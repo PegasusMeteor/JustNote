@@ -6,10 +6,10 @@
 **51CTO**:[http://blog.51cto.com/xiaoshuaigege](http://blog.51cto.com/xiaoshuaigege)  
 
 
-QQ讨论群：  
+**QQ讨论群**：  
 <img src="http://ot2trm1s2.bkt.clouddn.com/QQ%E7%BE%A4%E4%BA%8C%E7%BB%B4%E7%A0%81.png" height="400px" />   
 
-个人微信公众号：  
+**个人微信公众号**：  
 <img src="http://ot2trm1s2.bkt.clouddn.com/linuxtianya.jpg" />
 
 
