@@ -5,5 +5,5 @@
   * [Section2-常用命令](CHAPTER1/SECTION2.md)
 
 * [GOLNAG STUDY](GOLANG/README.md)
-  * [Development Environment(VIM)](GOLANG/Development Environment(VIM).md)
-  * [Development Environment(VSCODE)](GOLANG/Development Environment(VSCODE).md)
+  * [Development Environment(VIM)](GOLANG/Development Environment-vim.md)
+  * [Development Environment(VSCODE)](GOLANG/Development Environment-vscode.md)
