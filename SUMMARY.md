@@ -9,7 +9,7 @@
   * [Development Environment(VSCODE)](golang/development-environment-vscode.md)
 
 
-* [数据结构(GOLNAG)](golang_structure/readme.md)
+* [数据结构(GOLANG)](golang_structure/readme.md)
   * [一、线性表](golang_structure/list/1-0.md)
     * [1.1 线性表的类型定义](golang_structure/list/1-1.md)
     * [1.2 线性表的顺序表示和实现](golang_structure/list/linearlist/1-2.md)
