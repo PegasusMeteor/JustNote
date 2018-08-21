@@ -1,7 +1,7 @@
 {
     "title": "JustNote",
     "description": "一本简单的运维笔记，用来记录和分享自己的学习与成长之路。",
-    "language": "zh",
+    "language": "zh-hans",
     "plugins": [
         "-disqus",
         "github",
@@ -30,7 +30,7 @@
         "fontsettings": {
             "theme": "white",
             "family": "serif",
-            "size": 12
+            "size": 14
         },
         "simple-page-toc": {
             "maxDepth": 3,
