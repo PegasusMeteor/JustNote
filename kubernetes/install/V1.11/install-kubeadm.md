@@ -1,5 +1,5 @@
 
-<img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="150px">本次将主要介绍如何安装 `kubeadm` toolbox.如果对安装过程已经比较熟悉了的话，可以跳转到[使用kubeadm创建单个master的集群](kubernetes/install/v1.11/create-cluster-kubeadm).
+<img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="150px">本次将主要介绍如何安装 `kubeadm` 工具.如果对安装过程已经比较熟悉了的话，可以跳转到[使用kubeadm创建单个master的集群](create-cluster-kubeadm).
 
 - 开始之前
 - 确认每个node的 MAC 地址 以及 product_uuid 是唯一的
@@ -199,7 +199,7 @@ mkdir -p /opt/cni/bin
 curl -L "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-amd64-${CNI_VERSION}.tgz" | tar -C /opt/cni/bin -xz
 ```
 
-安装 `kubeadm`, `kubelet`, `kubectl` 并将`kubelet` s配置成系统服务:
+安装 `kubeadm`, `kubelet`, `kubectl` 并将`kubelet` 配置成系统服务:
 
 ```bash
 RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
@@ -250,11 +250,11 @@ systemctl restart kubelet
 
 ## 问题排查
 
-如果安装 kubeadm的过程中出现了什么问题,, 可以参考[kubeadm故障排除](kubernetes/install/v1.11/troubleshooting-kubeadm).
+如果安装 kubeadm的过程中出现了什么问题,, 可以参考[kubeadm故障排除](troubleshooting-kubeadm).
 
 ## 下一步
 
-* [使用kubeadm创建单个master的集群](kubernetes/install/v1.11/create-cluster-kubeadm)
+* [使用kubeadm创建单个master的集群](create-cluster-kubeadm)
 
 
 
