@@ -1,23 +1,23 @@
 {
-  "title": "JustNote",
-  "description": "demo",
-  "language": "zh",
-  "plugins": [ 
-    "-disqus",
-    "github",
-    "editlink",
-    "prism",
-    "-highlight",
-    "baidu",
-    "splitter",
-    "sitemap",
-    "tbfed-pagefooter",
-    "fontsettings",
-    "simple-page-toc",
-    "links"
-  ],
-  "pluginsConfig": {
-       "tbfed-pagefooter": {
+    "title": "JustNote",
+    "description": "demo",
+    "language": "zh",
+    "plugins": [
+        "-disqus",
+        "github",
+        "editlink",
+        "prism",
+        "-highlight",
+        "baidu",
+        "splitter",
+        "sitemap",
+        "tbfed-pagefooter",
+        "fontsettings",
+        "simple-page-toc",
+        "links"
+    ],
+    "pluginsConfig": {
+        "tbfed-pagefooter": {
             "copyright": "",
             "modify_label": "该文件修订时间：",
             "modify_format": "YYYY-MM-DD HH:mm:ss"
@@ -38,24 +38,7 @@
                 "facebook": false,
                 "twitter": false,
                 "all": false
+            }
         }
-    //     ,
-    // "disqus": {
-    //   "shortName": "webpack-handbook"
-    // },
-    // "github": {
-    //   "url": "https://github.com/webChatContact/baas-v2-help"
-    // },
-    // "editlink": {
-    //   "base": "https://github.com/webChatContact",
-    //   "label": "编辑本页面"
-    // },
-    // "baidu": {
-    //     "token": "a9787f0ab45d5e237bab522431d0a7ec"
-    // },
-    // "sitemap": {
-    //     "hostname": "http://baidu.com/"//生成站点地图
-    // }
     }
-}
 }
