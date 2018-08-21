@@ -31,9 +31,6 @@
             "maxDepth": 3,
             "skipFirstH1": true
         },
-        "github": {
-            "url": "https://github.com/xiaoshuaigege/JustNote"
-        },
         "links": {
             "gitbook": false,
             "sharing": {
@@ -41,14 +38,14 @@
                 "facebook": false,
                 "twitter": false,
                 "all": false
-            },
-            "github": {
-                "url": "https://github.com/xiaoshuaigege/JustNote"
-            },
-            "editlink": {
-                "base": "https://github.com/xiaoshuaigege",
-                "label": "编辑本页面"
             }
+        },
+        "github": {
+            "url": "https://github.com/xiaoshuaigege/JustNote"
+        },
+        "editlink": {
+            "base": "https://github.com/xiaoshuaigege",
+            "label": "编辑本页面"
         }
     }
 }
