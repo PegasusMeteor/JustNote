@@ -31,6 +31,9 @@
             "maxDepth": 3,
             "skipFirstH1": true
         },
+        "github": {
+            "url": "https://github.com/xiaoshuaigege/JustNote"
+        },
         "links": {
             "gitbook": false,
             "sharing": {
