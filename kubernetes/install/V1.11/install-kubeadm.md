@@ -173,6 +173,18 @@ yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 systemctl enable kubelet && systemctl start kubelet
 ```
 
+#### 使用阿里云安装Kubernetes
+
+&emsp;&emsp;  同样是由于国内网络环境的原因，安装过程可能会产生不少的问题因此，我们建议直接使用阿里云提供的镜像库来进行安装。  
+&emsp;&emsp;  阿里云开源镜像站中提供了了yum以及apt两种下载方式，选择适合自己的一种就可以。[https://mirrors.aliyun.com/kubernetes/](https://mirrors.aliyun.com/kubernetes/)  
+&emsp;&emsp;  然后直接使用下面的命令安装和启动就可以了。 
+
+```bash 
+yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+systemctl enable kubelet && systemctl start kubelet
+
+```
+
   **注意:**
 
   - 必须使用 `setenforce 0` 停用掉SELinux,也可以直接修改 `/etc/selinux/config` 文件来禁用SELinux.因为pod要求容器能够访问物理机的文件系统。
