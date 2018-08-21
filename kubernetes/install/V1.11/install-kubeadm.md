@@ -187,8 +187,8 @@ systemctl enable kubelet && systemctl start kubelet
 
   **注意:**
 
-  - 必须使用 `setenforce 0` 停用掉SELinux,也可以直接修改 `/etc/selinux/config` 文件来禁用SELinux.因为pod要求容器能够访问物理机的文件系统。
-    You have to do this until SELinux support is improved in the kubelet.
+  - 必须使用 `setenforce 0` 停用掉SELinux,也可以直接修改 `/etc/selinux/config` 文件来禁用SELinux.因为pod要求容器能够访问物理机的文件系统。  
+  
   - 一些 RHEL/CentOS 7 用户报告说iptables 可能会错误地过滤请求. 要确保配置文件`sysctl`中
     `net.bridge.bridge-nf-call-iptables` 参数值已经设置为 1 , 例如.
   
