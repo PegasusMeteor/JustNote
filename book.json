@@ -1,9 +1,9 @@
 {
   "title": "JustNote",
-  "description": "一本简单的运维笔记，用来记录和分享自己的学习与成长之路。",
+  "description": "demo",
   "language": "zh",
   "plugins": [ 
-    "disqus",
+    "-disqus",
     "github",
     "editlink",
     "prism",
@@ -39,6 +39,23 @@
                 "twitter": false,
                 "all": false
         }
+    //     ,
+    // "disqus": {
+    //   "shortName": "webpack-handbook"
+    // },
+    // "github": {
+    //   "url": "https://github.com/webChatContact/baas-v2-help"
+    // },
+    // "editlink": {
+    //   "base": "https://github.com/webChatContact",
+    //   "label": "编辑本页面"
+    // },
+    // "baidu": {
+    //     "token": "a9787f0ab45d5e237bab522431d0a7ec"
+    // },
+    // "sitemap": {
+    //     "hostname": "http://baidu.com/"//生成站点地图
+    // }
     }
-  }
+}
 }
