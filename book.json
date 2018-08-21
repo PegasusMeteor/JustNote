@@ -8,9 +8,9 @@
         "editlink",
         "prism",
         "-highlight",
-        "baidu",
+        "-baidu",
         "splitter",
-        "sitemap",
+        "-sitemap",
         "tbfed-pagefooter",
         "fontsettings",
         "simple-page-toc",
@@ -38,6 +38,13 @@
                 "facebook": false,
                 "twitter": false,
                 "all": false
+            },
+            "github": {
+                "url": "https://github.com/xiaoshuaigege/JustNote"
+            },
+            "editlink": {
+                "base": "https://github.com/xiaoshuaigege",
+                "label": "编辑本页面"
             }
         }
     }
