@@ -1,6 +1,6 @@
 {
     "title": "JustNote",
-    "description": "demo",
+    "description": "一本简单的运维笔记，用来记录和分享自己的学习与成长之路。",
     "language": "zh",
     "plugins": [
         "-disqus",
@@ -14,7 +14,12 @@
         "tbfed-pagefooter",
         "fontsettings",
         "simple-page-toc",
-        "links"
+        "links",
+        "expandable-chapters-small",
+        "sitemap-general",
+        "lunr",
+        "search",
+        "search-plus"
     ],
     "pluginsConfig": {
         "tbfed-pagefooter": {
@@ -46,6 +51,9 @@
         "editlink": {
             "base": "https://github.com/xiaoshuaigege",
             "label": "编辑本页面"
+        },
+        "sitemap-general": {
+            "prefix": "https://xiaoshuaigege.gitbooks.io/justnote"
         }
     }
 }
