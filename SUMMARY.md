@@ -27,7 +27,7 @@
 
 * [Kubernetes](kubernetes/readme.md)
   * [安装](kubernetes/install/readme.md)
-    * [V1.11 ](kubernetes/install/v1.11/_index.md)
+    * [V1.11](kubernetes/install/v1.11/_index.md)
       * [安装kubeadm](kubernetes/install/v1.11/install-kubeadm.md)
       * [使用kubeadm创建单个master的集群](kubernetes/install/v1.11/create-cluster-kubeadm.md)
       * [使用kubeadm配置集群中的每个kubelet](kubernetes/install/v1.11/kubelet-integration.md)
