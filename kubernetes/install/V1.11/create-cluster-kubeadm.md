@@ -182,7 +182,7 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 
 token 用于在master节点和新加入的node节点之间互相进行身份认证。这里token要安全保存，因为任何知道token的用户都能通过它认证并加入到集群中去。使用 `kubeadm token` 命令可以列举，创建和删除 token。
 
-### 安装 POD 网络组件 {#pod-network}
+### 安装 POD 网络组件   
 
 
 > **注意:** 本节包含关于安装和部署顺序的重要信息。在继续之前请仔细阅读。
@@ -327,7 +327,7 @@ to schedule pods everywhere.
 
 这个操作将把`node-role.kubernetes.io/master`这个标记从所有具有这个标记的节点上删除掉，包括master节点。这意味着调度器将能够将master上pod调度到任何地方。 
 
-### 将节点加入集群 {#join-nodes}
+### 将节点加入集群   
 
 这里所说的节点指的是运行容器和pod的节点.在每个机器上执行下面的命令，将这些节点加入到集群中:
 
@@ -429,7 +429,7 @@ kubectl --kubeconfig ./admin.conf proxy
 
 本地可以通过 `http://localhost:8001/api/v1` 这个地址访问API Server.
 
-## 移除 {#tear-down}
+## 移除   
 
 要撤销kubeadm所做的操作的话,在关闭节点之前需要将节点清空.
 
@@ -450,13 +450,13 @@ kubeadm reset
 
 更多信息可以查看[`kubeadm reset command`]().
 
-## 维护集群 {#lifecycle}
+## 维护集群   
 
 维护一个kubeadm集群的指令 (e.g. 升级,降级, etc.) 可以参考 [这里.]()
 
 
 
-## 不足之处 {#limitations}
+## 不足之处  
 
 请注意: kubeadm 仍然还在开发过程中，有一些缺陷需要在这里说明.
 
@@ -466,7 +466,7 @@ kubeadm reset
    解决方案: 
    [备份etcd数据](https://coreos.com/etcd/docs/latest/admin_guide.html). master节点上被kubeadm 配置的etcd的数据路径是 `/var/lib/etcd` .
 
-## 问题排查 {#troubleshooting}
+## 问题排查  
 
 如果在使用 kubeadm遇到了困难, 可以点击 [问题排查手册](troubleshooting-kubeadm).来进行查阅.
 
