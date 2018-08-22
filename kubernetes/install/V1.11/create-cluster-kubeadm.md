@@ -54,15 +54,10 @@ kubernetes 通常每9个月发布一个版本，但是在这期间，如果发�
 - 开始之前
 - 目标
 - 安装过程
-- Tear down
-- Maintaining a cluster
-- Explore other add-ons
-- What’s next
-- Feedback
-- Version skew policy
-- kubeadm works on multiple platforms
-- Limitations
-- Troubleshooting
+- 移除
+- 维护一个集群
+- 浏览其他附加组件
+- 问题排查
 
 
 ## 开始之前
@@ -332,23 +327,23 @@ to schedule pods everywhere.
 
 ### 将节点加入集群 {#join-nodes}
 
-The nodes are where your workloads (containers and pods, etc) run. To add new nodes to your cluster do the following for each machine:
+这里所说的节点指的是运行容器和pod的节点.在每个机器上执行下面的命令，将这些节点加入到集群中:
 
-* SSH to the machine
-* Become root (e.g. `sudo su -`)
-* Run the command that was output by `kubeadm init`. For example:
+* SSH 到节点主机
+* 切换到 root (e.g. `sudo su -`)
+* 运行加入到集群中的命令，这个命令在执行`kubeadm init`过程中有过提示 . For example:
 
 ``` bash
 kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
 ```
 
-If you do not have the token, you can get it by running the following command on the master node:
+如果还没有获取到token, 可以在 master 节点上运行下面的命令获取:
 
 ``` bash
 kubeadm token list
 ```
 
-The output is similar to this:
+命令的输出类似下面这样:
 
 ``` console
 TOKEN                    TTL  EXPIRES              USAGES           DESCRIPTION            EXTRA GROUPS
@@ -358,37 +353,35 @@ TOKEN                    TTL  EXPIRES              USAGES           DESCRIPTION 
                                                                                            default-node-token
 ```
 
-By default, tokens expire after 24 hours. If you are joining a node to the cluster after the current token has expired,
-you can create a new token by running the following command on the master node:
+tokens 默认24小时之后失效。如果在token失效之后，还想将一个node节点加入到集群中去，可以在master节点上通过下面的命令生成一个新的token:
 
 ``` bash
 kubeadm token create
 ```
 
-The output is similar to this:
+输出类似于下面这样:
 
 ``` console
 5didvk.d09sbcov8ph2amjw
 ```
 
-If you don't have the value of `--discovery-token-ca-cert-hash`, you can get it by running the following command chain on the master node:
+如果不知道  `--discovery-token-ca-cert-hash` 的值是多少, 可以在master节点上执行下面的组合命令来获取:
 
 ``` bash
 openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
    openssl dgst -sha256 -hex | sed 's/^.* //'
 ```
 
-The output is similar to this:
+输出类似于下面这样:
 
 ``` console
 8cb2de97839780a412b93877f8507ad6c94f73add17d5d7058e91741c9d5ec78
 ```
 
-{{< note >}}
-**Note:** To specify an IPv6 tuple for `<master-ip>:<master-port>`, IPv6 address must be enclosed in square brackets, for example: `[fd00::101]:2073`.
-{{< /note >}}
 
-The output should look something like:
+> **Note:** 如果要按照 `<master-ip>:<master-port>` 这种格式指定IPv6地址, IPv6 地址必须被方括号括起来, 例如: `[fd00::101]:2073`.
+
+输出像下面这样:
 
 ```
 [preflight] Running pre-flight checks
@@ -403,37 +396,28 @@ Node join complete:
 Run 'kubectl get nodes' on the master to see this machine join.
 ```
 
-A few seconds later, you should notice this node in the output from `kubectl get
-nodes` when run on the master.
+过一会儿，在master节点上执行`kubectl get nodes`命令，从输出的内容上就能看到节点已经加入到了集群中.
 
-### (Optional) Controlling your cluster from machines other than the master
+### (可选) 从master节点以外的机器控制集群
 
-In order to get a kubectl on some other computer (e.g. laptop) to talk to your
-cluster, you need to copy the administrator kubeconfig file from your master
-to your workstation like this:
+为了能够从master节点之外的计算机(例如笔记本)控制集群，我们需要从master节点将 administrator kubeconfig  配置文件复制到工作主机上(非master节点):
 
 ``` bash
 scp root@<master ip>:/etc/kubernetes/admin.conf .
 kubectl --kubeconfig ./admin.conf get nodes
 ```
 
-{{< note >}}
-**Note:** The example above assumes SSH access is enabled for root. If that is not the
-case, you can copy the `admin.conf` file to be accessible by some other user
-and `scp` using that other user instead.
 
-The `admin.conf` file gives the user _superuser_ privileges over the cluster.
-This file should be used sparingly. For normal users, it's recommended to
-generate an unique credential to which you whitelist privileges. You can do
-this with the `kubeadm alpha phase kubeconfig user --client-name <CN>`
-command. That command will print out a KubeConfig file to STDOUT which you
-should save to a file and distribute to your user. After that, whitelist
-privileges by using `kubectl create (cluster)rolebinding`.
-{{< /note >}}
+> **Note:** 上面的示例中假设了使用root来操作，这样是可行的。如果是其他用户，在copy `admin.conf` 配置文件时，请注意相应权限.
 
-### (Optional) Proxying API Server to localhost
+>  `admin.conf` 文件定义了集群的超级用户以及权限 .
+这个文件应该谨慎使用. 对于普通用户则要求生成一个定义了白名单权限的唯一凭证. 可以使用 `kubeadm alpha phase kubeconfig user --client-name <CN>` 命令完成这项操作. 这个命令将打印一个 KubeConfig 文件到标准输出，我们需要将KubeConfig保存到文件中，并分发给其他的用户。然后使用`kubectl create (cluster)rolebinding`创建权限白名单.
 
-If you want to connect to the API Server from outside the cluster you can use
+
+### (可选) 将API服务器代理到本地主机
+
+
+如果想要在集群之外链接到API Server 可以使用
 `kubectl proxy`:
 
 ```bash
@@ -441,73 +425,32 @@ scp root@<master ip>:/etc/kubernetes/admin.conf .
 kubectl --kubeconfig ./admin.conf proxy
 ```
 
-You can now access the API Server locally at `http://localhost:8001/api/v1`
+本地可以通过 `http://localhost:8001/api/v1` 这个地址访问API Server.
 
-## Tear down {#tear-down}
+## 移除 {#tear-down}
 
-To undo what kubeadm did, you should first [drain the
-node](/docs/reference/generated/kubectl/kubectl-commands#drain) and make
-sure that the node is empty before shutting it down.
+要撤销kubeadm所做的操作的话,在关闭节点之前需要将节点清空.
 
-Talking to the master with the appropriate credentials, run:
+然后通知master节点:
 
 ```bash
 kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
 kubectl delete node <node name>
 ```
 
-Then, on the node being removed, reset all kubeadm installed state:
+然后在即将被移除掉的节点上，重置kubeadm的状态:
 
 ```bash
 kubeadm reset
 ```
 
-If you wish to start over simply run `kubeadm init` or `kubeadm join` with the
-appropriate arguments.
+如果您希望重新开始，只需运行 `kubeadm init` 或者 `kubeadm join` 并加上合适的参数就可以了。
 
-More options and information about the
-[`kubeadm reset command`](/docs/reference/setup-tools/kubeadm/kubeadm-reset/).
+更多信息可以查看[`kubeadm reset command`]().
 
-## Maintaining a cluster {#lifecycle}
+## 维护集群 {#lifecycle}
 
-Instructions for maintaining kubeadm clusters (e.g. upgrades,downgrades, etc.) can be found [here.](/docs/tasks/administer-cluster/kubeadm)
-
-## Explore other add-ons {#other-addons}
-
-See the [list of add-ons](/docs/concepts/cluster-administration/addons/) to explore other add-ons,
-including tools for logging, monitoring, network policy, visualization &amp;
-control of your Kubernetes cluster.
-
-## What's next {#whats-next}
-
-* Verify that your cluster is running properly with [Sonobuoy](https://github.com/heptio/sonobuoy)
-* Learn about kubeadm's advanced usage in the [kubeadm reference documentation](/docs/reference/setup-tools/kubeadm/kubeadm)
-* Learn more about Kubernetes [concepts](/docs/concepts/) and [`kubectl`](/docs/user-guide/kubectl-overview/).
-* Configure log rotation. You can use **logrotate** for that. When using Docker, you can specify log rotation options for Docker daemon, for example `--log-driver=json-file --log-opt=max-size=10m --log-opt=max-file=5`. See [Configure and troubleshoot the Docker daemon](https://docs.docker.com/engine/admin/) for more details.
-
-## Feedback {#feedback}
-
-* For bugs, visit [kubeadm Github issue tracker](https://github.com/kubernetes/kubeadm/issues)
-* For support, visit kubeadm Slack Channel:
-  [#kubeadm](https://kubernetes.slack.com/messages/kubeadm/)
-* General SIG Cluster Lifecycle Development Slack Channel:
-  [#sig-cluster-lifecycle](https://kubernetes.slack.com/messages/sig-cluster-lifecycle/)
-* SIG Cluster Lifecycle [SIG information](#TODO)
-* SIG Cluster Lifecycle Mailing List:
-  [kubernetes-sig-cluster-lifecycle](https://groups.google.com/forum/#!forum/kubernetes-sig-cluster-lifecycle)
-
-## Version skew policy {#version-skew-policy}
-
-The kubeadm CLI tool of version vX.Y may deploy clusters with a control plane of version vX.Y or vX.(Y-1).
-kubeadm CLI vX.Y can also upgrade an existing kubeadm-created cluster of version vX.(Y-1).
-
-Due to that we can't see into the future, kubeadm CLI vX.Y may or may not be able to deploy vX.(Y+1) clusters.
-
-Example: kubeadm v1.8 can deploy both v1.7 and v1.8 clusters and upgrade v1.7 kubeadm-created clusters to
-v1.8.
-
-Please also check our [installation guide](/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
-for more information on the version skew between kubelets and the control plane.
+维护一个kubeadm集群的指令 (e.g. 升级,降级, etc.) 可以参考 [这里.]()
 
 ## kubeadm works on multiple platforms {#multi-platform}
 
@@ -519,24 +462,19 @@ Only some of the network providers offer solutions for all platforms. Please con
 network providers above or the documentation from each provider to figure out whether the provider
 supports your chosen platform.
 
-## Limitations {#limitations}
+## 不足之处 {#limitations}
 
-Please note: kubeadm is a work in progress and these limitations will be
-addressed in due course.
+请注意: kubeadm 仍然还在开发过程中，有一些缺陷需要在这里说明.
 
-1. The cluster created here has a single master, with a single etcd database
-   running on it. This means that if the master fails, your cluster may lose
-   data and may need to be recreated from scratch. Adding HA support
-   (multiple etcd servers, multiple API servers, etc) to kubeadm is
-   still a work-in-progress.
+1. 这里创建的集群只有一个master节点, 和一个单独的ETCD数据库.这意味着如果master节点宕机了, 集群将丢失所有数据，并需要从头开始重新创建. 给kubeadm 添加高可用
+   (multiple etcd servers, multiple API servers, etc) 支持还在进展过程中.
 
-   Workaround: regularly
-   [back up etcd](https://coreos.com/etcd/docs/latest/admin_guide.html). The
-   etcd data directory configured by kubeadm is at `/var/lib/etcd` on the master.
+   解决方案: 
+   [备份etcd数据](https://coreos.com/etcd/docs/latest/admin_guide.html). master节点上被kubeadm 配置的etcd的数据路径是 `/var/lib/etcd` .
 
-## Troubleshooting {#troubleshooting}
+## 问题排查 {#troubleshooting}
 
-If you are running into difficulties with kubeadm, please consult our [troubleshooting docs](/docs/setup/independent/troubleshooting-kubeadm/).
+如果在使用 kubeadm遇到了困难, 可以点击 [问题排查手册](troubleshooting-kubeadm).来进行查阅.
 
 
 

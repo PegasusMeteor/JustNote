@@ -11,3 +11,10 @@
 
 
 
+## 备注
+
+本次安装过程是对kubernetes官方文档的一次翻译和实践。文档中内容进行了相应的处理，可能会与官方有所偏差，如果理解不畅可以移步官方文档。
+[https://kubernetes.io/docs/setup/independent/install-kubeadm/](https://kubernetes.io/docs/setup/independent/install-kubeadm/)
+
+
+
