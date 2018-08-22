@@ -1,3 +1,4 @@
+## 安装kubeadm
 
 <img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="150px">本次将主要介绍如何安装 `kubeadm` 工具.如果对安装过程已经比较熟悉了的话，可以跳转到[使用kubeadm创建单个master的集群](create-cluster-kubeadm).
 
