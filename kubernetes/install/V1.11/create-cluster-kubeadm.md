@@ -51,6 +51,9 @@ kubernetes 通常每9个月发布一个版本，但是在这期间，如果发�
 | v1.11.x            | June 2018      | March 2019        |
 
 
+## 本章目录 
+
+
 - 开始之前
 - 目标
 - 安装过程
@@ -77,13 +80,13 @@ kubernetes 通常每9个月发布一个版本，但是在这期间，如果发�
 
 ### 安装kubeadm
 
-See ["Installing kubeadm"](install-kubeadm).
+请查看 ["安装kubeadm"](install-kubeadm).
 
 > **注意:** 如果已经安装了 kubeadm, 运行 `apt-get update &&
 apt-get upgrade` 或者 `yum update` 去获取最新版本的 kubeadm.
 
 在升级的过程中，kubelet会陷入死循环，每隔几秒钟重启一下，直到kubeadm通知它要做什么。死循环是正常并且有必要的。
-初始化了 master节点之后, kubelet 会回复正常.  
+初始化了 master节点之后, kubelet 会恢复正常.  
 
 
 ### 初始化 master 节点
@@ -106,13 +109,10 @@ kubeadm init <args>
 
 想要再次运行 `kubeadm init` , 首先要 [停止掉集群](#tear-down).
 
-If you join a node with a different architecture to your cluster, create a separate
-Deployment or DaemonSet for `kube-proxy` and `kube-dns` on the node. This is because the Docker images for these
-components do not currently support multi-architecture.
 如果要将一个不同体系结构(architecture)的node假如到集群中，在这个节点上需要单独创建`kube-proxy` 和 `kube-dns`。因为这些组件的Docker 镜像不支持 多体系结构(multi-architecture)。
 
 
-`kubeadm init` 命令首先会进行一系列的检测以确保这台机器适合运行kubernetes. 这些检测或输出warnings并在出现errors的时候停止掉. 然后 `kubeadm init` 命令会下载集群控制台(cluster control plane)需要的各种组件. 需要几分钟的时间. 输出应该会像下面这个样子:
+`kubeadm init` 命令首先会进行一系列的检测以确保这台机器适合运行kubernetes. 这些检测或输出warnings，并在出现errors的时候停止掉. 然后 `kubeadm init` 命令会下载集群控制台(cluster control plane)需要的各种组件. 需要几分钟的时间. 输出应该会像下面这个样子:
 
 ```none
 [init] Using Kubernetes version: vX.Y.Z
@@ -164,7 +164,7 @@ as root:
 
   kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
 ```
-为了非root用户更好的使用kubectl，可以执行下面的命令，这些内容 也是`kubeadm init` 执行过程中会提示的内容:
+为了非root用户能够更好的使用kubectl，可以执行下面的命令，这些内容 也是`kubeadm init` 执行过程中会提示的内容:
 
 ```bash
 mkdir -p $HOME/.kube
@@ -188,20 +188,20 @@ token 用于在master节点和新加入的node节点之间互相进行身份认�
 > **注意:** 本节包含关于安装和部署顺序的重要信息。在继续之前请仔细阅读。
 
 
-因为pod要求互相之间能够正常通信，所以必须安装网络组件，
+因为pod要求互相之间能够正常通信，所以必须安装网络组件。  
 
 
 **在发布应用程序之前，必须先将网络调通. 并且,  在网络没有安装好之前也不能启动CoreDNS.
 kubeadm 只支持基于网络的容器网络接口(Container Network Interface (CNI)) (不支持 kubenet).**
 
-有几个项目使用CNI提供Kubernetes pod网络，其中一些还支持网络策略。
+有些项目使用CNI为Kubernetes pod提供网络，其中一些还支持网络策略。
 - [CNI v0.6.0](https://github.com/containernetworking/cni/releases/tag/v0.6.0) 开始支持IPv6.
 - [CNI bridge](https://github.com/containernetworking/plugins/blob/master/plugins/main/bridge/README.md) 和 [local-ipam](https://github.com/containernetworking/plugins/blob/master/plugins/ipam/host-local/README.md) 是 Kubernetes  1.9 版本中唯一支持IPv6的组件.
 
-Note that kubeadm sets up a more secure cluster by default and enforces use of [RBAC](/docs/reference/access-authn-authz/rbac/).
-Make sure that your network manifest supports RBAC.
+请注意，kubeadm默认设置了一个更安全的集群，并强制使用[RBAC](/docs/reference/access-authn-authz/rbac/).
+确保你的网络清单支持RBAC.
 
-You can install a pod network add-on with the following command:
+可以通过下面的命令来安装pod network组件。:
 
 ```bash
 kubectl apply -f <add-on.yaml>
@@ -214,7 +214,7 @@ kubectl apply -f <add-on.yaml>
 根据下面不同的网络提供商选择不同的安装方式。
 
 
-**Calico**  
+#### Calico  
 
 可以点击 [Quickstart for Calico on Kubernetes](https://docs.projectcalico.org/latest/getting-started/kubernetes/), [Installing Calico for policy and networking](https://docs.projectcalico.org/latest/getting-started/kubernetes/installation/calico),获取更多信息.
 
@@ -225,7 +225,8 @@ kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/
 kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
 ```
 
-**Canal**
+#### Canal    
+
 Canal 使用Calico做网络策略，Flannel来进行网络转发。点击后面链接查看 Calico 文档 [official getting started guide](https://docs.projectcalico.org/latest/getting-started/kubernetes/installation/flannel).
 
 要使Canal更好地运行,在运行 `kubeadm init` 命令时需要指定 `--pod-network-cidr=10.244.0.0/16` 参数. 注意 Canal 只支持`amd64`.
@@ -235,7 +236,7 @@ kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/
 kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/canal/canal.yaml
 ```
 
-**Flannel**
+####  Flannel  
 
 要使 `flannel`更好地运行 在执行 `kubeadm init` 命令式需要指定         `--pod-network-cidr=10.244.0.0/16` 参数 .
 
@@ -254,7 +255,8 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Docume
 关于 `flannel`的更多信息可以查看, [the CoreOS flannel repository on GitHub
 ](https://github.com/coreos/flannel).
 
-**Kube-router**
+#### Kube-router  
+
 通过运行`sysctl net.bridge.bridge-nf-call-iptables=1`将 `/proc/sys/net/bridge/bridge-nf-call-iptables` 设置为 `1` 以便iptables能够放行IPv4的桥接网络包。其他的一些 CNI 插件也需要这样进行配置, 更多信息可以查看[这里](https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/#network-plugin-requirements).
 
 Kube-router 依赖 kube-controller-manager 为nodes节点分配 pod CIDR . 因此, 使用 `kubeadm init` 命令时需要加上 `--pod-network-cidr` 标志.
@@ -263,7 +265,7 @@ Kube-router 提供了基于服务代理的pod网络、网络策略和高性能IP
 
 使用kubeadm搭建基于Kube-router网络环境的 Kubernetes 集群  , 可以查看官方 [安装向导](https://github.com/cloudnativelabs/kube-router/blob/master/docs/kubeadm.md).
 
-**Romana**
+####  Romana  
 
 通过运行`sysctl net.bridge.bridge-nf-call-iptables=1`将 `/proc/sys/net/bridge/bridge-nf-call-iptables` 设置为 `1` 以便iptables能够放行IPv4的桥接网络包。其他的一些 CNI 插件也需要这样进行配置, 更多信息可以查看[这里](https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/#network-plugin-requirements).
 
@@ -275,7 +277,7 @@ Romana 只支持 `amd64`.
 kubectl apply -f https://raw.githubusercontent.com/romana/romana/master/containerize/specs/romana-kubeadm.yml
 ```
 
-**Weave Net**
+#### Weave Net  
 
 通过运行`sysctl net.bridge.bridge-nf-call-iptables=1`将 `/proc/sys/net/bridge/bridge-nf-call-iptables` 设置为 `1` 以便iptables能够放行IPv4的桥接网络包。其他的一些 CNI 插件也需要这样进行配置, 更多信息可以查看[这里](https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/#network-plugin-requirements).
 
@@ -288,7 +290,7 @@ Weave Net 默认设置为 hairpin 模式. 这允许pods 通过  Service IP  的�
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 ```
 
-**JuniperContrail/TungstenFabric**  
+#### JuniperContrail/TungstenFabric    
 
 提供覆盖SDN解决方案，提供多云联网，混合云联网，同时覆盖-基础支持，网络政策执行，网络隔离，服务链接和灵活的负载平衡。
 
@@ -452,15 +454,7 @@ kubeadm reset
 
 维护一个kubeadm集群的指令 (e.g. 升级,降级, etc.) 可以参考 [这里.]()
 
-## kubeadm works on multiple platforms {#multi-platform}
 
-kubeadm deb/rpm packages and binaries are built for amd64, arm (32-bit), arm64, ppc64le, and s390x
-following the [multi-platform
-proposal](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/multi-platform.md).
-
-Only some of the network providers offer solutions for all platforms. Please consult the list of
-network providers above or the documentation from each provider to figure out whether the provider
-supports your chosen platform.
 
 ## 不足之处 {#limitations}
 
