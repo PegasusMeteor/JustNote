@@ -80,7 +80,7 @@ kubernetes 通常每9个月发布一个版本，但是在这期间，如果发�
 
 ### 安装kubeadm
 
-请查看 ["安装kubeadm"](install-kubeadm).
+请查看 ["安装kubeadm"](install-kubeadm.html).
 
 > **注意:** 如果已经安装了 kubeadm, 运行 `apt-get update &&
 apt-get upgrade` 或者 `yum update` 去获取最新版本的 kubeadm.
@@ -468,7 +468,7 @@ kubeadm reset
 
 ## 问题排查  
 
-如果在使用 kubeadm遇到了困难, 可以点击 [问题排查手册](troubleshooting-kubeadm).来进行查阅.
+如果在使用 kubeadm遇到了困难, 可以点击 [问题排查手册](troubleshooting-kubeadm.html).来进行查阅.
 
 
 
