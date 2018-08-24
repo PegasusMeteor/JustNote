@@ -31,7 +31,7 @@
       * [安装kubeadm](kubernetes/install/V1.11/install-kubeadm.md)
       * [使用kubeadm创建单个master的集群](kubernetes/install/V1.11/create-cluster-kubeadm.md)
       * [使用kubeadm配置集群中的每个kubelet](kubernetes/install/V1.11/kubelet-integration.md)
-      * [使用kubeadm自定义控制平面配置](kubernetes/install/V1.11/control-plane-flags.md)
+      * [使用kubeadm自定义控制台配置](kubernetes/install/V1.11/control-plane-flags.md)
       * [使用kubeadm创建高度可用的集群](kubernetes/install/V1.11/high-availability.md)
       * [用kubeadm建立一个高度可用的etcd集群](kubernetes/install/V1.11/setup-ha-etcd-with-kubeadm.md)
       * [kubeadm故障排除](kubernetes/install/V1.11/troubleshooting-kubeadm.md)
