@@ -95,7 +95,7 @@ Master节点是  control plane 组件运行的地方 , 包括了
 etcd (集群数据库，自动注册与发现) 和 API server (与kubectl 命令行交互的).
 
 1. 选择一个pod网络附加组件，并确认它是否需要在kubeadm初始化时传入相应的参数. 根据选择的第三方提供商的不同，有可能需要将 `--pod-network-cidr` 设置成第三方指定的值. 查看 [安装 pod 网络附件](#pod-network).
-1. (可选) 除非另有说明, 否则 kubeadm 使用具有默认网关的网络接口来广播maste节点的IP. 如果要使用不同的网络接口,需要在执行 `kubeadm init` 命令时 指定 `--apiserver-advertise-address=<ip-address>` 参数. 如果要部署基于IPv6地址的 IPv6 Kubernetes 集群,就必须要指定IPv6的地址，例如 `--apiserver-advertise-address=fd00::101`
+1. (可选) 除非另有说明, 否则 kubeadm 使用具有默认网关的网络接口来广播master节点的IP. 如果要使用不同的网络接口,需要在执行 `kubeadm init` 命令时 指定 `--apiserver-advertise-address=<ip-address>` 参数. 如果要部署基于IPv6地址的 IPv6 Kubernetes 集群,就必须要指定IPv6的地址，例如 `--apiserver-advertise-address=fd00::101`
 1. (可选) 运行`kubeadm init` 之前先运行 `kubeadm config images pull` 来确定 gcr.io registries 的联通性.   
 
 接下来运行:

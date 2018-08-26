@@ -241,7 +241,7 @@ systemctl enable kubelet && systemctl start kubelet
 
 ## 在master节点上配置 kubelet 使用的 cgroup-driver
 
-如果使用了Dokcer的话， kubeadm 会为kubelet 自动检测 docker 的 cgroup driver 
+如果使用了Docker的话， kubeadm 会为kubelet 自动检测 docker 的 cgroup driver 
 并且在运行的时候把它配置在`/var/lib/kubelet/kubeadm-flags.env` 这个文件中. _这一点与旧版本有很大的不同，旧版本需要我们手动修改这个配置_ .
 
 如果使用了不同的容器运行时接口(Container Runtime Interface, CRI), 就需要在
