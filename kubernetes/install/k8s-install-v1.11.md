@@ -1,61 +1,212 @@
-1.11 版本 安装实践记录
 
 
+## kubernetes V1.11 版本 安装实践
 
-如果要发表文章的话，建议发表到kubernetes社区里里面吧。
+### 实验环境介绍
+|主机名称|主机角色|IP地址|
+|:---:|:---:|:---:|  
+k8s-master|master|192.168.0.39
+k8s-node1|node|192.168.0.40  
+k8s-node2|node|192.168.0.41
+k8s-node3|node|192.168.0.42   
 
-这个安装过程，至少得操作个两三遍吧，做到熟练掌握。
-最好在安装的过程中，掌握每一个环节的作用。以及k8s中各个组件的作用。
+实验环境的网络以及组件结构图如下所示。   
 
+![这里需要插入一张图]() 
 
+ 
 
-需要描述一下 master，以及nodes 节点的基本情况。
-
-
-
-
-
-
-
-
-1、关闭防火墙
-
-2、关闭selinux
-
-3、给master 和node 添加主机名解析，确保通过主机名能够访问到
-172.20.10.2 k8s-1
-172.20.10.3 k8s-2
-172.20.10.5 k8s-3
-172.20.10.4 master
+### 实验环境准备
+1.  关闭防火墙或者iptables
 
 
+    ```shell
+    systemctl disable firewalld && systemctl stop firewalld  
 
-4、确保时间同步
-
-生产中一定要有时间服务器
-
-
-
-timedatectl set-timezone Asia/Shanghai & systemctl restart chronyd.service
+    systemctl diables iptables && systemctl stop iptables
+    ```
 
 
+1.  关闭selinux  
+在 `/etc/selinux/config`文件修改下列配置  
 
-软件版本是截止笔者操作的时间版本
+    ```shell
+    SELINUX=disabled
+    ```
+
+1. 确保时间同步
+
+    生产中一定要有时间服务器,安装时间服务器ntp。详细过程可以自行查阅。如果有必要的话，设置一下时区。  
+    ```shell
+    timedatectl set-timezone Asia/Shanghai & systemctl restart chronyd.service
+    ```  
+
+1. 设置所有的主机可以通过主机名进行访问  
+    编辑 `/etc/hosts`文件，添加下面的内容
+    ``` shell
+    192.168.0.39 k8s-master
+    192.168.0.40 k8s-node1
+    192.168.0.41 k8s-node2
+    192.168.0.42 k8s-node3
+
+    ```  
+
+    否则的话，在对master 进行 `kubeadm init `命令的时候，会出现如下的警告信息。 
+    ```shell
+    [WARNING Hostname]: hostname "k8s-master" could not be reached
+    [WARNING Hostname]: hostname "k8s-master" lookup k8s-master on 192.168.1.1:53: no such host
+
+    ```   
+
+1. 设置系统相关参数  
+    这些参数是下面实验过程中某些环节必须的。只不过我们将其提前在这里描述了而已。如果想要搞明白是在哪个环节需要做这些事情的话，可以先不用设置，后面遇到了再参考这里进行解决就可以了。  
+
+    ```shell
+    sysctl net.bridge.bridge-nf-call-iptables=1
+    sysctl net.ipv4.ip_forward=1
+    sysctl -p
+
+    ```
 
 
+### 安装
 
+由于某些不可描述的原因，我们在安装各项组件的时候，可能会遇到网络的问题。所以建议在安装各项组件尽量选择国内的网络。
 
+#### 配置安装需要的yum源  
 
-5、 在每个节点上部署docker
+安装过程中需要解决一些依赖问题，所以在安装之前，最好将CentOS的 base源，以及epel源和extra源都配置好，避免安装过程中，出现了错误导致安装中止。
 
-使用阿里云的docker-ce
+**1、kubernetes yum 源**  
 
-https://mirrors.aliyun.com/docker-ce/linux/centos/
+kubernetes的安装可以参考官方的文档来进行操作。  
+官方文档地址[https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl](https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)。  
+如果阅读困难的话，可以参考我的版本。[https://xiaoshuaigege.gitbooks.io/justnote/content/kubernetes/install/V1.11/_index.html](https://xiaoshuaigege.gitbooks.io/justnote/content/kubernetes/install/V1.11/_index.html)   
 
+鉴于前面网络的原因，我们选择使用阿里云的yum源，地址 [https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/](https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/)  
 
+```shell
+[name]
+name=Kubernetes rpm repo
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=0
+```    
 
-版本信息
+实验过程中使用的版本是   
+```shell
+~]# yum info kubelet
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.aliyun.com
+ * extras: mirrors.aliyun.com
+ * updates: mirrors.aliyun.com
+Available Packages
+Name        : kubelet
+Arch        : x86_64
+Version     : 1.11.2
+Release     : 0
+Size        : 18 M
+Repo        : name
+Summary     : Container cluster management
+URL         : https://kubernetes.io
+License     : ASL 2.0
+Description : The node agent of Kubernetes, the container cluster manager.
+```  
 
+**2、配置Docker yum源**  
+
+这里实验中安装的是Docker-ce的版本。国内的开源镜像站同样提供了比较便捷的安装方式。我们同样使用阿里云的yum源。镜像地址[https://mirrors.aliyun.com/docker-ce/linux/centos/](https://mirrors.aliyun.com/docker-ce/linux/centos/)  
+
+```shell
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-stable-debuginfo]
+name=Docker CE Stable - Debuginfo $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/debug-$basearch/stable
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-stable-source]
+name=Docker CE Stable - Sources
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/source/stable
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-edge]
+name=Docker CE Edge - $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/edge
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-edge-debuginfo]
+name=Docker CE Edge - Debuginfo $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/debug-$basearch/edge
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-edge-source]
+name=Docker CE Edge - Sources
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/source/edge
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-test]
+name=Docker CE Test - $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/test
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-test-debuginfo]
+name=Docker CE Test - Debuginfo $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/debug-$basearch/test
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-test-source]
+name=Docker CE Test - Sources
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/source/test
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-nightly]
+name=Docker CE Nightly - $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/nightly
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-nightly-debuginfo]
+name=Docker CE Nightly - Debuginfo $basearch
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/debug-$basearch/nightly
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+
+[docker-ce-nightly-source]
+name=Docker CE Nightly - Sources
+baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/7/source/nightly
+enabled=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+```  
+
+实验过程中使用的docker版本是   
+
+```
 Client:
  Version:           18.06.0-ce
  API version:       1.38
@@ -75,23 +226,26 @@ Server:
   OS/Arch:          linux/amd64
   Experimental:     false
 
+```  
 
+### 在master节点上安装Docker、kubeadm、kubelet、kubectl
 
+```shell
+yum install  kubeadm kubelet kubectl docker-ce
+```
 
-如果 k8s 运行在物理机上的话，master节点是不需要部署docker的。
+### 在node节点上安装Docker、kubelet、kubectl
 
-yum install docker-ce -y
+```shell
+yum install kubeadm kubelet docker-ce
 
-还需要配置 EPEL源，以及extras 
+```
 
-可以调查一下这里需要那些依赖。
+### Docker 加速 
 
+为了后面实验能够顺利进行，这里对Docker 配置一下加速。使用的是阿里云的加速配置。   
 
-
-
-docker 加速 需要注册阿里云 开发者平台
-介绍一下阿里云的加速设置
-
+```shell
 sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json <<-'EOF'
 {
@@ -100,100 +254,47 @@ sudo tee /etc/docker/daemon.json <<-'EOF'
 EOF
 sudo systemctl daemon-reload
 sudo systemctl restart docker
-
-{
-  "registry-mirrors": ["https://vbbcsxj5.mirror.aliyuncs.com"]
-}
+sudo systemctl enable docker
+```
 
 
-配置开机启动，并启动docker 
+### 对master进行初始化 
 
+在以往的旧版本中，需要修改 kubeadm 的cgroup-driver与安装的docker所使用的一致。  
 
-systemctl start docker & systemctl enable docker
-
-
-
-
-
-
-
-
-k8s 安装
-  官方介绍
-  使用kubeadm 安装集群的方式
-  https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl
-
-
-
-
-  kubernetes rom repo:
-
-  官方站点
-
-    https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl
-
-  可以制作repo
-
-  
-  然后 阿里云 也有 yum的 路径
-
-  https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-
-
-]# yum info kubelet
-Loaded plugins: fastestmirror
-Loading mirror speeds from cached hostfile
- * base: mirrors.aliyun.com
- * extras: mirrors.aliyun.com
- * updates: mirrors.aliyun.com
-Available Packages
-Name        : kubelet
-Arch        : x86_64
-Version     : 1.11.2
-Release     : 0
-Size        : 18 M
-Repo        : name
-Summary     : Container cluster management
-URL         : https://kubernetes.io
-License     : ASL 2.0
-Description : The node agent of Kubernetes, the container cluster manager.
-
-
-
-k8s 在github 上有托管站点
-
-
-yum install kubeadm
-
-master 上安装 kubeadm
-
-其他节点主机上安装kubeadm 和kubelet
-
- yum install kubeadm kubelet
-
-yum install kubelet 
-
-
-
-rpm -ql kubeadm
-
-
-修改 kubeadm 的dgrou-driver  
-修改为与安装的docker一致
 最新版本的kubenetes 已经发生了变化，会自动根据docker中运行的cgroup-driver进行配置变更，这个在官方网站上已经介绍了。
 
+官方建议禁用 swap，但也可以使用`--ignore-preflight-errors` 这个参数忽略掉这个error。   
 
-近用 swap ，官方建议禁用
+```shell
+
+kubeadm init --help 
+
+kubeadm init  --kubernetes-version=v1.11.2 --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --ignore-preflight-errors=Swap   
+
+```
+其中之所以指定了`--kubernetes-version=v1.11.2` 这个版本参数，是因为如果不指定的话，在进行初始化的时候会访问google的网络，导致出现下面的错误，所以这里我们进行了手动指定版本。   
+
+```shell
+unable to get URL "https://dl.k8s.io/release/stable-1.11.txt": Get https://storage.googleapis.com/kubernetes-release/release/stable-1.11.txt: dial tcp 216.58.220.208:443: i/o timeout
+```
+
+`--pod-network-cidr=10.244.0.0/16` 这个参数的设置是因为我们选择了pod的网络组件为flannel.flannel 默认的网络就是这个网段。 `--service-cidr=10.96.0.0/12` 参数的作用是让service 默认使用这个子网网段。   
 
 
+这个过程可能会出现下面的错误。
 
-
-选择了flannel 网络 
-
-kubeadm init  --pod-network-cidr=10.244.0.0/16
-
-这个过程出现错误
-
+```shell
+[root@k8s-master ~]# kubeadm init  --kubernetes-version=v1.11.2 --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --ignore-preflight-errors=Swap 
+[init] using Kubernetes version: v1.11.2
+[preflight] running pre-flight checks
+I0829 22:23:08.443616    3209 kernel_validator.go:81] Validating kernel version
+I0829 22:23:08.443829    3209 kernel_validator.go:96] Validating kernel config
+        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.1-ce. Max validated version: 17.03
+[preflight/images] Pulling images required for setting up a Kubernetes cluster
+[preflight/images] This might take a minute or two, depending on the speed of your internet connection
+[preflight/images] You can also perform this action in beforehand using 'kubeadm config images pull'
+[preflight] Some fatal errors occurred:
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-apiserver-amd64:v1.11.2]: exit status 1
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-controller-manager-amd64:v1.11.2]: exit status 1
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-scheduler-amd64:v1.11.2]: exit status 1
@@ -201,18 +302,18 @@ kubeadm init  --pod-network-cidr=10.244.0.0/16
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/pause:3.1]: exit status 1
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/etcd-amd64:3.2.18]: exit status 1
         [ERROR ImagePull]: failed to pull image [k8s.gcr.io/coredns:1.1.3]: exit status 1
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+```
 
-这是由于国内网络环境，不能访问国外的地址
-
-解决方法 是去阿里云 下载相关镜像，然后再使用docker tag 修改
+这是由于国内网络环境，不能访问国外的地址导致需要的镜像下载不了。解决方法 是去阿里云下载相关镜像，然后再使用docker tag 修改。
 
 
 阿里云镜像地址 
-https://dev.aliyun.com/list.html?namePrefix=ks
+[https://dev.aliyun.com/list.html?namePrefix=ks](https://dev.aliyun.com/list.html?namePrefix=ks)
 
 
 注意下载的版本，应该与要求的版本一致
-
+```shell
 docker pull registry.cn-beijing.aliyuncs.com/acs/kube-apiserver-amd64:v1.11.2
 docker pull registry.cn-beijing.aliyuncs.com/acs/kube-controller-manager-amd64:v1.11.2
 docker pull registry.cn-beijing.aliyuncs.com/acs/kube-scheduler-amd64:v1.11.2
@@ -221,40 +322,58 @@ docker pull registry.cn-beijing.aliyuncs.com/acs/pause:3.1
 docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/etcd-amd64:3.2.18
 docker pull registry.cn-beijing.aliyuncs.com/acs/coredns:1.1.3
 
-docker tag  821507941e9c  k8s.gcr.io/kube-apiserver-amd64:v1.11.2
-docker tag  38521457c799  k8s.gcr.io/kube-controller-manager-amd64:v1.11.2
-docker tag  37a1403e6c1a  k8s.gcr.io/kube-scheduler-amd64:v1.11.2
-docker tag  46a3cd725628  k8s.gcr.io/kube-proxy-amd64:v1.11.2
-docker tag  da86e6ba6ca1  k8s.gcr.io/pause:3.1
-docker tag  b8df3b177be2  k8s.gcr.io/etcd-amd64:3.2.18
-docker tag  b3b94275d97c  k8s.gcr.io/coredns:1.1.3
+```
+
+修改docker image tag  
+
+```
+docker tag  [image_id]  k8s.gcr.io/kube-apiserver-amd64:v1.11.2
+docker tag  [image_id]  k8s.gcr.io/kube-controller-manager-amd64:v1.11.2
+docker tag  [image_id]  k8s.gcr.io/kube-scheduler-amd64:v1.11.2
+docker tag  [image_id]  k8s.gcr.io/kube-proxy-amd64:v1.11.2
+docker tag  [image_id]  k8s.gcr.io/pause:3.1
+docker tag  [image_id]  k8s.gcr.io/etcd-amd64:3.2.18
+docker tag  [image_id]  k8s.gcr.io/coredns:1.1.3
+
+```  
+
+将旧的tag 删除掉  
+
+```shell
+docker rmi registry.cn-beijing.aliyuncs.com/acs/kube-apiserver-amd64:v1.11.2
+docker rmi registry.cn-beijing.aliyuncs.com/acs/kube-controller-manager-amd64:v1.11.2
+docker rmi registry.cn-beijing.aliyuncs.com/acs/kube-scheduler-amd64:v1.11.2
+docker rmi registry.cn-beijing.aliyuncs.com/acs/kube-proxy-amd64:v1.11.2
+docker rmi registry.cn-beijing.aliyuncs.com/acs/pause:3.1
+docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd-amd64:3.2.18
+docker rmi registry.cn-beijing.aliyuncs.com/acs/coredns:1.1.3
+
+```
+这样的话，剩下的docker image 就是系统初始化需要的image 了。  
+
+```shell
+[root@k8s-master ~]# docker images
+REPOSITORY                                 TAG                 IMAGE ID            CREATED             SIZE
+k8s.gcr.io/kube-apiserver-amd64            v1.11.2             821507941e9c        3 weeks ago         187MB
+k8s.gcr.io/kube-controller-manager-amd64   v1.11.2             38521457c799        3 weeks ago         155MB
+k8s.gcr.io/kube-proxy-amd64                v1.11.2             46a3cd725628        3 weeks ago         97.8MB
+k8s.gcr.io/kube-scheduler-amd64            v1.11.2             37a1403e6c1a        3 weeks ago         56.8MB
+k8s.gcr.io/coredns                         1.1.3               b3b94275d97c        3 months ago        45.6MB
+k8s.gcr.io/etcd-amd64                      3.2.18              b8df3b177be2        4 months ago        219MB
+k8s.gcr.io/pause                           3.1                 da86e6ba6ca1        8 months ago        742kB
+```
 
 
 
-接下来继续执行
-kubeadm init   --pod-network-cidr=10.244.0.0/16
+上面一系列的问题解决之后，继续运行 init 过程 会出现下面的结果 
 
-出现了下面的错误
-
-unable to get URL "https://dl.k8s.io/release/stable-1.11.txt": Get https://storage.googleapis.com/kubernetes-release/release/stable-1.11.txt: dial tcp 216.58.220.208:443: i/o timeout
-
-解决方式 指定kubernetes的版本
-查看下面的地址 https://dl.k8s.io/release/stable-1.11.txt
-
-kubeadm init  --kubernetes-version=v1.11.2    --pod-network-cidr=10.244.0.0/16
-
-
-
-
-
-上面一系列的问题解决之后，继续运行会出现下面的结果 
-
-[root@master ~]# kubeadm init  --kubernetes-version=v1.11.2    --pod-network-cidr=10.244.0.0/16
+```shell
+[root@k8s-master ~]# kubeadm init  --kubernetes-version=v1.11.2 --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --ignore-preflight-errors=Swap  
 [init] using Kubernetes version: v1.11.2
 [preflight] running pre-flight checks
-I0826 16:14:06.074175    5430 kernel_validator.go:81] Validating kernel version
-I0826 16:14:06.074308    5430 kernel_validator.go:96] Validating kernel config
-        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.0-ce. Max validated version: 17.03
+I0829 22:40:10.083792    3785 kernel_validator.go:81] Validating kernel version
+I0829 22:40:10.084038    3785 kernel_validator.go:96] Validating kernel config
+        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.1-ce. Max validated version: 17.03
 [preflight/images] Pulling images required for setting up a Kubernetes cluster
 [preflight/images] This might take a minute or two, depending on the speed of your internet connection
 [preflight/images] You can also perform this action in beforehand using 'kubeadm config images pull'
@@ -263,16 +382,16 @@ I0826 16:14:06.074308    5430 kernel_validator.go:96] Validating kernel config
 [preflight] Activating the kubelet service
 [certificates] Generated ca certificate and key.
 [certificates] Generated apiserver certificate and key.
-[certificates] apiserver serving cert is signed for DNS names [master kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.0.31]
+[certificates] apiserver serving cert is signed for DNS names [k8s-master kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.0.39]
 [certificates] Generated apiserver-kubelet-client certificate and key.
 [certificates] Generated sa key and public key.
 [certificates] Generated front-proxy-ca certificate and key.
 [certificates] Generated front-proxy-client certificate and key.
 [certificates] Generated etcd/ca certificate and key.
 [certificates] Generated etcd/server certificate and key.
-[certificates] etcd/server serving cert is signed for DNS names [master localhost] and IPs [127.0.0.1 ::1]
+[certificates] etcd/server serving cert is signed for DNS names [k8s-master localhost] and IPs [127.0.0.1 ::1]
 [certificates] Generated etcd/peer certificate and key.
-[certificates] etcd/peer serving cert is signed for DNS names [master localhost] and IPs [192.168.0.31 127.0.0.1 ::1]
+[certificates] etcd/peer serving cert is signed for DNS names [k8s-master localhost] and IPs [192.168.0.39 127.0.0.1 ::1]
 [certificates] Generated etcd/healthcheck-client certificate and key.
 [certificates] Generated apiserver-etcd-client certificate and key.
 [certificates] valid certificates and keys now exist in "/etc/kubernetes/pki"
@@ -286,13 +405,13 @@ I0826 16:14:06.074308    5430 kernel_validator.go:96] Validating kernel config
 [etcd] Wrote Static Pod manifest for a local etcd instance to "/etc/kubernetes/manifests/etcd.yaml"
 [init] waiting for the kubelet to boot up the control plane as Static Pods from directory "/etc/kubernetes/manifests" 
 [init] this might take a minute or longer if the control plane images have to be pulled
-[apiclient] All control plane components are healthy after 59.505772 seconds
+[apiclient] All control plane components are healthy after 49.508501 seconds
 [uploadconfig] storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
 [kubelet] Creating a ConfigMap "kubelet-config-1.11" in namespace kube-system with the configuration for the kubelets in the cluster
-[markmaster] Marking the node master as master by adding the label "node-role.kubernetes.io/master=''"
-[markmaster] Marking the node master as master by adding the taints [node-role.kubernetes.io/master:NoSchedule]
-[patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "master" as an annotation
-[bootstraptoken] using token: y81338.mln8aoc6mfmqsakb
+[markmaster] Marking the node k8s-master as master by adding the label "node-role.kubernetes.io/master=''"
+[markmaster] Marking the node k8s-master as master by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+[patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "k8s-master" as an annotation
+[bootstraptoken] using token: fw3j8a.ynw60celvzihylou
 [bootstraptoken] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
 [bootstraptoken] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
 [bootstraptoken] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
@@ -315,14 +434,83 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 You can now join any number of machines by running the following on each node
 as root:
 
-  kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
+  kubeadm join 192.168.0.39:6443 --token fw3j8a.ynw60celvzihylou --discovery-token-ca-cert-hash sha256:700ce85cde3a8cae39c4c957269090f20062ed5b397d214f261b33ef68404145
+
+```
+至此 kubernetes 集群的 master 已经初始化完成
 
 
 
-master 已经初始化完成
+
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 如果是普通用户的话，我们需要怎样做。
 现在我们是root用户，可以直接执行 export KUBECONFIG=/etc/kubernetes/admin.conf。
+
+
+kubectl  get cs 
+查看集群 组件的状态 
+
+可以通过 kubectl get --help 
+
+
+
+notready 是因为 还没有安装flannel 
+
+
+可以去github 上 找到flannel 
+
+
+
+
+
+因为我们选择的是flannel 网络,所以，我们还需要安装flannel。
+
+在master节点上安装
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+
+
+
+[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.extensions/kube-flannel-ds-amd64 created
+daemonset.extensions/kube-flannel-ds-arm64 created
+daemonset.extensions/kube-flannel-ds-arm created
+daemonset.extensions/kube-flannel-ds-ppc64le created
+daemonset.extensions/kube-flannel-ds-s390x created
+[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+clusterrole.rbac.authorization.k8s.io/flannel configured
+clusterrolebinding.rbac.authorization.k8s.io/flannel configured
+serviceaccount/flannel unchanged
+configmap/kube-flannel-cfg unchanged
+daemonset.extensions/kube-flannel-ds created
+
+docke images 可以看到已经创建了flannel 的容器
+
+
+
+
+需要通过 kubectl get pods  -n kube-system -o wide
+
+
 
 
 将其他的节点加入到 集群中去
@@ -378,31 +566,8 @@ master    NotReady   master    9m        v1.11.2
 
 
 
-因为我们选择的是flannel 网络,所以，我们还需要安装flannel。
-
-在master节点上安装
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
-
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
 
 
-
-[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
-clusterrole.rbac.authorization.k8s.io/flannel created
-clusterrolebinding.rbac.authorization.k8s.io/flannel created
-serviceaccount/flannel created
-configmap/kube-flannel-cfg created
-daemonset.extensions/kube-flannel-ds-amd64 created
-daemonset.extensions/kube-flannel-ds-arm64 created
-daemonset.extensions/kube-flannel-ds-arm created
-daemonset.extensions/kube-flannel-ds-ppc64le created
-daemonset.extensions/kube-flannel-ds-s390x created
-[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
-clusterrole.rbac.authorization.k8s.io/flannel configured
-clusterrolebinding.rbac.authorization.k8s.io/flannel configured
-serviceaccount/flannel unchanged
-configmap/kube-flannel-cfg unchanged
-daemonset.extensions/kube-flannel-ds created
 
 
 
