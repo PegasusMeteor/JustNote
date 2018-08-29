@@ -1,0 +1,516 @@
+1.11 版本 安装实践记录
+
+
+
+如果要发表文章的话，建议发表到kubernetes社区里里面吧。
+
+这个安装过程，至少得操作个两三遍吧，做到熟练掌握。
+最好在安装的过程中，掌握每一个环节的作用。以及k8s中各个组件的作用。
+
+
+
+需要描述一下 master，以及nodes 节点的基本情况。
+
+
+
+
+
+
+
+
+1、关闭防火墙
+
+2、关闭selinux
+
+3、给master 和node 添加主机名解析，确保通过主机名能够访问到
+172.20.10.2 k8s-1
+172.20.10.3 k8s-2
+172.20.10.5 k8s-3
+172.20.10.4 master
+
+
+
+4、确保时间同步
+
+生产中一定要有时间服务器
+
+
+
+timedatectl set-timezone Asia/Shanghai & systemctl restart chronyd.service
+
+
+
+软件版本是截止笔者操作的时间版本
+
+
+
+
+
+5、 在每个节点上部署docker
+
+使用阿里云的docker-ce
+
+https://mirrors.aliyun.com/docker-ce/linux/centos/
+
+
+
+版本信息
+
+Client:
+ Version:           18.06.0-ce
+ API version:       1.38
+ Go version:        go1.10.3
+ Git commit:        0ffa825
+ Built:             Wed Jul 18 19:08:18 2018
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          18.06.0-ce
+  API version:      1.38 (minimum version 1.12)
+  Go version:       go1.10.3
+  Git commit:       0ffa825
+  Built:            Wed Jul 18 19:10:42 2018
+  OS/Arch:          linux/amd64
+  Experimental:     false
+
+
+
+
+如果 k8s 运行在物理机上的话，master节点是不需要部署docker的。
+
+yum install docker-ce -y
+
+还需要配置 EPEL源，以及extras 
+
+可以调查一下这里需要那些依赖。
+
+
+
+
+docker 加速 需要注册阿里云 开发者平台
+介绍一下阿里云的加速设置
+
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://vbbcsxj5.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+{
+  "registry-mirrors": ["https://vbbcsxj5.mirror.aliyuncs.com"]
+}
+
+
+配置开机启动，并启动docker 
+
+
+systemctl start docker & systemctl enable docker
+
+
+
+
+
+
+
+
+k8s 安装
+  官方介绍
+  使用kubeadm 安装集群的方式
+  https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl
+
+
+
+
+  kubernetes rom repo:
+
+  官方站点
+
+    https://kubernetes.io/docs/setup/independent/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl
+
+  可以制作repo
+
+  
+  然后 阿里云 也有 yum的 路径
+
+  https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+
+
+]# yum info kubelet
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.aliyun.com
+ * extras: mirrors.aliyun.com
+ * updates: mirrors.aliyun.com
+Available Packages
+Name        : kubelet
+Arch        : x86_64
+Version     : 1.11.2
+Release     : 0
+Size        : 18 M
+Repo        : name
+Summary     : Container cluster management
+URL         : https://kubernetes.io
+License     : ASL 2.0
+Description : The node agent of Kubernetes, the container cluster manager.
+
+
+
+k8s 在github 上有托管站点
+
+
+yum install kubeadm
+
+master 上安装 kubeadm
+
+其他节点主机上安装kubeadm 和kubelet
+
+ yum install kubeadm kubelet
+
+yum install kubelet 
+
+
+
+rpm -ql kubeadm
+
+
+修改 kubeadm 的dgrou-driver  
+修改为与安装的docker一致
+最新版本的kubenetes 已经发生了变化，会自动根据docker中运行的cgroup-driver进行配置变更，这个在官方网站上已经介绍了。
+
+
+近用 swap ，官方建议禁用
+
+
+
+
+选择了flannel 网络 
+
+kubeadm init  --pod-network-cidr=10.244.0.0/16
+
+这个过程出现错误
+
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-apiserver-amd64:v1.11.2]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-controller-manager-amd64:v1.11.2]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-scheduler-amd64:v1.11.2]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/kube-proxy-amd64:v1.11.2]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/pause:3.1]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/etcd-amd64:3.2.18]: exit status 1
+        [ERROR ImagePull]: failed to pull image [k8s.gcr.io/coredns:1.1.3]: exit status 1
+
+这是由于国内网络环境，不能访问国外的地址
+
+解决方法 是去阿里云 下载相关镜像，然后再使用docker tag 修改
+
+
+阿里云镜像地址 
+https://dev.aliyun.com/list.html?namePrefix=ks
+
+
+注意下载的版本，应该与要求的版本一致
+
+docker pull registry.cn-beijing.aliyuncs.com/acs/kube-apiserver-amd64:v1.11.2
+docker pull registry.cn-beijing.aliyuncs.com/acs/kube-controller-manager-amd64:v1.11.2
+docker pull registry.cn-beijing.aliyuncs.com/acs/kube-scheduler-amd64:v1.11.2
+docker pull registry.cn-beijing.aliyuncs.com/acs/kube-proxy-amd64:v1.11.2
+docker pull registry.cn-beijing.aliyuncs.com/acs/pause:3.1
+docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/etcd-amd64:3.2.18
+docker pull registry.cn-beijing.aliyuncs.com/acs/coredns:1.1.3
+
+docker tag  821507941e9c  k8s.gcr.io/kube-apiserver-amd64:v1.11.2
+docker tag  38521457c799  k8s.gcr.io/kube-controller-manager-amd64:v1.11.2
+docker tag  37a1403e6c1a  k8s.gcr.io/kube-scheduler-amd64:v1.11.2
+docker tag  46a3cd725628  k8s.gcr.io/kube-proxy-amd64:v1.11.2
+docker tag  da86e6ba6ca1  k8s.gcr.io/pause:3.1
+docker tag  b8df3b177be2  k8s.gcr.io/etcd-amd64:3.2.18
+docker tag  b3b94275d97c  k8s.gcr.io/coredns:1.1.3
+
+
+
+接下来继续执行
+kubeadm init   --pod-network-cidr=10.244.0.0/16
+
+出现了下面的错误
+
+unable to get URL "https://dl.k8s.io/release/stable-1.11.txt": Get https://storage.googleapis.com/kubernetes-release/release/stable-1.11.txt: dial tcp 216.58.220.208:443: i/o timeout
+
+解决方式 指定kubernetes的版本
+查看下面的地址 https://dl.k8s.io/release/stable-1.11.txt
+
+kubeadm init  --kubernetes-version=v1.11.2    --pod-network-cidr=10.244.0.0/16
+
+
+
+
+
+上面一系列的问题解决之后，继续运行会出现下面的结果 
+
+[root@master ~]# kubeadm init  --kubernetes-version=v1.11.2    --pod-network-cidr=10.244.0.0/16
+[init] using Kubernetes version: v1.11.2
+[preflight] running pre-flight checks
+I0826 16:14:06.074175    5430 kernel_validator.go:81] Validating kernel version
+I0826 16:14:06.074308    5430 kernel_validator.go:96] Validating kernel config
+        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.0-ce. Max validated version: 17.03
+[preflight/images] Pulling images required for setting up a Kubernetes cluster
+[preflight/images] This might take a minute or two, depending on the speed of your internet connection
+[preflight/images] You can also perform this action in beforehand using 'kubeadm config images pull'
+[kubelet] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[preflight] Activating the kubelet service
+[certificates] Generated ca certificate and key.
+[certificates] Generated apiserver certificate and key.
+[certificates] apiserver serving cert is signed for DNS names [master kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.0.31]
+[certificates] Generated apiserver-kubelet-client certificate and key.
+[certificates] Generated sa key and public key.
+[certificates] Generated front-proxy-ca certificate and key.
+[certificates] Generated front-proxy-client certificate and key.
+[certificates] Generated etcd/ca certificate and key.
+[certificates] Generated etcd/server certificate and key.
+[certificates] etcd/server serving cert is signed for DNS names [master localhost] and IPs [127.0.0.1 ::1]
+[certificates] Generated etcd/peer certificate and key.
+[certificates] etcd/peer serving cert is signed for DNS names [master localhost] and IPs [192.168.0.31 127.0.0.1 ::1]
+[certificates] Generated etcd/healthcheck-client certificate and key.
+[certificates] Generated apiserver-etcd-client certificate and key.
+[certificates] valid certificates and keys now exist in "/etc/kubernetes/pki"
+[kubeconfig] Wrote KubeConfig file to disk: "/etc/kubernetes/admin.conf"
+[kubeconfig] Wrote KubeConfig file to disk: "/etc/kubernetes/kubelet.conf"
+[kubeconfig] Wrote KubeConfig file to disk: "/etc/kubernetes/controller-manager.conf"
+[kubeconfig] Wrote KubeConfig file to disk: "/etc/kubernetes/scheduler.conf"
+[controlplane] wrote Static Pod manifest for component kube-apiserver to "/etc/kubernetes/manifests/kube-apiserver.yaml"
+[controlplane] wrote Static Pod manifest for component kube-controller-manager to "/etc/kubernetes/manifests/kube-controller-manager.yaml"
+[controlplane] wrote Static Pod manifest for component kube-scheduler to "/etc/kubernetes/manifests/kube-scheduler.yaml"
+[etcd] Wrote Static Pod manifest for a local etcd instance to "/etc/kubernetes/manifests/etcd.yaml"
+[init] waiting for the kubelet to boot up the control plane as Static Pods from directory "/etc/kubernetes/manifests" 
+[init] this might take a minute or longer if the control plane images have to be pulled
+[apiclient] All control plane components are healthy after 59.505772 seconds
+[uploadconfig] storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config-1.11" in namespace kube-system with the configuration for the kubelets in the cluster
+[markmaster] Marking the node master as master by adding the label "node-role.kubernetes.io/master=''"
+[markmaster] Marking the node master as master by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+[patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "master" as an annotation
+[bootstraptoken] using token: y81338.mln8aoc6mfmqsakb
+[bootstraptoken] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstraptoken] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstraptoken] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstraptoken] creating the "cluster-info" ConfigMap in the "kube-public" namespace
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes master has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
+
+
+
+master 已经初始化完成
+
+如果是普通用户的话，我们需要怎样做。
+现在我们是root用户，可以直接执行 export KUBECONFIG=/etc/kubernetes/admin.conf。
+
+
+将其他的节点加入到 集群中去
+
+
+
+
+kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
+
+出现了下面这样的错误
+
+[root@k8s-1 ~]#  kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
+[preflight] running pre-flight checks
+        [WARNING RequiredIPVSKernelModulesAvailable]: the IPVS proxier will not be used, because the following required kernel modules are not loaded: [ip_vs_sh ip_vs ip_vs_rr ip_vs_wrr] or no builtin kernel ipvs support: map[ip_vs:{} ip_vs_rr:{} ip_vs_wrr:{} ip_vs_sh:{} nf_conntrack_ipv4:{}]
+you can solve this problem with following methods:
+ 1. Run 'modprobe -- ' to load missing kernel modules;
+2. Provide the missing builtin kernel ipvs support
+
+I0826 16:20:47.902392    5304 kernel_validator.go:81] Validating kernel version
+I0826 16:20:47.902569    5304 kernel_validator.go:96] Validating kernel config
+        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.0-ce. Max validated version: 17.03
+[preflight] Some fatal errors occurred:
+        [ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1
+
+
+解决办法
+
+
+sysctl net.bridge.bridge-nf-call-iptables=1
+
+再执行上面的命令 
+
+显示 
+
+
+This node has joined the cluster:
+* Certificate signing request was sent to master and a response
+  was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the master to see this node join the cluster.
+
+
+
+全部节点加入完成之后，可以在master节点上查看集群节点
+
+[root@master ~]# kubectl get nodes
+NAME      STATUS     ROLES     AGE       VERSION
+k8s-1     NotReady   <none>    1m        v1.11.2
+k8s-2     NotReady   <none>    20s       v1.11.2
+k8s-3     NotReady   <none>    13s       v1.11.2
+master    NotReady   master    9m        v1.11.2
+
+
+
+因为我们选择的是flannel 网络,所以，我们还需要安装flannel。
+
+在master节点上安装
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+
+
+
+[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.extensions/kube-flannel-ds-amd64 created
+daemonset.extensions/kube-flannel-ds-arm64 created
+daemonset.extensions/kube-flannel-ds-arm created
+daemonset.extensions/kube-flannel-ds-ppc64le created
+daemonset.extensions/kube-flannel-ds-s390x created
+[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+clusterrole.rbac.authorization.k8s.io/flannel configured
+clusterrolebinding.rbac.authorization.k8s.io/flannel configured
+serviceaccount/flannel unchanged
+configmap/kube-flannel-cfg unchanged
+daemonset.extensions/kube-flannel-ds created
+
+
+
+
+
+
+
+
+
+
+因为安装到上面那个过程的之后，后面的内容还没有了解，所以就先进行了安装Dashboard的操作。
+
+https://github.com/kubernetes/dashboard
+
+
+安装Dashboard
+
+
+[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+secret/kubernetes-dashboard-certs created
+serviceaccount/kubernetes-dashboard created
+role.rbac.authorization.k8s.io/kubernetes-dashboard-minimal created
+rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard-minimal created
+deployment.apps/kubernetes-dashboard created
+service/kubernetes-dashboard created
+
+
+想要访问就可以执行下面的命令
+
+kubectl proxy
+
+接下来就可以在本机进行访问了。
+
+
+如果想要从其他主机进行访问的话
+
+https://github.com/kubernetes/dashboard/wiki/Accessing-Dashboard---1.7.X-and-above
+
+kubectl -n kube-system edit service kubernetes-dashboard
+
+将type: ClusterIP 改成 type: NodePort
+
+kubectl -n kube-system get service kubernetes-dashboard
+
+端口就被映射到 
+
+[root@master ~]# kubectl -n kube-system get service kubernetes-dashboard
+NAME                   TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)         AGE
+kubernetes-dashboard   NodePort   10.108.22.254   <none>        443:31625/TCP   9m
+
+
+这时通过  https://<master-ip>:31625 来进行访问了。
+
+<master-ip> 可以通过下面的命令来获取  kubectl cluster-info
+
+[root@master ~]# kubectl cluster-info
+Kubernetes master is running at https://192.168.0.31:6443
+KubeDNS is running at https://192.168.0.31:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+
+
+
+之前浏览器访问不到，是因为使用了浏览器代理。
+
+
+注: 在这里遇到了一个错误
+master 节点的 IP  没了，网络故障，恢复不了。
+
+把所有的节点也关闭了之后，ip就恢复了。原因我也不清楚。
+
+
+重启所有节点之后，输入 kubectl get nodes 命令出现了下面的情况
+
+The connection to the server localhost:8080 was refused - did you specify the right host or port?
+
+解决方式： 因为之前，设置了环境变量，重启之后，环境变量消失，所以会出现上述情况。
+重新执行一下这个命令，或者将这个命令写入到 profile 中
+
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+
+
+
+dashboard 没有安装成功
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

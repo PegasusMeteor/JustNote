@@ -35,4 +35,4 @@
       * [使用kubeadm创建高可用集群](kubernetes/install/V1.11/high-availability.md)
       * [用kubeadm建立一个高可用的etcd集群](kubernetes/install/V1.11/setup-ha-etcd-with-kubeadm.md)
       * [kubeadm故障排除](kubernetes/install/V1.11/troubleshooting-kubeadm.md)
-  * [test2]()
+    * [kubernetes V1.11 安装实践](kubernetes/install/k8s-install-v1.11.md)
