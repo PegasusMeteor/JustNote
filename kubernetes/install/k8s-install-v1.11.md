@@ -19,9 +19,6 @@
 
 ![实验网络图](http://ot2trm1s2.bkt.clouddn.com/k8s/k8s-install-v1.11/k8s-env-network.jpg) 
 
-<center>
-<img src='http://ot2trm1s2.bkt.clouddn.com/k8s/k8s-install-v1.11/k8s-env-network.jpg' width='800px'/>
-</center>
 
 ### 实验环境准备
 1.  关闭防火墙或者iptables  
@@ -311,7 +308,11 @@ I0829 22:23:08.443829    3209 kernel_validator.go:96] Validating kernel config
 [preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
 ```
 
-这是由于国内网络环境，不能访问国外的地址导致需要的镜像下载不了。解决方法 是去阿里云下载相关镜像，然后再使用docker tag 修改。
+这是由于国内网络环境，不能访问国外的地址导致需要的镜像下载不了。  
+
+这里的解决方式有两种：
+
+**第一种是去阿里云下载相关镜像，然后再使用docker tag 修改**。
 
 
 阿里云镜像地址 
@@ -368,6 +369,33 @@ k8s.gcr.io/coredns                         1.1.3               b3b94275d97c     
 k8s.gcr.io/etcd-amd64                      3.2.18              b8df3b177be2        4 months ago        219MB
 k8s.gcr.io/pause                           3.1                 da86e6ba6ca1        8 months ago        742kB
 ```
+
+**第二种是修改docker的配置，使用http代理**  
+
+第一种方式是可以解决掉镜像下载的问题的，但是，如果集群中有众多的节点，而每个节点都需要这样进行操作的话，免不了耗费大量的时间，因此，推荐使用第二种http代理的方式。  
+
+编辑docker的服务文件`/usr/lib/systemd/system/docker.service`，在其中 Service 部分 加入下面这样两个`Environment`环境变量，然后重启docker.  
+
+```shell
+[Service]
+Type=notify
+# the default is not to use systemd for cgroups because the delegate issues still
+# exists and systemd currently does not support the cgroup feature set required
+# for containers run by docker
+Environment="HTTPS_PROXY=http://www.ik8s.io:10080"
+Environment="NO_PROXY=127.0.0.1/8,182.168.0.0/16"
+ExecStart=/usr/bin/dockerd
+ExecReload=/bin/kill -s HUP $MAINPID
+```  
+
+因为修改了system文件，需要重新reload服务，并重启docker.
+
+```shell
+systemctl daemon-reload
+systemctl restart docker
+```
+
+这样，就能够正常的从网络中下载我们所需要的镜像文件了。  
 
 
 
@@ -445,54 +473,53 @@ as root:
 ```
 至此 kubernetes 集群的 master 已经初始化完成
 
+在 `init` 命令执行成功之后，命令行会提示接下来应该怎样操作。  
+
+### 创建配置文件  
+
+为了实验方便，我们直接直接使用root来进行操作。
+
+```shell
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```    
+
+执行此操作之后，就可以使用 `kubectl` 命令了.例如,查看master节点上的组件状态：
+
+```shell
+[root@k8s-master ~]# kubectl get cs                
+NAME                 STATUS    MESSAGE              ERROR
+controller-manager   Healthy   ok                   
+scheduler            Healthy   ok                   
+etcd-0               Healthy   {"health": "true"} 
+```    
+
+查看集群中现有节点以及其状态：
+
+```shell
+[root@k8s-master ~]# kubectl  get nodes
+NAME         STATUS     ROLES     AGE       VERSION
+k8s-master   NotReady   master    22h       v1.11.2  
+
+```
+
+集群中只有一个节点是因为其他的节点还没有join到集群中去。 `NotReady` 是因为我们的 `Pod Network` 还没有安装。也就是flannel 还没有安装。  
 
 
+### 安装flannel  
+flannel 本身也是一个开源项目。可以到github的站点上，去查看如何部署flannel。[https://github.com/coreos/flannel](https://github.com/coreos/flannel)    
 
+执行下面的命令  
 
--------------------------------------------------------------------------------
+```shell
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml 
+```  
 
+当输出下面的命令的内容的时候，并不代表已经安装成功，相反我们需要等待flannel 安装完成。  
 
-
-
-
-
-
-
-
-
-
-
-
-如果是普通用户的话，我们需要怎样做。
-现在我们是root用户，可以直接执行 export KUBECONFIG=/etc/kubernetes/admin.conf。
-
-
-kubectl  get cs 
-查看集群 组件的状态 
-
-可以通过 kubectl get --help 
-
-
-
-notready 是因为 还没有安装flannel 
-
-
-可以去github 上 找到flannel 
-
-
-
-
-
-因为我们选择的是flannel 网络,所以，我们还需要安装flannel。
-
-在master节点上安装
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
-
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
-
-
-
-[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/c5d10c8/Documentation/kube-flannel.yml
+```shell
+[root@k8s-master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 clusterrole.rbac.authorization.k8s.io/flannel created
 clusterrolebinding.rbac.authorization.k8s.io/flannel created
 serviceaccount/flannel created
@@ -502,182 +529,108 @@ daemonset.extensions/kube-flannel-ds-arm64 created
 daemonset.extensions/kube-flannel-ds-arm created
 daemonset.extensions/kube-flannel-ds-ppc64le created
 daemonset.extensions/kube-flannel-ds-s390x created
-[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
-clusterrole.rbac.authorization.k8s.io/flannel configured
-clusterrolebinding.rbac.authorization.k8s.io/flannel configured
-serviceaccount/flannel unchanged
-configmap/kube-flannel-cfg unchanged
-daemonset.extensions/kube-flannel-ds created
+```    
 
-docke images 可以看到已经创建了flannel 的容器
-
-
-
-
-需要通过 kubectl get pods  -n kube-system -o wide
-
-
-
-
-将其他的节点加入到 集群中去
+过一段时间之后，可以通过 ` docker image ls `,`kubectl get pods  -n kube-system -o wide` 命令查看是否 flannel 已经安装成功。  
+```shell  
+[root@k8s-master ~]# docker image ls
+REPOSITORY                                 TAG                 IMAGE ID            CREATED             SIZE
+k8s.gcr.io/kube-apiserver-amd64            v1.11.2             821507941e9c        3 weeks ago         187MB
+k8s.gcr.io/kube-controller-manager-amd64   v1.11.2             38521457c799        3 weeks ago         155MB
+k8s.gcr.io/kube-proxy-amd64                v1.11.2             46a3cd725628        3 weeks ago         97.8MB
+k8s.gcr.io/kube-scheduler-amd64            v1.11.2             37a1403e6c1a        3 weeks ago         56.8MB
+k8s.gcr.io/coredns                         1.1.3               b3b94275d97c        3 months ago        45.6MB
+k8s.gcr.io/etcd-amd64                      3.2.18              b8df3b177be2        4 months ago        219MB
+quay.io/coreos/flannel                     v0.10.0-amd64       f0fad859c909        7 months ago        44.6MB
+k8s.gcr.io/pause                           3.1                 da86e6ba6ca1        8 months ago        742kB  
 
 
 
+[root@k8s-master ~]# kubectl get pods  -n kube-system -o wide
+NAME                                 READY     STATUS    RESTARTS   AGE       IP             NODE         NOMINATED NODE
+coredns-78fcdf6894-khlkd             1/1       Running   0          23h       10.244.0.3     k8s-master   <none>
+coredns-78fcdf6894-qqrnc             1/1       Running   0          23h       10.244.0.2     k8s-master   <none>
+etcd-k8s-master                      1/1       Running   0          1m        192.168.0.39   k8s-master   <none>
+kube-apiserver-k8s-master            1/1       Running   0          1m        192.168.0.39   k8s-master   <none>
+kube-controller-manager-k8s-master   1/1       Running   0          1m        192.168.0.39   k8s-master   <none>
+kube-flannel-ds-amd64-pwnmc          1/1       Running   0          5m        192.168.0.39   k8s-master   <none>
+kube-proxy-bh54w                     1/1       Running   0          23h       192.168.0.39   k8s-master   <none>
+kube-scheduler-k8s-master            1/1       Running   0          1m        192.168.0.39   k8s-master   <none>
+```  
 
-kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
+可以看到，已经多了一个`quay.io/coreos/flannel`的 flannel容器和一个`kube-flannel-ds-amd64-pwnmc` 的pod 资源。此时再使用 `kubectl  get pods`来查看集群状态，就会发现,原来的NotReady已经切换成了Ready。  
 
-出现了下面这样的错误
+```shell
+[root@k8s-master ~]# kubectl get nodes
+NAME         STATUS    ROLES     AGE       VERSION
+k8s-master   Ready     master    23h       v1.11.2
+```  
 
-[root@k8s-1 ~]#  kubeadm join 192.168.0.31:6443 --token y81338.mln8aoc6mfmqsakb --discovery-token-ca-cert-hash sha256:421b71c1726719f12b5c47a1488bdb484428f55a1465260e70194b7cc52310c8
-[preflight] running pre-flight checks
-        [WARNING RequiredIPVSKernelModulesAvailable]: the IPVS proxier will not be used, because the following required kernel modules are not loaded: [ip_vs_sh ip_vs ip_vs_rr ip_vs_wrr] or no builtin kernel ipvs support: map[ip_vs:{} ip_vs_rr:{} ip_vs_wrr:{} ip_vs_sh:{} nf_conntrack_ipv4:{}]
-you can solve this problem with following methods:
- 1. Run 'modprobe -- ' to load missing kernel modules;
-2. Provide the missing builtin kernel ipvs support
+### 其他节点加入到集群中
 
-I0826 16:20:47.902392    5304 kernel_validator.go:81] Validating kernel version
-I0826 16:20:47.902569    5304 kernel_validator.go:96] Validating kernel config
-        [WARNING SystemVerification]: docker version is greater than the most recently validated version. Docker version: 18.06.0-ce. Max validated version: 17.03
-[preflight] Some fatal errors occurred:
-        [ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1
+在其他节点中执行下面的加入到集群中的命令，需要手动指定忽略 swap 错误。  
 
+```shell
+kubeadm join 192.168.0.39:6443 --token fw3j8a.ynw60celvzihylou --discovery-token-ca-cert-hash sha256:700ce85cde3a8cae39c4c957269090f20062ed5b397d214f261b33ef68404145 --ignore-preflight-errors=Swap 
+```  
 
-解决办法
+执行成功之后会输出下面的内容 。
 
-
-sysctl net.bridge.bridge-nf-call-iptables=1
-
-再执行上面的命令 
-
-显示 
-
-
+```shell 
+..........
 This node has joined the cluster:
 * Certificate signing request was sent to master and a response
   was received.
 * The Kubelet was informed of the new secure connection details.
 
 Run 'kubectl get nodes' on the master to see this node join the cluster.
+```  
+此时在master节点上执行`kubectl get nodes`命令就可以查看 目前集群的状态。此时nodes 节点上docker 需要去网络上下载相应的镜像文件，所以需要稍等一下。如果前面使用了第一种方式去下载docker镜像的话，这里三个节点也需要手动去下载镜像，需要下载下面这些镜像。  
 
-
+```shell
+ ~]# docker images 
+REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
+k8s.gcr.io/kube-proxy-amd64   v1.11.2             46a3cd725628        3 weeks ago         97.8MB
+quay.io/coreos/flannel        v0.10.0-amd64       f0fad859c909        7 months ago        44.6MB
+k8s.gcr.io/pause              3.1                 da86e6ba6ca1        8 months ago        742kB  
+```
 
 全部节点加入完成之后，可以在master节点上查看集群节点
 
-[root@master ~]# kubectl get nodes
-NAME      STATUS     ROLES     AGE       VERSION
-k8s-1     NotReady   <none>    1m        v1.11.2
-k8s-2     NotReady   <none>    20s       v1.11.2
-k8s-3     NotReady   <none>    13s       v1.11.2
-master    NotReady   master    9m        v1.11.2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-因为安装到上面那个过程的之后，后面的内容还没有了解，所以就先进行了安装Dashboard的操作。
-
-https://github.com/kubernetes/dashboard
-
-
-安装Dashboard
-
-
-[root@master ~]# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-secret/kubernetes-dashboard-certs created
-serviceaccount/kubernetes-dashboard created
-role.rbac.authorization.k8s.io/kubernetes-dashboard-minimal created
-rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard-minimal created
-deployment.apps/kubernetes-dashboard created
-service/kubernetes-dashboard created
-
-
-想要访问就可以执行下面的命令
-
-kubectl proxy
-
-接下来就可以在本机进行访问了。
-
-
-如果想要从其他主机进行访问的话
-
-https://github.com/kubernetes/dashboard/wiki/Accessing-Dashboard---1.7.X-and-above
-
-kubectl -n kube-system edit service kubernetes-dashboard
-
-将type: ClusterIP 改成 type: NodePort
-
-kubectl -n kube-system get service kubernetes-dashboard
-
-端口就被映射到 
-
-[root@master ~]# kubectl -n kube-system get service kubernetes-dashboard
-NAME                   TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)         AGE
-kubernetes-dashboard   NodePort   10.108.22.254   <none>        443:31625/TCP   9m
-
-
-这时通过  https://<master-ip>:31625 来进行访问了。
-
-<master-ip> 可以通过下面的命令来获取  kubectl cluster-info
-
-[root@master ~]# kubectl cluster-info
-Kubernetes master is running at https://192.168.0.31:6443
-KubeDNS is running at https://192.168.0.31:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-
-
-
-
-之前浏览器访问不到，是因为使用了浏览器代理。
-
-
-注: 在这里遇到了一个错误
-master 节点的 IP  没了，网络故障，恢复不了。
-
-把所有的节点也关闭了之后，ip就恢复了。原因我也不清楚。
-
-
-重启所有节点之后，输入 kubectl get nodes 命令出现了下面的情况
-
-The connection to the server localhost:8080 was refused - did you specify the right host or port?
-
-解决方式： 因为之前，设置了环境变量，重启之后，环境变量消失，所以会出现上述情况。
-重新执行一下这个命令，或者将这个命令写入到 profile 中
-
-export KUBECONFIG=/etc/kubernetes/admin.conf
-
-
-
-
-dashboard 没有安装成功
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```shell
+[root@k8s-master ~]# kubectl get nodes
+NAME         STATUS    ROLES     AGE       VERSION
+k8s-master   Ready     master    23h       v1.11.2
+k8s-node1    Ready     <none>    28m       v1.11.2
+k8s-node2    Ready     <none>    27m       v1.11.2
+k8s-node3    Ready     <none>    27m       v1.11.2
+```  
+
+此时，再查看一下pod的运行状况 
+
+```shell
+[root@k8s-master ~]# kubectl get pods -n kube-system
+NAME                                 READY     STATUS    RESTARTS   AGE
+coredns-78fcdf6894-khlkd             1/1       Running   1          23h
+coredns-78fcdf6894-qqrnc             1/1       Running   1          23h
+etcd-k8s-master                      1/1       Running   1          42m
+kube-apiserver-k8s-master            1/1       Running   1          42m
+kube-controller-manager-k8s-master   1/1       Running   1          42m
+kube-flannel-ds-amd64-9b4zg          1/1       Running   0          28m
+kube-flannel-ds-amd64-jd24m          1/1       Running   3          28m
+kube-flannel-ds-amd64-pwnmc          1/1       Running   2          46m
+kube-flannel-ds-amd64-zk7xj          1/1       Running   0          29m
+kube-proxy-49gz8                     1/1       Running   0          28m
+kube-proxy-bh54w                     1/1       Running   1          23h
+kube-proxy-m4gcz                     1/1       Running   0          29m
+kube-proxy-x6p74                     1/1       Running   0          28m
+kube-scheduler-k8s-master            1/1       Running   1          42m  
+```
+
+通过分析上面pod的运行状况我们可以发现正在运行的所有pod节点中一共有4个flannel以及4个proxy.这就表明，每个节点上都会安装。而其他的应该都安装了master节点上。   
+
+**至此，基于V1.11 版本的kubernetes集群搭建就完成了。**   
+-------------------------------------------------------------------------------------- 
 
 
 
