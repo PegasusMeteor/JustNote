@@ -246,7 +246,7 @@ yum install kubeadm kubelet docker-ce
 
 ### Docker 加速 
 
-为了后面实验能够顺利进行，这里对Docker 配置一下加速。使用的是阿里云的加速配置。   
+为了后面实验能够顺利进行，这里对Docker 配置一下加速。使用的是阿里云的加速配置,阿里云的加速，对每个用户而言是不一样的。   
 
 ```shell
 sudo mkdir -p /etc/docker
