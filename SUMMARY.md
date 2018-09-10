@@ -31,7 +31,7 @@
   * [Docker私有Registry](docker/private-registry.md)
   * [Docker资源限制以及验证](docker/resource-limited.md)
   * [Docker开发(golang)](docker/dev-golang/readme.md)
-    * [golang template 格式化docker输出](docker/)
+    * [golang template 格式化docker输出]()
 
 * [Kubernetes](kubernetes/readme.md)
   * [V1.11](kubernetes/V1.11/readme.md)
