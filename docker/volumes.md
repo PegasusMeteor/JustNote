@@ -60,26 +60,32 @@ docker 有两种类型的卷，每种类型都在容器中存在一个挂载点�
 
 Docker run 命令使用-v 选项即可使用volumes
 - Docker-managed volume 
-        ~]# docker run -it --name volume-test1 -v /data busybox
-        ~]# docker inspect -f {{.Mounts}}  volume-test1
-
-- Bind-mount Volume
-        ~]# docker run -it -v HOSTDIR:VOLUMEDIR --name volume-test2 busybox
-        ~]# docker inspect -f {{.Mounts}}  volume-test2
-
+```shell
+    ~]# docker run -it --name volume-test1 -v /data busybox
+    ~]# docker inspect -f {{.Mounts}}  volume-test1
+```
+- Bind-mount Volume  
+```shell
+     ~]# docker run -it -v HOSTDIR:VOLUMEDIR --name volume-test2 busybox
+    ~]# docker inspect -f {{.Mounts}}  volume-test2
+```
 
 # 复制其他容器的存储卷设置(共享存储卷)
 
 Docker 支持在启动一个容器的时候直接复制其他的容器的存储卷设置。
 - 多个容器的卷使用同一个主机目录,例如
 
-         ~]# docker run -it -v /docker/volume-test1:/data --name volume-test1 busybox
-         ~]# docker run -it -v /docker/volume-test1:/data --name volume-test2 busybox
+```shell
+    ~]# docker run -it -v /docker/volume-test1:/data --name volume-test1 busybox
+    ~]# docker run -it -v /docker/volume-test1:/data --name volume-test2 busybox
+```
 
 - 复制使用其他容器的卷,为docker run 命令使用 --volumes-from 选项
 
-        ~]# docker run -it -v /docker/volume-test1:/data --name volume-test1 busybox
-        ~]# docker run -it --name volume-test2 --volumes-from  volume-test1 busybox
+```shell
+    ~]# docker run -it -v /docker/volume-test1:/data --name volume-test1 busybox
+    ~]# docker run -it --name volume-test2 --volumes-from  volume-test1 busybox
+```
 
 
 ![docker share volumes][http://ot2trm1s2.bkt.clouddn.com/docker/dcoker-share-volumes.png]()
