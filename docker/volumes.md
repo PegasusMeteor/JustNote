@@ -62,12 +62,12 @@ Docker run 命令使用-v 选项即可使用volumes
 - Docker-managed volume 
 ```shell
     ~]# docker run -it --name volume-test1 -v /data busybox
-    ~]# docker inspect -f {{.Mounts}}  volume-test1
+    ~]# docker inspect -f \lbrace\lbrace.Mounts\rbrace\rbrace  volume-test1
 ```
 - Bind-mount Volume  
 ```shell
-     ~]# docker run -it -v HOSTDIR:VOLUMEDIR --name volume-test2 busybox
-    ~]# docker inspect -f {{.Mounts}}  volume-test2
+    ~]# docker run -it -v HOSTDIR:VOLUMEDIR --name volume-test2 busybox
+    ~]# docker inspect -f \lbrace\lbrace.Mounts\rbrace\rbrace volume-test2
 ```
 
 # 复制其他容器的存储卷设置(共享存储卷)
