@@ -439,112 +439,71 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 > 或者直接运行shell命令, 例如: `RUN [ "sh", "-c", "echo $HOME" ]`.
 > 当使用 ` exec ` 格式直接执行shell 命令时, 与 shell 格式一样，是shell 对命令中的变量进行了替换，而不是docker。
 
->
-> **Note**:
-> In the *JSON* form, it is necessary to escape backslashes. This is
-> particularly relevant on Windows where the backslash is the path separator.
-> The following line would otherwise be treated as *shell* form due to not
-> being valid JSON, and fail in an unexpected way:
-> `RUN ["c:\windows\system32\tasklist.exe"]`
-> The correct syntax for this example is:
+
+> **注意**:
+> 在*JSON* 格式中,有必要转义反斜杠. 尤其是在windows中，反斜杠作为路径分隔符存在.
+> 否则，下面的这行将会被当作*shell*格式来执行，而不是有效的*JSON*格式，从而会导致意想不到的错误:  
+> `RUN ["c:\windows\system32\tasklist.exe"]`  
+> 正确的写法是这样的:  
 > `RUN ["c:\\windows\\system32\\tasklist.exe"]`
 
-The cache for `RUN` instructions isn't invalidated automatically during
-the next build. The cache for an instruction like
-`RUN apt-get dist-upgrade -y` will be reused during the next build. The
-cache for `RUN` instructions can be invalidated by using the `--no-cache`
-flag, for example `docker build --no-cache`.
+ `RUN` 指令缓存在下一个构建过程中不会自动失效. 例如像
+`RUN apt-get dist-upgrade -y`指令的缓存在下一次构建过程中就会被重用. 使用 `--no-cache` 参数可以使  `RUN` 指令缓存失效，例如`docker build --no-cache`.
 
-See the [`Dockerfile` Best Practices
-guide](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#/build-cache) for more information.
 
-The cache for `RUN` instructions can be invalidated by `ADD` instructions. See
-[below](#add) for details.
-
-### Known issues (RUN)
-
-- [Issue 783](https://github.com/docker/docker/issues/783) is about file
-  permissions problems that can occur when using the AUFS file system. You
-  might notice it during an attempt to `rm` a file, for example.
-
-  For systems that have recent aufs version (i.e., `dirperm1` mount option can
-  be set), docker will attempt to fix the issue automatically by mounting
-  the layers with `dirperm1` option. More details on `dirperm1` option can be
-  found at [`aufs` man page](https://github.com/sfjro/aufs3-linux/tree/aufs3.18/Documentation/filesystems/aufs)
-
-  If your system doesn't have support for `dirperm1`, the issue describes a workaround.
+`ADD` 指令可以使 `RUN` 指令缓存失效. 
 
 ## CMD
 
-The `CMD` instruction has three forms:
+`CMD` 指令含有三种形式:
 
-- `CMD ["executable","param1","param2"]` (*exec* form, this is the preferred form)
-- `CMD ["param1","param2"]` (as *default parameters to ENTRYPOINT*)
-- `CMD command param1 param2` (*shell* form)
+- `CMD ["executable","param1","param2"]` (*exec* 格式, 首选)
+- `CMD ["param1","param2"]` (作为 *default parameters to ENTRYPOINT*)
+- `CMD command param1 param2` (*shell* 格式)
 
-There can only be one `CMD` instruction in a `Dockerfile`. If you list more than one `CMD`
-then only the last `CMD` will take effect.
+`Dockerfile`中只能有一个 `CMD` 指令 . 如果列举了多个 `CMD` 指令，只有最后一个会生效.
 
-**The main purpose of a `CMD` is to provide defaults for an executing
-container.** These defaults can include an executable, or they can omit
-the executable, in which case you must specify an `ENTRYPOINT`
-instruction as well.
+** `CMD` 指令的首要目的就是为一个容器提供可执行的默认值.** 这些默认值可以包括可执行文件，也可以省略可执行文件，省略可执行文件的话，就必须指定 `ENTRYPOINT`指令.
 
-> **Note**:
-> If `CMD` is used to provide default arguments for the `ENTRYPOINT`
-> instruction, both the `CMD` and `ENTRYPOINT` instructions should be specified
-> with the JSON array format.
+> **注意**:
+> 如果 `CMD` 指令用来给 `ENTRYPOINT`指令提供默认参数的话,  `CMD` 和 `ENTRYPOINT` 指令都应该使用 JSON 数组的格式。
 
-> **Note**:
-> The *exec* form is parsed as a JSON array, which means that
-> you must use double-quotes (") around words not single-quotes (').
+> **注意**:
+> *exec* 格式指令会解析成JSON数组的格式, 这也就意味着每个词必须使用双引号 ` (") ` 而不是单引号 ` (') `.
 
-> **Note**:
-> Unlike the *shell* form, the *exec* form does not invoke a command shell.
-> This means that normal shell processing does not happen. For example,
-> `CMD [ "echo", "$HOME" ]` will not do variable substitution on `$HOME`.
-> If you want shell processing then either use the *shell* form or execute
-> a shell directly, for example: `CMD [ "sh", "-c", "echo $HOME" ]`.
-> When using the exec form and executing a shell directly, as in the case for
-> the shell form, it is the shell that is doing the environment variable
-> expansion, not docker.
+> **注意**:
+> 与*shell* 格式不同,  *exec* 格式不需要调用 shell 命令.
+> 这也就意味着不会有shell命令执行过程发生. 例如,
+> `CMD [ "echo", "$HOME" ]`，不会对变量 `$HOME` 进行变量替换.
+> 如果想要用shell来处理的话，可以使用 *shell* 格式，或者直接执行一个shell命令
+> , 例如: `CMD [ "sh", "-c", "echo $HOME" ]`.
+> 当使用shell格式的命令或者直接执行了shell命令的时候，是shell对命令中的变量进行了替换，不是docker.
 
-When used in the shell or exec formats, the `CMD` instruction sets the command
-to be executed when running the image.
+当使用了 shell 或者 exec 格式时,  `CMD` 指令制定的命令会在运行镜像的时候被执行(executed when running the image).
 
-If you use the *shell* form of the `CMD`, then the `<command>` will execute in
-`/bin/sh -c`:
+如果使用了 `CMD` 命令的 *shell* 格式 ,  `<command>` 将会在`/bin/sh -c` 中执行:
 
     FROM ubuntu
     CMD echo "This is a test." | wc -
 
-If you want to **run your** `<command>` **without a shell** then you must
-express the command as a JSON array and give the full path to the executable.
-**This array form is the preferred format of `CMD`.** Any additional parameters
-must be individually expressed as strings in the array:
+如果想要 **不在shell中运行** `<command>`, 就需要使用  JSON array 的形式，同时指定可执行程序的全路径.
+**这种JSON Array的形式是 `CMD` 命令的首选格式.** 任何附加参数都必须单独表示为数组中的字符串:
 
     FROM ubuntu
     CMD ["/usr/bin/wc","--help"]
 
-If you would like your container to run the same executable every time, then
-you should consider using `ENTRYPOINT` in combination with `CMD`. See
-[*ENTRYPOINT*](#entrypoint).
+如果希望容器每次都运行相同的可执行文件,那可以考虑将 `ENTRYPOINT` 和 `CMD` 结合起来使用. 
 
-If the user specifies arguments to `docker run` then they will override the
-default specified in `CMD`.
+如果用户为 `docker run` 命令指定了参数，那么他们覆盖掉 `CMD`命令的默认参数.
 
-> **Note**:
-> Don't confuse `RUN` with `CMD`. `RUN` actually runs a command and commits
-> the result; `CMD` does not execute anything at build time, but specifies
-> the intended command for the image.
+> **注意**:
+> 不要混淆了 `RUN` 和 `CMD`. `RUN` 实际上是运行了一个指令并commit 了结果; `CMD` 在构建的时候，不执行任何的指令，而是指定了镜像在运行时的一个预期的命令.
 
 ## LABEL
 
     LABEL <key>=<value> <key>=<value> <key>=<value> ...
 
-The `LABEL` instruction adds metadata to an image. A `LABEL` is a
-key-value pair. To include spaces within a `LABEL` value, use quotes and
-backslashes as you would in command-line parsing. A few usage examples:
+ `LABEL` 指令为镜像添加了一些元数据. 一个 `LABEL` 就是一个键值对. 如果要在 `LABEL` 中包含空格,请像在命令行解析中那样使用引号和反斜杠 . 例如下面的使用示例:
 
     LABEL "com.example.vendor"="ACME Incorporated"
     LABEL com.example.label-with-value="foo"
@@ -552,10 +511,7 @@ backslashes as you would in command-line parsing. A few usage examples:
     LABEL description="This text illustrates \
     that label-values can span multiple lines."
 
-An image can have more than one label. You can specify multiple labels on a
-single line. Prior to Docker 1.10, this decreased the size of the final image,
-but this is no longer the case. You may still choose to specify multiple labels
-in a single instruction, in one of the following two ways:
+一个镜像可以有多个label标签. 也可以在一行当中指定多个label . 在Docker 1.10之前 这样能够减少镜像的大小，但是现在不会了. 下面就是这两种示例:
 
 ```none
 LABEL multi.label1="value1" multi.label2="value2" other="value3"
@@ -567,11 +523,9 @@ LABEL multi.label1="value1" \
       other="value3"
 ```
 
-Labels included in base or parent images (images in the `FROM` line) are
-inherited by your image. If a label already exists but with a different value,
-the most-recently-applied value overrides any previously-set value.
+在base镜像和父镜像(images in the `FROM` line) 也会被我们的镜像继承过来. 如果一个镜像已经存在了但是有不一样的值,最新指定的值会覆盖之前指定的值.
 
-To view an image's labels, use the `docker inspect` command.
+可以使用`docker inspect` 命令来查看docker镜像中的值.
 
     "Labels": {
         "com.example.vendor": "ACME Incorporated"
@@ -583,64 +537,42 @@ To view an image's labels, use the `docker inspect` command.
         "other": "value3"
     },
 
-## MAINTAINER (deprecated)
+## MAINTAINER (过时了)
 
     MAINTAINER <name>
 
-The `MAINTAINER` instruction sets the *Author* field of the generated images.
-The `LABEL` instruction is a much more flexible version of this and you should use
-it instead, as it enables setting any metadata you require, and can be viewed
-easily, for example with `docker inspect`. To set a label corresponding to the
-`MAINTAINER` field you could use:
+ `MAINTAINER` 指令可以设置构建这个镜像的  *Author* . `LABEL` 指令是一个更灵活的版本，现在应该使用它来代替 `MAINTAINER`, 它能够设置我们需要的任何元数据, 同时使用 `docker inspect`也很容易被查看,例如使用 `LABEL` 来设置 
+`MAINTAINER` 字段的话，可以像下面这样:
 
     LABEL maintainer="SvenDowideit@home.org.au"
 
-This will then be visible from `docker inspect` with the other labels.
+这样的话，使用`docker inspect`命令就能够看到这条 label 标签.
 
 ## EXPOSE
 
     EXPOSE <port> [<port>/<protocol>...]
 
-The `EXPOSE` instruction informs Docker that the container listens on the
-specified network ports at runtime. You can specify whether the port listens on
-TCP or UDP, and the default is TCP if the protocol is not specified.
+`EXPOSE` 指令通知Docker容器在运行时监听指定的网络端口. 我们可以指定监听TCP 或者 UDP 端口, 如果不指定的话，默认是TCP协议.
 
-The `EXPOSE` instruction does not actually publish the port. It functions as a
-type of documentation between the person who builds the image and the person who
-runs the container, about which ports are intended to be published. To actually
-publish the port when running the container, use the `-p` flag on `docker run`
-to publish and map one or more ports, or the `-P` flag to publish all exposed
-ports and map them to high-order ports.
+ `EXPOSE` 指令实际上不发布端口. 它作为一种文档类型在构建映像的人员和运行容器的人员之间运行，这些人打算发布哪些端口 . 想要在运行容器时实际发布这些端口，`docker run` 命令加上 `-p` 来发布和映射一个或者多个端口，或者使用 `-P` 来发布所有指定的端口或者把他们映射到更高级的端口上。
 
-To set up port redirection on the host system, see [using the -P
-flag](run.md#expose-incoming-ports). The `docker network` command supports
-creating networks for communication among containers without the need to
-expose or publish specific ports, because the containers connected to the
-network can communicate with each other over any port. For detailed information,
-see the
-[overview of this feature](https://docs.docker.com/engine/userguide/networking/)).
+为了将端口重定向到宿主机系统上可以查看 ` -P ` 参数的详细用法.  `docker network` 命令支持创建一个用于容器间交流的网络，而不用开放指定的端口，因为容器可以加入到这个网络并通过任意的端口进行通信。可以点击下面地址查看详细内容,
+[overview of this feature](https://docs.docker.com/engine/userguide/networking/).
 
 ## ENV
 
     ENV <key> <value>
     ENV <key>=<value> ...
 
-The `ENV` instruction sets the environment variable `<key>` to the value
-`<value>`. This value will be in the environment of all "descendant"
-`Dockerfile` commands and can be [replaced inline](#environment-replacement) in
-many as well.
+ `ENV` 指令用来设置环境变量，将 `<key>` 指定值为
+`<value>`.  此值将位于`Dockerfile`所有“后代”命令的环境中，并且可以在许多内联中进行内联替换.
 
-The `ENV` instruction has two forms. The first form, `ENV <key> <value>`,
-will set a single variable to a value. The entire string after the first
-space will be treated as the `<value>` - including characters such as
-spaces and quotes.
+ `ENV`指令有两种格式. 第一种, `ENV <key> <value>`,
+设置一个单独的变量值. 空格之后的整个字符串都会被当作 `<value>` 来对待 - 包括宝行的控制或者引号.
 
-The second form, `ENV <key>=<value> ...`, allows for multiple variables to
-be set at one time. Notice that the second form uses the equals sign (=)
-in the syntax, while the first form does not. Like command line parsing,
-quotes and backslashes can be used to include spaces within values.
+第二种格式, `ENV <key>=<value> ...`, 允许一次设置多个变量值.注意，这种形式需要使用在语法中使用 (=) , 第一种形式不需要. 与命令行解析一样，引号和反斜杠可用于在值内包含空格.
 
-For example:
+例如:
 
     ENV myName="John Doe" myDog=Rex\ The\ Dog \
         myCat=fluffy
@@ -651,165 +583,100 @@ and
     ENV myDog Rex The Dog
     ENV myCat fluffy
 
-will yield the same net results in the final image, but the first form
-is preferred because it produces a single cache layer.
+会在最终的镜像中产生相同的结果, 但是一种为首选，因为会产生一个单独的缓存层.
 
-The environment variables set using `ENV` will persist when a container is run
-from the resulting image. You can view the values using `docker inspect`, and
-change them using `docker run --env <key>=<value>`.
+当从生成的图像运行容器时，使用`ENV`设置的环境变量将保持不变. 您可以使用`docker inspect`查看值，并使用`docker run --env <key> = <value>更改它们.
 
-> **Note**:
-> Environment persistence can cause unexpected side effects. For example,
-> setting `ENV DEBIAN_FRONTEND noninteractive` may confuse apt-get
-> users on a Debian-based image. To set a value for a single command, use
-> `RUN <key>=<value> <command>`.
+> **注意**:
+> 环境持久性可能会导致意外的副作用. 例如,
+> 设置了 `ENV DEBIAN_FRONTEND noninteractive` 可能会在基于Debian的图像上混淆apt-get用户. 要为单个命令设置值，请使用`RUN <key> = <value> <command>`.
 
 ## ADD
 
-ADD has two forms:
+ADD有两种形式:
 
 - `ADD [--chown=<user>:<group>] <src>... <dest>`
-- `ADD [--chown=<user>:<group>] ["<src>",... "<dest>"]` (this form is required for paths containing
-whitespace)
+- `ADD [--chown=<user>:<group>] ["<src>",... "<dest>"]` (如果路径中含有空格需要使用这种形式)
 
-> **Note**:
-> The `--chown` feature is only supported on Dockerfiles used to build Linux containers,
-> and will not work on Windows containers. Since user and group ownership concepts do
-> not translate between Linux and Windows, the use of `/etc/passwd` and `/etc/group` for
-> translating user and group names to IDs restricts this feature to only be viable for
-> for Linux OS-based containers.
+> **注意**:
+>  `--chown` 特征仅在用于构建Linux容器的Dockerfiles上受支持,windows 容器上将会不起作用.由于用户和组所有权概念不能在Linux和Windows之间进行转换，因此使用`/etc/passwd`和`/etc/group`将用户名和组名转换为ID会限制此功能仅适用于基于Linux的容器.
 
-The `ADD` instruction copies new files, directories or remote file URLs from `<src>`
-and adds them to the filesystem of the image at the path `<dest>`.
+The `ADD` 指令，拷贝新文件、目录或者 `<src>`指定的远程文件，并将他们添加到 `<dest>` 指定的镜像的文件系统中.
 
-Multiple `<src>` resources may be specified but if they are files or
-directories, their paths are interpreted as relative to the source of
-the context of the build.
+可以指定多个`<src>`资源，但如果它们是文件或目录，它们的路径被解释基于构建的上下文的相对路径。  
 
-Each `<src>` may contain wildcards and matching will be done using Go's
-[filepath.Match](http://golang.org/pkg/path/filepath#Match) rules. For example:
+
+每个 `<src>` 可以包含通配符，匹配工作将使用 go  语言的
+[filepath.Match](http://golang.org/pkg/path/filepath#Match) 规则来完成. 例如:
 
     ADD hom* /mydir/        # adds all files starting with "hom"
     ADD hom?.txt /mydir/    # ? is replaced with any single character, e.g., "home.txt"
 
-The `<dest>` is an absolute path, or a path relative to `WORKDIR`, into which
-the source will be copied inside the destination container.
+`<dest>`是一个绝对路径，或者是相对于`WORKDIR`的路径,源文件将会被复制到目标容器中.
 
     ADD test relativeDir/          # adds "test" to `WORKDIR`/relativeDir/
     ADD test /absoluteDir/         # adds "test" to /absoluteDir/
 
-When adding files or directories that contain special characters (such as `[`
-and `]`), you need to escape those paths following the Golang rules to prevent
-them from being treated as a matching pattern. For example, to add a file
-named `arr[0].txt`, use the following;
+当添加含有特殊字符(例如`[`和 `]`)的文件或者目录时 , 需要遵循Golang规则来逃避这些路径，以防止它们被视为匹配模式. 例如, 添加一个名为 `arr[0].txt` 的文件时,使用下面的方式;
 
     ADD arr[[]0].txt /mydir/    # copy a file named "arr[0].txt" to /mydir/
 
 
-All new files and directories are created with a UID and GID of 0, unless the
-optional `--chown` flag specifies a given username, groupname, or UID/GID
-combination to request specific ownership of the content added. The
-format of the `--chown` flag allows for either username and groupname strings
-or direct integer UID and GID in any combination. Providing a username without
-groupname or a UID without GID will use the same numeric UID as the GID. If a
-username or groupname is provided, the container's root filesystem
-`/etc/passwd` and `/etc/group` files will be used to perform the translation
-from name to integer UID or GID respectively. The following examples show
-valid definitions for the `--chown` flag:
+创建出来的新文件和目录的 UID 和 GID 都是 0, 除非使用 `--chown` 参数来指定 username, groupname, 或者使用 UID/GID 组合来指定添加内容的属主和属组.`--chown` 格式允许 使用用户名和组名字符串或者直接使用UID 和 GID 的数字组合.如果只提供用户名，不提供组名,默认将用户名作为组名，同理，如果只提供UID，不提供GID的话，默认将UID作为GID. 如果提供了用户名或者组名, 容器的根文件系统会根据
+`/etc/passwd` 和 `/etc/group` 文件将名称分别转换成 UID 或者 GID. 下面示例演示了如何使用 `--chown` 参数:
 
     ADD --chown=55:mygroup files* /somedir/
     ADD --chown=bin files* /somedir/
     ADD --chown=1 files* /somedir/
     ADD --chown=10:11 files* /somedir/
 
-If the container root filesystem does not contain either `/etc/passwd` or
-`/etc/group` files and either user or group names are used in the `--chown`
-flag, the build will fail on the `ADD` operation. Using numeric IDs requires
-no lookup and will not depend on container root filesystem content.
+如果容器的根文件系统不包含 `/etc/passwd` 或者`/etc/group` 文件，并且也没有在 `--chown` 参数中指定属主属组, 将会在`ADD`操作这里构建失败. 使用数字ID不需要查找，也不依赖于容器根文件系统内容.
 
-In the case where `<src>` is a remote file URL, the destination will
-have permissions of 600. If the remote file being retrieved has an HTTP
-`Last-Modified` header, the timestamp from that header will be used
-to set the `mtime` on the destination file. However, like any other file
-processed during an `ADD`, `mtime` will not be included in the determination
-of whether or not the file has changed and the cache should be updated.
+在 `<src>` 是远程文件目录的情况下, 目标位置需要具备600权限. 如果正在检索的远程文件具有HTTP `Last-Modified`标头，则该标头的时间戳将用于在目标文件上设置`mtime`. 但是，像在 `ADD`期间处理的其他文件一样, `mtime` 不会被作为确定文件是否已更改并且应更新缓存的依据 .
 
-> **Note**:
-> If you build by passing a `Dockerfile` through STDIN (`docker
-> build - < somefile`), there is no build context, so the `Dockerfile`
-> can only contain a URL based `ADD` instruction. You can also pass a
-> compressed archive through STDIN: (`docker build - < archive.tar.gz`),
-> the `Dockerfile` at the root of the archive and the rest of the
-> archive will be used as the context of the build.
+> **注意**:
+> 如果通过传递`Dockerfile`到STDIN(`docker build - <somefile`)来构建镜像，则没有构建上下文, 所以 `Dockerfile`只能包含基于URL的`ADD`指令. 也可以通过 STDIN 传送一个位于 `Dockerfile` 根目录下的压缩文件: (`docker build - < archive.tar.gz`),压缩文档的其余部分将会作为这次构建的上下文.
 
-> **Note**:
-> If your URL files are protected using authentication, you
-> will need to use `RUN wget`, `RUN curl` or use another tool from
-> within the container as the `ADD` instruction does not support
-> authentication.
+> **注意**:
+> 如果URL文件使用身份验证进行保护，则需要使用`RUN wget`，`RUN curl`或使用容器内的其他工具，因为`ADD`指令不支持身份验证.
 
-> **Note**:
-> The first encountered `ADD` instruction will invalidate the cache for all
-> following instructions from the Dockerfile if the contents of `<src>` have
-> changed. This includes invalidating the cache for `RUN` instructions.
-> See the [`Dockerfile` Best Practices
-guide](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#/build-cache) for more information.
+> **注意**:
+> 如果`<src>`的内容已经改变，第一次遇到`ADD`指令将使Dockerfile的所有后续指令的高速缓存无效。这包括使`RUN`指令的高速缓存无效。
 
 
-`ADD` obeys the following rules:
 
-- The `<src>` path must be inside the *context* of the build;
-  you cannot `ADD ../something /something`, because the first step of a
-  `docker build` is to send the context directory (and subdirectories) to the
+
+`ADD` 遵守下列规则:
+
+-  `<src>` 路径必须位于 *构建上下文* 中;不能像 `ADD ../something /something` 这样来指定, 因为  `docker build`的第一步就是将 上下文目录 (包含子目录) 发送给
   docker daemon.
 
-- If `<src>` is a URL and `<dest>` does not end with a trailing slash, then a
-  file is downloaded from the URL and copied to `<dest>`.
+- 如果`<src>`是一个URL并且`<dest>`没有以斜杠结束，则从URL下载文件并复制到`<dest>`.
 
-- If `<src>` is a URL and `<dest>` does end with a trailing slash, then the
-  filename is inferred from the URL and the file is downloaded to
-  `<dest>/<filename>`. For instance, `ADD http://example.com/foobar /` would
-  create the file `/foobar`. The URL must have a nontrivial path so that an
-  appropriate filename can be discovered in this case (`http://example.com`
-  will not work).
+- 如果`<src>`是一个URL并且`<dest>`以尾部斜杠结尾，则从URL推断出文件名，并将文件下载到`<dest>/<filename>`. 例如, `ADD http://example.com/foobar /` 将创建文件`/foobar`.  URL 必须有一个普通路径，以便能够找到一个合适的文件名字,这种情况(`http://example.com`)将不会起作用.
 
-- If `<src>` is a directory, the entire contents of the directory are copied,
-  including filesystem metadata.
+- 如果 `<src>` 是一个目录, 目录的整体内容都会被拷贝，包括文件系统元数据.
 
-> **Note**:
-> The directory itself is not copied, just its contents.
+> **注意**:
+> 文件目录本身不会被拷贝, 仅仅拷贝它的内容.
 
-- If `<src>` is a *local* tar archive in a recognized compression format
-  (identity, gzip, bzip2 or xz) then it is unpacked as a directory. Resources
-  from *remote* URLs are **not** decompressed. When a directory is copied or
-  unpacked, it has the same behavior as `tar -x`, the result is the union of:
+- 如果 `<src>` 是一个 *本地的* 使用公认的压缩格式(identity, gzip, bzip2 or xz) 的tar包，它会被解压缩成一个目录. *远程* URLs的资源 **不** 解压缩. 当一个目录被拷贝或者解压缩时, 具有与`tar -x`命令一致的效果 ,包含下面几种:
 
     1. Whatever existed at the destination path and
     2. The contents of the source tree, with conflicts resolved in favor
        of "2." on a file-by-file basis.
 
-  > **Note**:
-  > Whether a file is identified as a recognized compression format or not
-  > is done solely based on the contents of the file, not the name of the file.
-  > For example, if an empty file happens to end with `.tar.gz` this will not
-  > be recognized as a compressed file and **will not** generate any kind of
-  > decompression error message, rather the file will simply be copied to the
-  > destination.
+  > **注意**:
+  > 是否将文件标识为已识别的压缩格式仅基于文件的内容而不是文件的名称来完成.
+  > 例如，如果空文件恰好以`.tar.gz`结尾，则不会将其识别为压缩文件，**不会**生成任何类型的解压缩错误消息，而是将文件简单地复制到 目的地.
 
-- If `<src>` is any other kind of file, it is copied individually along with
-  its metadata. In this case, if `<dest>` ends with a trailing slash `/`, it
-  will be considered a directory and the contents of `<src>` will be written
-  at `<dest>/base(<src>)`.
+- 如果`<src>`是任何其他类型的文件，它将与其元数据一起单独复制。 在这种情况下，如果`<dest>`以尾部斜杠`/`结尾，它将被视为一个目录，`<src>`的内容将写在`<dest>/base(<src>)`.
 
-- If multiple `<src>` resources are specified, either directly or due to the
-  use of a wildcard, then `<dest>` must be a directory, and it must end with
-  a slash `/`.
+- 如果直接或者使用通配符制定了多个 `<src>`资源,  `<dest>` 就必须是一个路径, 而且必须以 `/`结尾.
 
-- If `<dest>` does not end with a trailing slash, it will be considered a
-  regular file and the contents of `<src>` will be written at `<dest>`.
+- 如果 `<dest>` 不以斜杠结尾, 它将被视为一个常规文件，`<src>` 的内容将会写在 `<dest>` 上.
 
-- If `<dest>` doesn't exist, it is created along with all missing directories
-  in its path.
+- 如果 `<dest>` 不存在, 它将与路径中所有缺少的目录一起被创建.
 
 ## COPY
 
