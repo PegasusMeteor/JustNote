@@ -439,7 +439,6 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 > 或者直接运行shell命令, 例如: `RUN [ "sh", "-c", "echo $HOME" ]`.
 > 当使用 ` exec ` 格式直接执行shell 命令时, 与 shell 格式一样，是shell 对命令中的变量进行了替换，而不是docker。
 
-
 > **注意**:
 > 在*JSON* 格式中,有必要转义反斜杠. 尤其是在windows中，反斜杠作为路径分隔符存在.
 > 否则，下面的这行将会被当作*shell*格式来执行，而不是有效的*JSON*格式，从而会导致意想不到的错误:  
