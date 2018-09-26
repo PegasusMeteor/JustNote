@@ -621,8 +621,7 @@ The `ADD` 指令，拷贝新文件、目录或者 `<src>`指定的远程文件�
     ADD arr[[]0].txt /mydir/    # copy a file named "arr[0].txt" to /mydir/
 
 
-创建出来的新文件和目录的 UID 和 GID 都是 0, 除非使用 `--chown` 参数来指定 username, groupname, 或者使用 UID/GID 组合来指定添加内容的属主和属组.`--chown` 格式允许 使用用户名和组名字符串或者直接使用UID 和 GID 的数字组合.如果只提供用户名，不提供组名,默认将用户名作为组名，同理，如果只提供UID，不提供GID的话，默认将UID作为GID. 如果提供了用户名或者组名, 容器的根文件系统会根据
-`/etc/passwd` 和 `/etc/group` 文件将名称分别转换成 UID 或者 GID. 下面示例演示了如何使用 `--chown` 参数:
+创建出来的新文件和目录的 UID 和 GID 都是 0, 除非使用 `--chown` 参数来指定 username, groupname, 或者使用 UID/GID 组合来指定添加内容的属主和属组.`--chown` 格式允许 使用用户名和组名字符串或者直接使用UID 和 GID 的数字组合.如果只提供用户名，不提供组名,默认将用户名作为组名，同理，如果只提供UID，不提供GID的话，默认将UID作为GID. 如果提供了用户名或者组名, 容器的根文件系统会根据`/etc/passwd` 和 `/etc/group` 文件将名称分别转换成 UID 或者 GID. 下面示例演示了如何使用 `--chown` 参数:
 
     ADD --chown=55:mygroup files* /somedir/
     ADD --chown=bin files* /somedir/
@@ -679,105 +678,63 @@ The `ADD` 指令，拷贝新文件、目录或者 `<src>`指定的远程文件�
 
 ## COPY
 
-COPY has two forms:
+COPY 指令有两种形式:
 
 - `COPY [--chown=<user>:<group>] <src>... <dest>`
-- `COPY [--chown=<user>:<group>] ["<src>",... "<dest>"]` (this form is required for paths containing
-whitespace)
+- `COPY [--chown=<user>:<group>] ["<src>",... "<dest>"]` (如果路径中含有空格需要使用这种形式)
 
-> **Note**:
-> The `--chown` feature is only supported on Dockerfiles used to build Linux containers,
-> and will not work on Windows containers. Since user and group ownership concepts do
-> not translate between Linux and Windows, the use of `/etc/passwd` and `/etc/group` for
-> translating user and group names to IDs restricts this feature to only be viable for
-> for Linux OS-based containers.
+> **注意**:
+>  `--chown` 特征仅在用于构建Linux容器的Dockerfiles上受支持,windows 容器上将会不起作用.由于用户和组所有权概念不能在Linux和Windows之间进行转换，因此使用`/etc/passwd`和`/etc/group`将用户名和组名转换为ID会限制此功能仅适用于基于Linux的容器.
 
-The `COPY` instruction copies new files or directories from `<src>`
-and adds them to the filesystem of the container at the path `<dest>`.
+`COPY` 指令 从 `<src>` 拷贝文件和目录，并把他们添加到容器的文件系统`<dest>`目标路径中。
 
-Multiple `<src>` resources may be specified but the paths of files and
-directories will be interpreted as relative to the source of the context
-of the build.
+可以指定多个 `<src>` 资源路径，但是文件和目录的路径视为构建上下文的相对路径.
 
-Each `<src>` may contain wildcards and matching will be done using Go's
-[filepath.Match](http://golang.org/pkg/path/filepath#Match) rules. For example:
+每个 `<src>` 可以包含通配符，匹配工作将使用 go  语言的[filepath.Match](http://golang.org/pkg/path/filepath#Match) 规则来完成. 例如:
 
     COPY hom* /mydir/        # adds all files starting with "hom"
     COPY hom?.txt /mydir/    # ? is replaced with any single character, e.g., "home.txt"
 
-The `<dest>` is an absolute path, or a path relative to `WORKDIR`, into which
-the source will be copied inside the destination container.
+ `<dest>`是一个绝对路径，或者是相对于`WORKDIR`的路径,源文件将会被复制到目标容器中.
 
     COPY test relativeDir/   # adds "test" to `WORKDIR`/relativeDir/
     COPY test /absoluteDir/  # adds "test" to /absoluteDir/
 
 
-When copying files or directories that contain special characters (such as `[`
-and `]`), you need to escape those paths following the Golang rules to prevent
-them from being treated as a matching pattern. For example, to copy a file
-named `arr[0].txt`, use the following;
+当添加含有特殊字符(例如`[`和 `]`)的文件或者目录时 , 需要遵循Golang规则来逃避这些路径，以防止它们被视为匹配模式. 例如, 添加一个名为 `arr[0].txt` 的文件时,使用下面的方式;;
 
     COPY arr[[]0].txt /mydir/    # copy a file named "arr[0].txt" to /mydir/
 
-All new files and directories are created with a UID and GID of 0, unless the
-optional `--chown` flag specifies a given username, groupname, or UID/GID
-combination to request specific ownership of the copied content. The
-format of the `--chown` flag allows for either username and groupname strings
-or direct integer UID and GID in any combination. Providing a username without
-groupname or a UID without GID will use the same numeric UID as the GID. If a
-username or groupname is provided, the container's root filesystem
-`/etc/passwd` and `/etc/group` files will be used to perform the translation
-from name to integer UID or GID respectively. The following examples show
-valid definitions for the `--chown` flag:
+创建出来的新文件和目录的 UID 和 GID 都是 0, 除非使用 `--chown` 参数来指定 username, groupname, 或者使用 UID/GID 组合来指定添加内容的属主和属组.`--chown` 格式允许 使用用户名和组名字符串或者直接使用UID 和 GID 的数字组合.如果只提供用户名，不提供组名,默认将用户名作为组名，同理，如果只提供UID，不提供GID的话，默认将UID作为GID. 如果提供了用户名或者组名, 容器的根文件系统会根据`/etc/passwd` 和 `/etc/group` 文件将名称分别转换成 UID 或者 GID. 下面示例演示了如何使用 `--chown` 参数:
 
     COPY --chown=55:mygroup files* /somedir/
     COPY --chown=bin files* /somedir/
     COPY --chown=1 files* /somedir/
     COPY --chown=10:11 files* /somedir/
 
-If the container root filesystem does not contain either `/etc/passwd` or
-`/etc/group` files and either user or group names are used in the `--chown`
-flag, the build will fail on the `COPY` operation. Using numeric IDs requires
-no lookup and will not depend on container root filesystem content.
+如果容器的根文件系统不包含 `/etc/passwd` 或者`/etc/group` 文件，并且也没有在 `--chown` 参数中指定属主属组, 将会在`COPY`操作这里构建失败. 使用数字ID不需要查找，也不依赖于容器根文件系统内容.
 
-> **Note**:
-> If you build using STDIN (`docker build - < somefile`), there is no
-> build context, so `COPY` can't be used.
+> **注意**:
+>  如果通过传递`Dockerfile`到STDIN(`docker build - <somefile`)来构建镜像，由于没有构建上下文，`COPY` 指令不能使用.
 
-Optionally `COPY` accepts a flag `--from=<name|index>` that can be used to set
-the source location to a previous build stage (created with `FROM .. AS <name>`)
-that will be used instead of a build context sent by the user. The flag also
-accepts a numeric index assigned for all previous build stages started with
-`FROM` instruction. In case a build stage with a specified name can't be found an
-image with the same name is attempted to be used instead.
+(可选) `COPY` 可以通过参数 `--from=<name|index>` 指定前一个构建阶段 (created with `FROM .. AS <name>`)的源路径，来作为构建上下文，而不使用用户默认的。这个参数还支持使用`FROM`指令启动的所有先前构建阶段分配的数字索引 . 如果找不到具有指定名称的构建阶段，则尝试使用具有相同名称的镜像.
 
-`COPY` obeys the following rules:
+`COPY` 遵守以下规则:
 
-- The `<src>` path must be inside the *context* of the build;
-  you cannot `COPY ../something /something`, because the first step of a
-  `docker build` is to send the context directory (and subdirectories) to the
-  docker daemon.
+-  `<src>` 目录必须位于构建*上下文*; 不能够直接操作 `COPY ../something /something`, 因为`docker build`的第一步就是把上下文路径(包括子路径) 发送给 docker daemon.
 
-- If `<src>` is a directory, the entire contents of the directory are copied,
-  including filesystem metadata.
+-  如果 `<src>` 是一个目录, 这个目录包含的所有内容都会被复制,包括文件系统元数据.
 
-> **Note**:
-> The directory itself is not copied, just its contents.
+> **注意**:
+> 目录本身不会被拷贝, 只拷贝它的内容.
 
-- If `<src>` is any other kind of file, it is copied individually along with
-  its metadata. In this case, if `<dest>` ends with a trailing slash `/`, it
-  will be considered a directory and the contents of `<src>` will be written
-  at `<dest>/base(<src>)`.
+- 如果`<src>`是任何其他类型的文件，它将与其元数据一起单独复制。 在这种情况下，如果`<dest>`以尾部斜杠`/`结尾，它将被视为一个目录，`<src>`的内容将写在`<dest>/base(<src>)`.
 
-- If multiple `<src>` resources are specified, either directly or due to the
-  use of a wildcard, then `<dest>` must be a directory, and it must end with
-  a slash `/`.
+- 如果直接或者使用通配符制定了多个 `<src>`资源,  `<dest>` 就必须是一个路径, 而且必须以 `/`结尾.
 
-- If `<dest>` does not end with a trailing slash, it will be considered a
-  regular file and the contents of `<src>` will be written at `<dest>`.
+- 如果 `<dest>` 不以斜杠结尾, 它将被视为一个常规文件，`<src>` 的内容将会写在 `<dest>` 上.
 
-- If `<dest>` doesn't exist, it is created along with all missing directories
-  in its path.
+- 如果 `<dest>` 不存在, 它将与路径中所有缺少的目录一起被创建.
 
 ## ENTRYPOINT
 
