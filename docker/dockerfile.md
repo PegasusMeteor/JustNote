@@ -882,13 +882,12 @@ sys	0m 0.03s
 
 可以为`ENTRYPOINT` 指定一个普通字符串，它将在`/bin/sh -c`中执行.
 这样的话，将使用shell来替换shell环境变量，并且忽略`CMD` 指令或者 `docker run`命令的命令行参数.
-为了确保 `docker stop` 命令能够 will signal any long running `ENTRYPOINT` executable
-correctly, you need to remember to start it with `exec`:
+为了确保 `docker stop` 命令能够直接给任何长时间运行的 `ENTRYPOINT`可执行程序发送指令,需要使用`exec`命令格式启动它:
 
     FROM ubuntu
     ENTRYPOINT exec top -b
 
-When you run this image, you'll see the single `PID 1` process:
+当你运行这个镜像时, 会看到一个单独的 `PID 1` 进程:
 
     $ docker run -it --rm --name test top
     Mem: 1704520K used, 352148K free, 0K shrd, 0K buff, 140368121167873K cached
@@ -897,7 +896,7 @@ When you run this image, you'll see the single `PID 1` process:
       PID  PPID USER     STAT   VSZ %VSZ %CPU COMMAND
         1     0 root     R     3164   0%   0% top -b
 
-Which will exit cleanly on `docker stop`:
+该进程会在`docker stop`时被清理掉:
 
     $ /usr/bin/time docker stop test
     test
@@ -905,13 +904,13 @@ Which will exit cleanly on `docker stop`:
     user	0m 0.02s
     sys	0m 0.04s
 
-If you forget to add `exec` to the beginning of your `ENTRYPOINT`:
+如果忘记了在`ENTRYPOINT`指令开始之前加上 `exec`的话:
 
     FROM ubuntu
     ENTRYPOINT top -b
     CMD --ignored-param1
 
-You can then run it (giving it a name for the next step):
+可以运行它 (指定一个名字，留在下一步使用):
 
     $ docker run -it --name test top --ignored-param2
     Mem: 1704184K used, 352484K free, 0K shrd, 0K buff, 140621524238337K cached
@@ -921,10 +920,10 @@ You can then run it (giving it a name for the next step):
         1     0 root     S     3168   0%   0% /bin/sh -c top -b cmd cmd2
         7     1 root     R     3164   0%   0% top -b
 
-You can see from the output of `top` that the specified `ENTRYPOINT` is not `PID 1`.
+我们可以从`top` 命令的输出中看到， `ENTRYPOINT`  指令指定的程序不是 `PID 1`.
 
-If you then run `docker stop test`, the container will not exit cleanly - the
-`stop` command will be forced to send a `SIGKILL` after the timeout:
+如果你运行 `docker stop test`, 容器不会退出并清理干净 - 
+`stop` 命令会在 timeout之后发送一个 command  `SIGKILL` 命令，强制退出。:
 
     $ docker exec -it test ps aux
     PID   USER     COMMAND
@@ -937,21 +936,20 @@ If you then run `docker stop test`, the container will not exit cleanly - the
     user	0m 0.04s
     sys	0m 0.03s
 
-### Understand how CMD and ENTRYPOINT interact
+### 了解 CMD 和 ENTRYPOINT 如何相互作用
 
-Both `CMD` and `ENTRYPOINT` instructions define what command gets executed when running a container.
-There are few rules that describe their co-operation.
+ `CMD` 和 `ENTRYPOINT`指令都定义了运行容器时执行的命令。.
+很少有规则描述他们的相互作用关系.
 
-1. Dockerfile should specify at least one of `CMD` or `ENTRYPOINT` commands.
+1. Dockerfile 应至少指定一个`CMD` or `ENTRYPOINT` 命令.
 
-2. `ENTRYPOINT` should be defined when using the container as an executable.
+2. 使用容器作为可执行文件时，应定义`ENTRYPOINT`.
 
-3. `CMD` should be used as a way of defining default arguments for an `ENTRYPOINT` command
-or for executing an ad-hoc command in a container.
+3. `CMD`应该用作定义`ENTRYPOINT`命令的默认参数或在容器中执行ad-hoc命令的方法.
 
-4. `CMD` will be overridden when running the container with alternative arguments.
+4. 使用备用参数运行容器时，将覆盖`CMD`命令的参数.
 
-The table below shows what command is executed for different `ENTRYPOINT` / `CMD` combinations:
+下表显示了针对不同的`ENTRYPOINT`/`CMD`组合，执行了哪些命令:
 
 |                                | No ENTRYPOINT              | ENTRYPOINT exec_entry p1_entry | ENTRYPOINT ["exec_entry", "p1_entry"]          |
 |:-------------------------------|:---------------------------|:-------------------------------|:-----------------------------------------------|
@@ -964,50 +962,39 @@ The table below shows what command is executed for different `ENTRYPOINT` / `CMD
 
     VOLUME ["/data"]
 
-The `VOLUME` instruction creates a mount point with the specified name
-and marks it as holding externally mounted volumes from native host or other
-containers. The value can be a JSON array, `VOLUME ["/var/log/"]`, or a plain
-string with multiple arguments, such as `VOLUME /var/log` or `VOLUME /var/log
-/var/db`. For more information/examples and mounting instructions via the
-Docker client, refer to
+`VOLUME`指令创建具有指定名称的挂载点，并将其标记为本地主机或者其他容器的存储卷。
+值可以是JSON 数组, `VOLUME ["/var/log/"]`, 也可以是带有多个参数的普通字符串, 
+例如 `VOLUME /var/log` 或者 `VOLUME /var/log/var/db`. 
+有关Docker客户端的更多信息/示例和安装说明, 可以参考
 [*Share Directories via Volumes*](https://docs.docker.com/engine/tutorials/dockervolumes/#/mount-a-host-directory-as-a-data-volume)
-documentation.
+文档.
 
-The `docker run` command initializes the newly created volume with any data
-that exists at the specified location within the base image. For example,
-consider the following Dockerfile snippet:
+`docker run`命令使用base image 中指定位置存在的任何数据初始化新创建的卷. 例如,
+如下的 Dockerfile 片段:
 
     FROM ubuntu
     RUN mkdir /myvol
     RUN echo "hello world" > /myvol/greeting
     VOLUME /myvol
 
-This Dockerfile results in an image that causes `docker run` to
-create a new mount point at `/myvol` and copy the  `greeting` file
-into the newly created volume.
+这个 Dockerfile 镜像的结果就是导致`docker run`在`/ myvol`创建一个新的挂载点 导致`docker run`在`/ myvol`创建一个新的挂载点.
 
 ### Notes about specifying volumes
 
-Keep the following things in mind about volumes in the `Dockerfile`.
+关于`Dockerfile`中的卷，请记住以下几点.
 
-- **Volumes on Windows-based containers**: When using Windows-based containers,
-  the destination of a volume inside the container must be one of:
+- **Volumes on Windows-based containers**:使用基于Windows的容器时,
+  容器内卷的目标必须是下面其中一个:
 
-  - a non-existing or empty directory
-  - a drive other than `C:`
+  - 一个不存在的或者空的目录
+  - 除了`C:`之外的驱动
 
-- **Changing the volume from within the Dockerfile**: If any build steps change the
-  data within the volume after it has been declared, those changes will be discarded.
+- **Changing the volume from within the Dockerfile**: 如果任何一个构建过程在卷声明之后，修改了卷里面的数据，这些改动将会被忽略掉.
 
-- **JSON formatting**: The list is parsed as a JSON array.
-  You must enclose words with double quotes (`"`)rather than single quotes (`'`).
+- **JSON formatting**: 如果列表被解析成 JSON 数组.必须用双引号（`“`）而不是单引号（```）.
 
-- **The host directory is declared at container run-time**: The host directory
-  (the mountpoint) is, by its nature, host-dependent. This is to preserve image
-  portability, since a given host directory can't be guaranteed to be available
-  on all hosts. For this reason, you can't mount a host directory from
-  within the Dockerfile. The `VOLUME` instruction does not support specifying a `host-dir`
-  parameter.  You must specify the mountpoint when you create or run the container.
+- **The host directory is declared at container run-time**: 主机目录
+  (挂载点) , 本质上, 是依赖主机的. 这是为了保持镜像的可移植性，因为不能保证给定的主机目录在所有主机上都可用. 因此, 不能从Dockerfile中关在主机目录。`VOLUME`指令不支持指定`host-dir`参数. 您必须在创建或运行容器时指定挂载点.
 
 ## USER
 
@@ -1015,16 +1002,13 @@ Keep the following things in mind about volumes in the `Dockerfile`.
 or
     USER <UID>[:<GID>]
 
-The `USER` instruction sets the user name (or UID) and optionally the user
-group (or GID) to use when running the image and for any `RUN`, `CMD` and
-`ENTRYPOINT` instructions that follow it in the `Dockerfile`.
+ 运行镜像时 ,`USER` 指令用来指定`RUN`, `CMD` 和`ENTRYPOINT` 指令运行需要的属主(或者UID)属组(可选)。`USER` 指令在 `Dockerfile`中 放置在`RUN`, `CMD` 和`ENTRYPOINT` 指令之前.
 
-> **Warning**:
-> When the user doesn't have a primary group then the image (or the next
-> instructions) will be run with the `root` group.
+> **注意**:
+> 如果user 没有一个属组的话，镜像(或者下一条指令) 将会以 `root` 组来运行.
 
-> On Windows, the user must be created first if it's not a built-in account.
-> This can be done with the `net user` command called as part of a Dockerfile.
+> 在Windows上, 如果不是内建账户的话，就一定要先创建用户账户.
+> 这可以通过作为Dockerfile的一部分调用的`net user`命令来完成.
 
 ```Dockerfile
     FROM microsoft/windowsservercore
@@ -1039,49 +1023,39 @@ group (or GID) to use when running the image and for any `RUN`, `CMD` and
 
     WORKDIR /path/to/workdir
 
-The `WORKDIR` instruction sets the working directory for any `RUN`, `CMD`,
-`ENTRYPOINT`, `COPY` and `ADD` instructions that follow it in the `Dockerfile`.
-If the `WORKDIR` doesn't exist, it will be created even if it's not used in any
-subsequent `Dockerfile` instruction.
+ `WORKDIR` 指令 为`Dockerfile`中后面跟着的 `RUN`, `CMD`, `ENTRYPOINT`, `COPY` and `ADD` 指令设定工作目录.
+如果 `WORKDIR` 不存在, 它将被创建，即使它没有在任何后续的`Dockerfile`指令中使用.
 
-The `WORKDIR` instruction can be used multiple times in a `Dockerfile`. If a
-relative path is provided, it will be relative to the path of the previous
-`WORKDIR` instruction. For example:
+`WORKDIR` 指令可以在`Dockerfile`中被使用多次. 如果指定的时相对路径, 将会被解析成是针对上一个`WORKDIR` 指令的相对路径. 例如:
 
     WORKDIR /a
     WORKDIR b
     WORKDIR c
     RUN pwd
 
-The output of the final `pwd` command in this `Dockerfile` would be
-`/a/b/c`.
+在这个 `Dockerfile` 中`pwd`命令最终的输出结果将会是`/a/b/c`.
 
-The `WORKDIR` instruction can resolve environment variables previously set using
-`ENV`. You can only use environment variables explicitly set in the `Dockerfile`.
-For example:
+`WORKDIR`指令可以解析先前使用`ENV`设置的环境变量. 但是只能使用`Dockerfile`中显式设置的环境变量.
+例如:
 
     ENV DIRPATH /path
     WORKDIR $DIRPATH/$DIRNAME
     RUN pwd
 
-The output of the final `pwd` command in this `Dockerfile` would be
-`/path/$DIRNAME`
+在这个 `Dockerfile` 中`pwd`命令最终的输出结果将会是`/path/$DIRNAME`
 
 ## ARG
 
     ARG <name>[=<default value>]
 
-The `ARG` instruction defines a variable that users can pass at build-time to
-the builder with the `docker build` command using the `--build-arg <varname>=<value>`
-flag. If a user specifies a build argument that was not
-defined in the Dockerfile, the build outputs a warning.
+`ARG`指令使用`--build-arg <varname>=<value>`参数定义一个变量，用户可以使用`docker build`命令在构建时将其传递给构建器。
+如果用户指定了未在Dockerfile中定义的构建参数，则构建会输出警告。
 
 ```
 [Warning] One or more build-args [foo] were not consumed.
 ```
 
-A Dockerfile may include one or more `ARG` instructions. For example,
-the following is a valid Dockerfile:
+一个Dockerfile可以包含多个 `ARG` 指令. 例如,下面的Dockerfile也是可以的:
 
 ```
 FROM busybox
@@ -1090,13 +1064,12 @@ ARG buildno
 ...
 ```
 
-> **Warning:** It is not recommended to use build-time variables for
->  passing secrets like github keys, user credentials etc. Build-time variable
->  values are visible to any user of the image with the `docker history` command.
+> **警告:** 建议不要使用构建时变量来传递github密钥，用户凭证等秘密. 
+>  使用`docker history`命令，任何镜像用户都可以看到构建时变量值.
 
 ### Default values
 
-An `ARG` instruction can optionally include a default value:
+(可选)`ARG` 指令可以有一个默认值:
 
 ```
 FROM busybox
@@ -1105,14 +1078,11 @@ ARG buildno=1
 ...
 ```
 
-If an `ARG` instruction has a default value and if there is no value passed
-at build-time, the builder uses the default.
+如果 `ARG` 指令有了默认值，并且在构建时没有传递别的值，构建器将使用默认值.
 
 ### Scope
 
-An `ARG` variable definition comes into effect from the line on which it is
-defined in the `Dockerfile` not from the argument's use on the command-line or
-elsewhere.  For example, consider this Dockerfile:
+`ARG`变量定义从`Dockerfile`中定义的行开始生效，而不是来自命令行或其他地方的参数的使用. 例如下面的 Dockerfile:
 
 ```
 1 FROM busybox
@@ -1121,20 +1091,16 @@ elsewhere.  For example, consider this Dockerfile:
 4 USER $user
 ...
 ```
-A user builds this file by calling:
+用户可以调用下面的命令构建这个文件:
 
 ```
 $ docker build --build-arg user=what_user .
 ```
 
-The `USER` at line 2 evaluates to `some_user` as the `user` variable is defined on the
-subsequent line 3. The `USER` at line 4 evaluates to `what_user` as `user` is
-defined and the `what_user` value was passed on the command line. Prior to its definition by an
-`ARG` instruction, any use of a variable results in an empty string.
+第2行的`USER`评估为`some_user`，因为`user`变量在后续第3行定义. 第四行的 `USER`被解释为`what_user` 因为 `user` 
+已经定义了， `what_user` 在命令行中进行了传递. 在通过`ARG`指令定义之前，对变量的任何使用都会导致空字符串.
 
-An `ARG` instruction goes out of scope at the end of the build
-stage where it was defined. To use an arg in multiple stages, each stage must
-include the `ARG` instruction.
+`ARG` 指令如果定义在构建过程的最后，会超出作用范围. 如果想在多个构建阶段使用参数，需要在每个阶段都包含`ARG`指令.
 
 ```
 FROM busybox
