@@ -1114,10 +1114,8 @@ RUN ./run/other $SETTINGS
 
 ### Using ARG variables
 
-You can use an `ARG` or an `ENV` instruction to specify variables that are
-available to the `RUN` instruction. Environment variables defined using the
-`ENV` instruction always override an `ARG` instruction of the same name. Consider
-this Dockerfile with an `ENV` and `ARG` instruction.
+我们可以使用`ARG`或`ENV`指令来指定`RUN`指令可用的变量.使用`ENV`指令定义的环境变量总是覆盖`ARG`指令中定义的同名变量. 
+下面的Dockerfile 示例中介绍了  `ENV` 和 `ARG` 指令的用法.
 
 ```
 1 FROM ubuntu
@@ -1125,19 +1123,16 @@ this Dockerfile with an `ENV` and `ARG` instruction.
 3 ENV CONT_IMG_VER v1.0.0
 4 RUN echo $CONT_IMG_VER
 ```
-Then, assume this image is built with this command:
+假如使用下面的命令来构建镜像的话:
 
 ```
 $ docker build --build-arg CONT_IMG_VER=v2.0.1 .
 ```
 
-In this case, the `RUN` instruction uses `v1.0.0` instead of the `ARG` setting
-passed by the user:`v2.0.1` This behavior is similar to a shell
-script where a locally scoped variable overrides the variables passed as
-arguments or inherited from environment, from its point of definition.
+在这种情况下, `RUN`指令使用`v1.0.0`而不是用户传递的`ARG`设置：`v2.0.1`。 
+这种行为类似于shell脚本，从定义的角度来看，其中本地范围的变量覆盖作为参数传递的变量或从环境继承的变量.
 
-Using the example above but a different `ENV` specification you can create more
-useful interactions between `ARG` and `ENV` instructions:
+参考上面的例子，使用一个不同的 `ENV` 格式，就可以结合 `ARG` 和 `ENV` 指令创造出很多有用的使用方式:
 
 ```
 1 FROM ubuntu
@@ -1146,25 +1141,19 @@ useful interactions between `ARG` and `ENV` instructions:
 4 RUN echo $CONT_IMG_VER
 ```
 
-Unlike an `ARG` instruction, `ENV` values are always persisted in the built
-image. Consider a docker build without the `--build-arg` flag:
+与 `ARG` 指令不同, `ENV` 的值，始终保留在构建的镜像中. 如果 docker build 时不加 `--build-arg` 参数:
 
 ```
 $ docker build .
 ```
 
-Using this Dockerfile example, `CONT_IMG_VER` is still persisted in the image but
-its value would be `v1.0.0` as it is the default set in line 3 by the `ENV` instruction.
+在这个示例中, `CONT_IMG_VER`仍然保留在镜像中，但其值为`v1.0.0`，因为它是`ENV`指令在第3行中的默认设置.
 
-The variable expansion technique in this example allows you to pass arguments
-from the command line and persist them in the final image by leveraging the
-`ENV` instruction. Variable expansion is only supported for [a limited set of
-Dockerfile instructions.](#environment-replacement)
 
-### Predefined ARGs
+### Predefined ARGs 
 
-Docker has a set of predefined `ARG` variables that you can use without a
-corresponding `ARG` instruction in the Dockerfile.
+Docker有一组预定义的`ARG`变量，我们可以在Dockerfile中直接使用，而不用指定相应的`ARG`指令。
+
 
 * `HTTP_PROXY`
 * `http_proxy`
@@ -1175,31 +1164,26 @@ corresponding `ARG` instruction in the Dockerfile.
 * `NO_PROXY`
 * `no_proxy`
 
-To use these, simply pass them on the command line using the flag:
+要使用这些参数的话，只要在命令行中传递他们就可以:
 
 ```
 --build-arg <varname>=<value>
 ```
 
-By default, these pre-defined variables are excluded from the output of
-`docker history`. Excluding them reduces the risk of accidentally leaking
-sensitive authentication information in an `HTTP_PROXY` variable.
+默认情况下, 这些预定义的变量在`docker history`中是看不到的. 
+这样可以降低在`HTTP_PROXY`变量中意外泄漏敏感验证信息的风险.
 
-For example, consider building the following Dockerfile using
-`--build-arg HTTP_PROXY=http://user:pass@proxy.lon.example.com`
+例如， 使用这个命令`--build-arg HTTP_PROXY=http://user:pass@proxy.lon.example.com` 来构建下面的Dockerfile：
 
 ``` Dockerfile
 FROM ubuntu
 RUN echo "Hello World"
 ```
 
-In this case, the value of the `HTTP_PROXY` variable is not available in the
-`docker history` and is not cached. If you were to change location, and your
-proxy server changed to `http://user:pass@proxy.sfo.example.com`, a subsequent
-build does not result in a cache miss.
+此例中,`HTTP_PROXY` 变量的值在`docker history`中是不可用的，并且不会被缓存。 
+如果需要更改位置，或者代理服务器需要更换为,`http://user:pass@proxy.sfo.example.com`, 后续构建中不会导致缓存未命中.
 
-If you need to override this behaviour then you may do so by adding an `ARG`
-statement in the Dockerfile as follows:
+如果想要覆盖这个值， 可以像下面这样在Dockerfile中添加一个 `ARG`指令:
 
 ``` Dockerfile
 FROM ubuntu
@@ -1207,21 +1191,17 @@ ARG HTTP_PROXY
 RUN echo "Hello World"
 ```
 
-When building this Dockerfile, the `HTTP_PROXY` is preserved in the
-`docker history`, and changing its value invalidates the build cache.
+构建这个Dockerfile时，`HTTP_PROXY`保存在`docker history`中，更改其值会使构建缓存无效.
 
 ### Impact on build caching
 
-`ARG` variables are not persisted into the built image as `ENV` variables are.
-However, `ARG` variables do impact the build cache in similar ways. If a
-Dockerfile defines an `ARG` variable whose value is different from a previous
-build, then a "cache miss" occurs upon its first usage, not its definition. In
-particular, all `RUN` instructions following an `ARG` instruction use the `ARG`
-variable implicitly (as an environment variable), thus can cause a cache miss.
-All predefined `ARG` variables are exempt from caching unless there is a
-matching `ARG` statement in the `Dockerfile`.
+`ARG`变量不会像`ENV`变量一样持久存储在构建的图像中.
+但是，`ARG`变量确实以类似的方式影响构建缓存. 
+如果Dockerfile定义了一个'ARG`变量，其值与先前的构建不同，那么在第一次使用时会出现"cache miss"，而不是它的定义。
+特别是，`ARG`指令后面的所有`RUN`指令都隐式使用`ARG`变量（作为环境变量），因此可能导致高速缓存未命中.
+所有预定义的`ARG`变量都免于缓存，除非在`Dockerfile中有匹配的`ARG`语句.
 
-For example, consider these two Dockerfile:
+例如下面两个 Dockerfile:
 
 ```
 1 FROM ubuntu
@@ -1235,13 +1215,11 @@ For example, consider these two Dockerfile:
 3 RUN echo hello
 ```
 
-If you specify `--build-arg CONT_IMG_VER=<value>` on the command line, in both
-cases, the specification on line 2 does not cause a cache miss; line 3 does
-cause a cache miss.`ARG CONT_IMG_VER` causes the RUN line to be identified
-as the same as running `CONT_IMG_VER=<value>` echo hello, so if the `<value>`
-changes, we get a cache miss.
+如果命令行中指定了 `--build-arg CONT_IMG_VER=<value>` 参数, 两种情况下, 第二行的定义不会导致 cache miss; 
+第三行会导致 cache miss .`ARG CONT_IMG_VER` 导致 RUN 指令那一行被认为与 运行 `CONT_IMG_VER=<value>` 来 echo hello是一样的, 如果`<value>`
+值发生变化了, 会有cache miss.
 
-Consider another example under the same command line:
+考虑同一命令的另一个示例:
 
 ```
 1 FROM ubuntu
@@ -1249,13 +1227,11 @@ Consider another example under the same command line:
 3 ENV CONT_IMG_VER $CONT_IMG_VER
 4 RUN echo $CONT_IMG_VER
 ```
-In this example, the cache miss occurs on line 3. The miss happens because
-the variable's value in the `ENV` references the `ARG` variable and that
-variable is changed through the command line. In this example, the `ENV`
-command causes the image to include the value.
+在这个示例中, 第三行会发生 cache miss. 之所以缓存未命中是因为 because
+`ENV`  中的变量值引用了`ARG` 变量，而这个变量在命令行中被改变了. 在这个示例中,  `ENV`
+指令要求镜像包含这个值.
 
-If an `ENV` instruction overrides an `ARG` instruction of the same name, like
-this Dockerfile:
+如果`ENV`指令覆盖了 `ARG` 指令中同名的变量, 例如 下面的Dockerfile:
 
 ```
 1 FROM ubuntu
@@ -1264,108 +1240,79 @@ this Dockerfile:
 4 RUN echo $CONT_IMG_VER
 ```
 
-Line 3 does not cause a cache miss because the value of `CONT_IMG_VER` is a
-constant (`hello`). As a result, the environment variables and values used on
-the `RUN` (line 4) doesn't change between builds.
+第3行不会导致缓存未命中，因为 `CONT_IMG_VER` 变量值是常量(`hello`). 因此，  `RUN`（第4行）上使用的环境变量和值在构建时不会发生变化.
 
 ## ONBUILD
 
     ONBUILD [INSTRUCTION]
 
-The `ONBUILD` instruction adds to the image a *trigger* instruction to
-be executed at a later time, when the image is used as the base for
-another build. The trigger will be executed in the context of the
-downstream build, as if it had been inserted immediately after the
-`FROM` instruction in the downstream `Dockerfile`.
+当镜像用作另一个构建的基础镜像时,`ONBUILD`指令在镜像中添加一个* trigger *指令，以便稍后执行。
+触发器将在下游构建的上下文中执行，就好像它是在下游`Dockerfile中的`FROM`指令之后立即插入的一样。
 
-Any build instruction can be registered as a trigger.
+任何一个构建指令都可以作为触发器.
 
-This is useful if you are building an image which will be used as a base
-to build other images, for example an application build environment or a
-daemon which may be customized with user-specific configuration.
+如果你正在构建的镜像还要作为另外一个镜像的基础镜像, 例如一个应用程序编译环境，或者用户自定义配置的守护进程。
 
-For example, if your image is a reusable Python application builder, it
-will require application source code to be added in a particular
-directory, and it might require a build script to be called *after*
-that. You can't just call `ADD` and `RUN` now, because you don't yet
-have access to the application source code, and it will be different for
-each application build. You could simply provide application developers
-with a boilerplate `Dockerfile` to copy-paste into their application, but
-that is inefficient, error-prone and difficult to update because it
-mixes with application-specific code.
+例如, 如果你的镜像是一个可复用的 Python 应用程序构建器, 则需要将应用程序源代码添加到特定目录中, 
+并在之后指定一个 build script. 您现在不能只调用`ADD`和`RUN`，因为您还无法访问应用程序源代码，并且每个应用程序构建都会有所不同. 
+我们可以简单地为应用程序开发人员提供一个模板`Dockerfile`，来复制粘贴到他们的应用程序中，但这样做效率低，容易出错且难以更新，因为它与特定于应用程序的代码混合在一起.
 
-The solution is to use `ONBUILD` to register advance instructions to
-run later, during the next build stage.
+解决方案是使用`ONBUILD`来准备一些需要提前的指令，以便在下一个构建阶段运行。T
 
-Here's how it works:
+下面是它的工作原理:
 
-1. When it encounters an `ONBUILD` instruction, the builder adds a
-   trigger to the metadata of the image being built. The instruction
-   does not otherwise affect the current build.
-2. At the end of the build, a list of all triggers is stored in the
-   image manifest, under the key `OnBuild`. They can be inspected with
-   the `docker inspect` command.
-3. Later the image may be used as a base for a new build, using the
-   `FROM` instruction. As part of processing the `FROM` instruction,
-   the downstream builder looks for `ONBUILD` triggers, and executes
-   them in the same order they were registered. If any of the triggers
-   fail, the `FROM` instruction is aborted which in turn causes the
-   build to fail. If all triggers succeed, the `FROM` instruction
-   completes and the build continues as usual.
-4. Triggers are cleared from the final image after being executed. In
-   other words they are not inherited by "grand-children" builds.
+1. 当遇到`ONBUILD`指令时，构建器会为正在构建的镜像的元数据添加触发器。 该指令不会影响当前构建。
+2. 在构建结束时,   镜像 清单的`OnBuild`键下面会存储一系列的触发器 . 他们可以通过 `docker inspect` 命令查看到.
+3. 稍后，可以使用`FROM`指令将镜像用作新构建的基础. 
+   作为 `FROM` 指令处理过程的一部分,下游构建器会查询 `ONBUILD` 触发器,然后按照他们注册的顺序执行他们。
+   如果任何一个触发器构建失败的话,  `FROM` 指令会被终止这反过来导致构建失败. 
+   如果所有的触发器都构建成功了, `FROM`指令完成，构建继续照常进行.
+4. 执行后，触发器将从最终镜像中清除掉. 换句话说，他们不会被后续的构建过程所继承.
 
-For example you might add something like this:
+例如你可能会添加一些类似下面的内容:
 
     [...]
     ONBUILD ADD . /app/src
     ONBUILD RUN /usr/local/bin/python-build --dir /app/src
     [...]
 
-> **Warning**: Chaining `ONBUILD` instructions using `ONBUILD ONBUILD` isn't allowed.
+> **注意**:  不允许使用 `ONBUILD ONBUILD`链接 `ONBUILD`指令.
 
-> **Warning**: The `ONBUILD` instruction may not trigger `FROM` or `MAINTAINER` instructions.
+> **注意**:   `ONBUILD` 指令可能不会触发`FROM` 或者 `MAINTAINER` 指令.
 
 ## STOPSIGNAL
 
     STOPSIGNAL signal
 
-The `STOPSIGNAL` instruction sets the system call signal that will be sent to the container to exit.
-This signal can be a valid unsigned number that matches a position in the kernel's syscall table, for instance 9,
-or a signal name in the format SIGNAME, for instance SIGKILL.
+`STOPSIGNAL`指令设置将发送到容器，并使容器退出的系统调用信号.
+此信号可以是与内核的系统调用表中的位置匹配的有效无符号数，例如9，或SIGNAME格式的信号名，例如SIGKILL.
 
 ## HEALTHCHECK
 
-The `HEALTHCHECK` instruction has two forms:
+`HEALTHCHECK`指令有两种形式:
 
-* `HEALTHCHECK [OPTIONS] CMD command` (check container health by running a command inside the container)
-* `HEALTHCHECK NONE` (disable any healthcheck inherited from the base image)
+* `HEALTHCHECK [OPTIONS] CMD command` (通过在容器内运行命令来检查容器运行状况)
+* `HEALTHCHECK NONE` (禁用从基础镜像继承的任何运行状况检查)
 
-The `HEALTHCHECK` instruction tells Docker how to test a container to check that
-it is still working. This can detect cases such as a web server that is stuck in
-an infinite loop and unable to handle new connections, even though the server
-process is still running.
+`HEALTHCHECK`指令告诉Docker如何测试容器以检查它是否仍在工作。
+即使服务进程仍在运行，这也可以检测到陷入无限循环且无法处理新连接的Web服务器等情况.
 
-When a container has a healthcheck specified, it has a _health status_ in
-addition to its normal status. This status is initially `starting`. Whenever a
-health check passes, it becomes `healthy` (whatever state it was previously in).
-After a certain number of consecutive failures, it becomes `unhealthy`.
+当容器指定了运行状况检查时, 除了正常状态外，它还具有_health status_. 
+这种状态最初是 `starting`。 每当健康检查通过时，它就变得`healthy`（无论以前处于什么状态）。
+经过一定数量的连续失败后, 它将会变成 `unhealthy`.
 
-The options that can appear before `CMD` are:
+在`CMD`之前可以出现的选项是:
 
 * `--interval=DURATION` (default: `30s`)
 * `--timeout=DURATION` (default: `30s`)
 * `--start-period=DURATION` (default: `0s`)
 * `--retries=N` (default: `3`)
 
-The health check will first run **interval** seconds after the container is
-started, and then again **interval** seconds after each previous check completes.
+健康检查将在容器启动后，隔几秒才开始运行，然后在上一次健康性检查完成之后，隔几秒再运行一次,以此重复.
 
-If a single run of the check takes longer than **timeout** seconds then the check
-is considered to have failed.
+如果检查的单次运行时间超时了，则认为检查失败.
 
-It takes **retries** consecutive failures of the health check for the container
-to be considered `unhealthy`.
+对容器的健康性检查，重试几次都是失败的话， 容器的状态会被认为是 `unhealthy`.
 
 **start period** provides initialization time for containers that need time to bootstrap.
 Probe failure during that period will not be counted towards the maximum number of retries.
