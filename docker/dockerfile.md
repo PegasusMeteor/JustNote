@@ -1314,57 +1314,44 @@ RUN echo "Hello World"
 
 对容器的健康性检查，重试几次都是失败的话， 容器的状态会被认为是 `unhealthy`.
 
-**start period** provides initialization time for containers that need time to bootstrap.
-Probe failure during that period will not be counted towards the maximum number of retries.
-However, if a health check succeeds during the start period, the container is considered
-started and all consecutive failures will be counted towards the maximum number of retries.
+**start period** 为需要时间引导的容器提供了初始化的时间，在此期间探测失败将不计入最大重试次数。 
+但是，如果在启动期间运行状况检查成功，则会将容器视为已启动，并且所有连续的故障将计入最大重试次数.
 
-There can only be one `HEALTHCHECK` instruction in a Dockerfile. If you list
-more than one then only the last `HEALTHCHECK` will take effect.
+Dockerfile中只能有一个`HEALTHCHECK`指令. 如果列出多个，那么只有最后一个`HEALTHCHECK`才会生效.
 
-The command after the `CMD` keyword can be either a shell command (e.g. `HEALTHCHECK
-CMD /bin/check-running`) or an _exec_ array (as with other Dockerfile commands;
-see e.g. `ENTRYPOINT` for details).
+`CMD`关键字后面的命令可以是shell命令（例如`HEALTHCHECK CMD /bin/check-running`）或 _exec_ 数组（与其他Dockerfile命令一样;有关详细信息，请参阅例如`ENTRYPOINT`）
 
-The command's exit status indicates the health status of the container.
-The possible values are:
+命令的退出状态指示容器的运行状况.
+可能的值是:
 
 - 0: success - the container is healthy and ready for use
 - 1: unhealthy - the container is not working correctly
 - 2: reserved - do not use this exit code
 
-For example, to check every five minutes or so that a web-server is able to
-serve the site's main page within three seconds:
+例如，每隔五分钟检查一次，网络服务器能够在三秒钟内为网站的主页面提供服务:
 
     HEALTHCHECK --interval=5m --timeout=3s \
       CMD curl -f http://localhost/ || exit 1
 
-To help debug failing probes, any output text (UTF-8 encoded) that the command writes
-on stdout or stderr will be stored in the health status and can be queried with
-`docker inspect`. Such output should be kept short (only the first 4096 bytes
-are stored currently).
+为了便于调试, 这个命令在标准输出或者错误输出的的任何输出 (UTF-8 编码) 都会被存储到健康状态中，并且能够通过`docker inspect`查询到. 
+此类输出应保持较短（目前仅存储前4096个字节）.
 
-When the health status of a container changes, a `health_status` event is
-generated with the new status.
+当容器的运行状况发生更改时，将生成具有新状态的“health_status”事件.
 
-The `HEALTHCHECK` feature was added in Docker 1.12.
+Docker 1.12中添加了`HEALTHCHECK`功能.
 
 
 ## SHELL
 
     SHELL ["executable", "parameters"]
 
-The `SHELL` instruction allows the default shell used for the *shell* form of
-commands to be overridden. The default shell on Linux is `["/bin/sh", "-c"]`, and on
-Windows is `["cmd", "/S", "/C"]`. The `SHELL` instruction *must* be written in JSON
-form in a Dockerfile.
+`SHELL`指令允许覆盖用于 * shell * 形式命令的默认shell. Linux上的默认shell是 `["/bin/sh", "-c"]`, windows平台上默认的是 `["cmd", "/S", "/C"]`. 
+ Dockerfile中 `SHELL` 指令 *必须* 被写成 JSON 格式.
 
-The `SHELL` instruction is particularly useful on Windows where there are
-two commonly used and quite different native shells: `cmd` and `powershell`, as
-well as alternate shells available including `sh`.
+`SHELL` 指令在windows平台上特别有用，因为windows上有两个完全不同的但是却非常常用的本地shell: `cmd` 和 `powershell`,
+以及包括`sh`在内的可替代shell.
 
-The `SHELL` instruction can appear multiple times. Each `SHELL` instruction overrides
-all previous `SHELL` instructions, and affects all subsequent instructions. For example:
+`SHELL`指令可以多次出现. 每个`SHELL`指令都会覆盖所有先前的`SHELL`指令，并影响所有后续指令. 例如:
 
     FROM microsoft/windowsservercore
 
@@ -1382,36 +1369,28 @@ all previous `SHELL` instructions, and affects all subsequent instructions. For 
     SHELL ["cmd", "/S"", "/C"]
     RUN echo hello
 
-The following instructions can be affected by the `SHELL` instruction when the
-*shell* form of them is used in a Dockerfile: `RUN`, `CMD` and `ENTRYPOINT`.
+当在Dockerfile中使用它们的* shell *形式时，以下指令会受到`SHELL`指令的影响: `RUN`, `CMD` and `ENTRYPOINT`.
 
-The following example is a common pattern found on Windows which can be
-streamlined by using the `SHELL` instruction:
+以下示例是Windows上常见的模式，可以使用`SHELL`指令简化:
 
     ...
     RUN powershell -command Execute-MyCmdlet -param1 "c:\foo.txt"
     ...
 
-The command invoked by docker will be:
+docker调用的命令将是:
 
     cmd /S /C powershell -command Execute-MyCmdlet -param1 "c:\foo.txt"
 
-This is inefficient for two reasons. First, there is an un-necessary cmd.exe command
-processor (aka shell) being invoked. Second, each `RUN` instruction in the *shell*
-form requires an extra `powershell -command` prefixing the command.
+这样是低效的，有两个原因. 首先，调用一个不必要的cmd.exe命令处理器（也就是shell）. 其次，每个 *shell* 格式的 `RUN` 指令都需要为命令添加一个前缀  `powershell -command`.
 
-To make this more efficient, one of two mechanisms can be employed. One is to
-use the JSON form of the RUN command such as:
+为了提高效率，可以采用两种机制中的一种。 一种是使用RUN命令的JSON形式，如:
 
     ...
     RUN ["powershell", "-command", "Execute-MyCmdlet", "-param1 \"c:\\foo.txt\""]
     ...
 
-While the JSON form is unambiguous and does not use the un-necessary cmd.exe,
-it does require more verbosity through double-quoting and escaping. The alternate
-mechanism is to use the `SHELL` instruction and the *shell* form,
-making a more natural syntax for Windows users, especially when combined with
-the `escape` parser directive:
+虽然JSON表单是明确的，并且不使用不必要的cmd.exe，但它确实需要通过双引号和转义来获得更多详细信息. 
+另一种机制是使用`SHELL` 指令的 *shell* 格式, 为Windows用户提供更自然的语法, 特别是与`escape`解析器指令结合使用时:
 
     # escape=`
 
@@ -1421,7 +1400,7 @@ the `escape` parser directive:
     ADD Execute-MyCmdlet.ps1 c:\example\
     RUN c:\example\Execute-MyCmdlet -sample 'hello world'
 
-Resulting in:
+结果:
 
     PS E:\docker\build\shell> docker build -t shell .
     Sending build context to Docker daemon 4.096 kB
@@ -1456,19 +1435,15 @@ Resulting in:
     Successfully built 8e559e9bf424
     PS E:\docker\build\shell>
 
-The `SHELL` instruction could also be used to modify the way in which
-a shell operates. For example, using `SHELL cmd /S /C /V:ON|OFF` on Windows, delayed
-environment variable expansion semantics could be modified.
+`SHELL`指令也可用于修改shell的运行方式. 例如, 在Windows上使用 `SHELL cmd /S /C /V:ON|OFF` 格式, 可以修改延迟环境变量扩展语义.
 
-The `SHELL` instruction can also be used on Linux should an alternate shell be
-required such as `zsh`, `csh`, `tcsh` and others.
+果需要备用shell，如`zsh`，`csh`，`tcsh`等，也可以在Linux上使用`SHELL`指令.
 
-The `SHELL` feature was added in Docker 1.12.
+Docker 1.12中添加了`SHELL` 功能.
 
 ## Dockerfile examples
 
-Below you can see some examples of Dockerfile syntax. If you're interested in
-something more realistic, take a look at the list of [Dockerization examples](https://docs.docker.com/engine/examples/).
+下面可以看到Dockerfile语法的一些示例. 如果对更多的示例感兴趣，可以移步 [Dockerization examples](https://docs.docker.com/engine/examples/).
 
 ```
 # Nginx
