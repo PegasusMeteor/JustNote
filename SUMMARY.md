@@ -46,8 +46,8 @@
     * [kubernetes集群搭建(V1.11)](kubernetes/V1.11/k8s-install-v1.11.md)    
     * [kubernetes应用入门(V1.11)](kubernetes/V1.11/k8s-quick-start-v1.11.md)   
     * [kubernetes资源清单定义入门(V1.11)](kubernetes/V1.11/k8s-resource-inventory-v1.11.md) 
-
-
+    * [kubernetes pod 控制器(V1.11)](kubernetes/V1.11/k8s-pod-controller-v1.11.md)
+    * [kubernetes pod 生命周期(V1.11)](kubernetes/V1.11/k8s-pod-lifecycle-v1.11.md)
 
 
 
