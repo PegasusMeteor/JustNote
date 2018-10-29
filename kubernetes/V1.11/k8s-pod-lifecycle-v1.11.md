@@ -1,5 +1,8 @@
 **此处参考了kubernetes的官方文档**
-[https://kubernetes.io/zh/docs/concepts/workloads/pods/pod-lifecycle/](https://kubernetes.io/zh/docs/concepts/workloads/pods/pod-lifecycle/)  
+[https://kubernetes.io/zh/docs/concepts/workloads/pods/pod-lifecycle/](https://kubernetes.io/zh/docs/concepts/workloads/pods/pod-lifecycle/)   
+
+
+**这部分生命周期的内容很重要，后期需要再回顾学习**
 
 
 ## 本章目录

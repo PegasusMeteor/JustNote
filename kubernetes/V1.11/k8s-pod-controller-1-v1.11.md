@@ -1,4 +1,4 @@
-## kubernetes pod 控制器
+## kubernetes pod 控制器一
 
 
 ### Pod资源  
