@@ -49,6 +49,7 @@
     * [kubernetes pod 控制器一(V1.11)](kubernetes/V1.11/k8s-pod-controller-1-v1.11.md)
     * [kubernetes pod 生命周期(V1.11)](kubernetes/V1.11/k8s-pod-lifecycle-v1.11.md)
     * [kubernetes pod 控制器二(V1.11)](kubernetes/V1.11/k8s-pod-controller-2-v1.11.md)
+    * [kubernetes pod 控制器三(V1.11)](kubernetes/V1.11/k8s-pod-controller-3-v1.11.md)
 
 
 
