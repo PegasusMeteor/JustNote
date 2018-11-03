@@ -171,8 +171,163 @@ Events:
 
 Deployment 是建构再rs之上的。  
 
+```shell
+[root@k8s-master ~]# kubectl explain deploy 
+KIND:     Deployment
+VERSION:  extensions/v1beta1
+
+DESCRIPTION:
+     DEPRECATED - This group version of Deployment is deprecated by
+     apps/v1beta2/Deployment. See the release notes for more information.
+     Deployment enables declarative updates for Pods and ReplicaSets.
+
+FIELDS:
+   apiVersion   <string>
+     APIVersion defines the versioned schema of this representation of an
+     object. Servers should convert recognized schemas to the latest internal
+     value, and may reject unrecognized values. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#resources
+
+   kind <string>
+     Kind is a string value representing the REST resource this object
+     represents. Servers may infer this from the endpoint the client submits
+     requests to. Cannot be updated. In CamelCase. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+
+   metadata     <Object>
+     Standard object metadata.
+
+   spec <Object>
+     Specification of the desired behavior of the Deployment.
+
+   status       <Object>
+     Most recently observed status of the Deployment.
+
+```
+下面我们来定义一个deployment 来看看实际的效果。
+
+
+```shell
+[root@k8s-master manifests]# cat deploy-demo.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deploy
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+      release: canary
+  template:
+    metadata:
+      labels:
+        app: myapp
+        release: canary
+    spec:
+      containers:
+      - name: myapp
+        image: nginx:1.13.8
+        ports:
+        - name: http
+          containerPort: 80 
+        
+[root@k8s-master manifests]# kubectl apply -f deploy-demo.yaml 
+deployment.apps/myapp-deploy created
+[root@k8s-master manifests]# kubectl get deploy         
+NAME           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+myapp-deploy   2         2         2            0           1m
+
+```
+
+可以试用patch 命令来给我们的deployment 来动态的打补丁。但是这种方式并不会真正的修改我们自定义的配置文件。
+
+```shell
+[root@k8s-master manifests]# kubectl patch deployment myapp-deploy -p '{"spec":{"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":0}}}}'
+deployment.extensions/myapp-deploy patched
+```
+还可以直接对镜像进行修改
+```shell
+[root@k8s-master manifests]# kubectl set image deployment myapp-deploy myapp=nginx:latest 
+deployment.extensions/myapp-deploy image updated
+```
+
+
 
 #### DaemonSet 
+在整个集群的每一个节点上，只运行一个指定的pod副本。
+
+```shell
+[root@k8s-master manifests]# kubectl explain ds
+KIND:     DaemonSet
+VERSION:  extensions/v1beta1
+
+DESCRIPTION:
+     DEPRECATED - This group version of DaemonSet is deprecated by
+     apps/v1beta2/DaemonSet. See the release notes for more information.
+     DaemonSet represents the configuration of a daemon set.
+
+FIELDS:
+   apiVersion   <string>
+     APIVersion defines the versioned schema of this representation of an
+     object. Servers should convert recognized schemas to the latest internal
+     value, and may reject unrecognized values. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#resources
+
+   kind <string>
+     Kind is a string value representing the REST resource this object
+     represents. Servers may infer this from the endpoint the client submits
+     requests to. Cannot be updated. In CamelCase. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+
+   metadata     <Object>
+     Standard object's metadata. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+
+   spec <Object>
+     The desired behavior of this daemon set. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+
+   status       <Object>
+     The current status of this daemon set. This data may be out of date by some
+     window of time. Populated by the system. Read-only. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+```
+
+
+```shell
+[root@k8s-master manifests]# cat ds-demo.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat-ds
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: filebeat
+      release: stable
+  template:
+    metadata:
+      labels:
+        app: filebeat
+        release: stable
+    spec:
+      containers:
+      - name: filebeat
+        image: dev_ops/filebeat:latest
+        env: 
+        - name: REDIS_HOST
+          value: redis.default.cluster.svc.cluster.local 
+        - name: REDIS_LOG_LEVEL
+          value: info 
+         
+[root@k8s-master manifests]# kubectl apply -f ds-demo.yaml 
+daemonset.apps/myapp-ds created
+
+
+```
 
 #### Job
 
