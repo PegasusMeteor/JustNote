@@ -1,10 +1,10 @@
 ## kubernetes service 资源
 
-官方文档 [https://kubernetes.io/zh/docs/concepts/services-networking/service/]{https://kubernetes.io/zh/docs/concepts/services-networking/service/}
+官方文档 [https://kubernetes.io/zh/docs/concepts/services-networking/service/](https://kubernetes.io/zh/docs/concepts/services-networking/service/)
 
-![userservice代理模式]{http://ot2trm1s2.bkt.clouddn.com/k8s/services-userspace-overview.svg}
+![userservice代理模式](http://ot2trm1s2.bkt.clouddn.com/k8s/services-userspace-overview.svg)
 
-![iptables代理模式]{http://ot2trm1s2.bkt.clouddn.com/k8s/services-iptables-overview.svg}
+![iptables代理模式](http://ot2trm1s2.bkt.clouddn.com/k8s/services-iptables-overview.svg)
 
 
 
