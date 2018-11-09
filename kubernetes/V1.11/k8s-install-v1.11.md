@@ -12,12 +12,12 @@
 
 实验环境组件结构图如下所示。   
 
-![实验环境架构图](http://ot2trm1s2.bkt.clouddn.com/k8s/k8s-install-v1.11/k8s-env-structure.jpg) 
+![实验环境架构图](http://dingdangkoudai.shop/k8s/k8s-install-v1.11/k8s-env-structure.jpg) 
   
 
 实验环境的网络结构如下图所示。至于为什么使用这个网段，后面的过程中会有详细的介绍。  
 
-![实验网络图](http://ot2trm1s2.bkt.clouddn.com/k8s/k8s-install-v1.11/k8s-env-network.jpg) 
+![实验网络图](http://dingdangkoudai.shop/k8s/k8s-install-v1.11/k8s-env-network.jpg) 
 
 
 ### 实验环境准备

@@ -4,7 +4,7 @@
 
 ### ingress 介绍
 
-![nginx-ingress-controller](http://ot2trm1s2.bkt.clouddn.com/k8s/nginx-ingress-controller.png)
+![nginx-ingress-controller](http://dingdangkoudai.shop/k8s/nginx-ingress-controller.png)
 
 **后期要补充完善**
 

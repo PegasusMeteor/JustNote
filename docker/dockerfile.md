@@ -2,7 +2,7 @@
 
 ## 镜像的相关操作 
 
-![镜像的相关操作](http://ot2trm1s2.bkt.clouddn.com/docker/imge-operation.png)
+![镜像的相关操作](http://dingdangkoudai.shop/docker/imge-operation.png)
 
 
 

@@ -4,11 +4,11 @@
 
 Dokcer Engine 本身一个C/S架构的应用程序。包含下面的一些组件。   
 
-![Docker Engine](http://ot2trm1s2.bkt.clouddn.com/docker/engine-components-flow.png)  
+![Docker Engine](http://dingdangkoudai.shop/docker/engine-components-flow.png)  
 
 ## Docker Architecture  
 
-![Docker Architecture](http://ot2trm1s2.bkt.clouddn.com/docker/architecture.svg)  
+![Docker Architecture](http://dingdangkoudai.shop/docker/architecture.svg)  
 
 
 ### Docker daemon  
@@ -168,7 +168,7 @@ docker container logs [OPTIONS] CONTAINER
 
 ## Docker Event State
 
-![Docker Event State](http://ot2trm1s2.bkt.clouddn.com/docker/event_state.png)
+![Docker Event State](http://dingdangkoudai.shop/docker/event_state.png)
 
 
 
