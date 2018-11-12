@@ -52,6 +52,7 @@
     * [kubernetes pod 控制器三(V1.11)](kubernetes/V1.11/k8s-pod-controller-3-v1.11.md)
     * [kubernetes service资源(V1.11)](kubernetes/V1.11/k8s-service-v1.11.md)
     * [kubernetes ingress(V1.11)](kubernetes/V1.11/k8s-ingress-v1.11.md)
+    * [kubernetes 存储卷(V1.11)](kubernetes/V1.11/k8s-volumes-v1.11.md)
 
 
 
