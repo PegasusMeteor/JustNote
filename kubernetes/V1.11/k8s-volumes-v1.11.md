@@ -394,6 +394,224 @@ FIELDS:
 
 ```  
 
+![http://dingdangkoudai.shop/k8s/PVC.png](http://dingdangkoudai.shop/k8s/PVC.png)
+
+![http://dingdangkoudai.shop/k8s/pvc2.png](http://dingdangkoudai.shop/k8s/pvc2.png)
+
+
+在之前创建的nfs存储路径下，创建几个 pv路径，用于pvc的使用。
+
+```shell
+[root@k8s-node1 ~]# cd /data/volumes
+[root@k8s-node1 volumes]# mkdir v{1..5}
+[root@k8s-node1 volumes]# cat /etc/exports
+/data/volumes/v1 192.168.0.0/16(rw,no_root_squash)
+/data/volumes/v2 192.168.0.0/16(rw,no_root_squash)
+/data/volumes/v3 192.168.0.0/16(rw,no_root_squash)
+/data/volumes/v4 192.168.0.0/16(rw,no_root_squash)
+/data/volumes/v5 192.168.0.0/16(rw,no_root_squash)
+
+[root@k8s-node1 volumes]# exportfs -arv
+exporting 192.168.0.0/16:/data/volumes/v5
+exporting 192.168.0.0/16:/data/volumes/v4
+exporting 192.168.0.0/16:/data/volumes/v3
+exporting 192.168.0.0/16:/data/volumes/v2
+exporting 192.168.0.0/16:/data/volumes/v1
+```
+
+下面将这些存储卷在kubernetes中定义为pv。什么是pv,可以看下下面的解释。  
+
+```shell
+[root@k8s-master ~]# kubectl explain pv
+KIND:     PersistentVolume
+VERSION:  v1
+
+DESCRIPTION:
+     PersistentVolume (PV) is a storage resource provisioned by an
+     administrator. It is analogous to a node. More info:
+     https://kubernetes.io/docs/concepts/storage/persistent-volumes
+
+FIELDS:
+   apiVersion   <string>
+     APIVersion defines the versioned schema of this representation of an
+     object. Servers should convert recognized schemas to the latest internal
+     value, and may reject unrecognized values. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#resources
+
+   kind <string>
+     Kind is a string value representing the REST resource this object
+     represents. Servers may infer this from the endpoint the client submits
+     requests to. Cannot be updated. In CamelCase. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+
+   metadata     <Object>
+     Standard object's metadata. More info:
+     https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+
+   spec <Object>
+     Spec defines a specification of a persistent volume owned by the cluster.
+     Provisioned by an administrator. More info:
+     https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
+
+   status       <Object>
+     Status represents the current information/status for the persistent volume.
+     Populated by the system. Read-only. More info:
+     https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
+
+```
+下面我们就将刚才创建的路径创建成几个pv。
+
+```shell
+[root@k8s-master volumes]# cat pv-demo.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: pv001
+# 注意，定义pv的时候，一定不要写名称空间
+# pv是属于集群级别的资源，所有的pvc都可以用 
+# pvc 属于名称空间级别，pod也是  
+  labels:
+    name: pv001
+spec:
+  nfs: 
+    path: /data/volumes/v1
+    server: 192.168.0.40
+  accessModes: ["ReadWriteMany","ReadWriteOnce"]
+  capacity:
+    storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: pv002
+  labels:
+    name: pv002
+spec:
+  nfs: 
+    path: /data/volumes/v2
+    server: 192.168.0.40
+  accessModes: ["ReadWriteMany","ReadWriteOnce"]
+  capacity:
+    storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: pv003
+  labels:
+    name: pv003
+spec:
+  nfs: 
+    path: /data/volumes/v3
+    server: 192.168.0.40
+  accessModes: ["ReadWriteMany","ReadWriteOnce"]
+  capacity:
+    storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: pv004
+  labels:
+    name: pv004
+spec:
+  nfs: 
+    path: /data/volumes/v4
+    server: 192.168.0.40
+  accessModes: ["ReadWriteMany","ReadWriteOnce"]
+  capacity:
+    storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: pv005
+  labels:
+    name: pv005
+spec:
+  nfs: 
+    path: /data/volumes/v5
+    server: 192.168.0.40
+  accessModes: ["ReadWriteMany","ReadWriteOnce"]
+  capacity:
+    storage: 10Gi
+
+[root@k8s-master volumes]# kubectl apply -f pv-demo.yaml 
+persistentvolume/pv001 created
+persistentvolume/pv002 created
+persistentvolume/pv003 created
+persistentvolume/pv004 created
+persistentvolume/pv005 created
+```
+这样我们就创建了5个pv。接下来，可以获取一下这些pv，可以查看到他们的状态。
+
+```shell
+[root@k8s-master volumes]# kubectl get pv
+NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM     STORAGECLASS   REASON    AGE
+pv001     10Gi       RWO,RWX        Retain           Available                                      1m
+pv002     5Gi        RWO,RWX        Retain           Available                                      1m
+pv003     2Gi        RWO,RWX        Retain           Available                                      1m
+pv004     20Gi       RWO,RWX        Retain           Available                                      1m
+pv005     10Gi       RWO,RWX        Retain           Available                                      1m
+```
+
+接下来，我们就可以创建PVC了。  
+
+```shell
+[root@k8s-master volumes]# cat pod-volume-pvc.yaml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mypvc
+  namespace: default
+spec:
+  accessModes: ["ReadWriteMany"]
+  resources:
+    requests:
+      storage: 6Gi
+      
+---
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: pod-vol-pvc
+  namespace: default 
+spec:
+  containers: 
+  - name: myapp
+    image: nginx:1.13
+    volumeMounts:
+    - name: html 
+      mountPath: /usr/share/nginx/html/
+  volumes: 
+  - name: html 
+    persistentVolumeClaim: 
+      claimName: mypvc
+    
+[root@k8s-master volumes]# kubectl apply -f pod-volume-pvc.yaml
+persistentvolumeclaim/mypvc created
+pod/pod-vol-pvc created
+
+```
+
+此时，我们再去查看一下pv的状态。  
+
+```shell
+[root@k8s-master volumes]# kubectl get pv
+NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM           STORAGECLASS   REASON    AGE
+pv001     10Gi       RWO,RWX        Retain           Available                                            13m
+pv002     5Gi        RWO,RWX        Retain           Available                                            13m
+pv003     2Gi        RWO,RWX        Retain           Available                                            13m
+pv004     20Gi       RWO,RWX        Retain           Bound       default/mypvc                            13m
+pv005     10Gi       RWO,RWX        Retain           Available                                            13m
+
+[root@k8s-master volumes]# kubectl get pvc
+NAME      STATUS    VOLUME    CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+mypvc     Bound     pv004     20Gi       RWO,RWX                       3m
+```
+
+这会儿，我们能够看到，有一个pv已经被绑定了。只要大于等于pvc里面要求的空间的大小，就可以被绑定来使用。同样，查看pvc也能看到相似的信息。这时，我们的pod就可以正常使用了。   
+  
 
 
 
