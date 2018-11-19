@@ -394,9 +394,9 @@ FIELDS:
 
 ```  
 
-![http://dingdangkoudai.shop/k8s/PVC.png](http://dingdangkoudai.shop/k8s/PVC.png)
+![http://www.selinux.tech/k8s/PVC.png](http://www.selinux.tech/k8s/PVC.png)
 
-![http://dingdangkoudai.shop/k8s/pvc2.png](http://dingdangkoudai.shop/k8s/pvc2.png)
+![http://www.selinux.tech/k8s/pvc2.png](http://www.selinux.tech/k8s/pvc2.png)
 
 
 在之前创建的nfs存储路径下，创建几个 pv路径，用于pvc的使用。

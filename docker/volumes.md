@@ -5,7 +5,7 @@ Docker 镜像 由多个只读层内叠加而成，启动容器时，docker会加
 如果运行中的容器修改了现有的一个已经存在的文件，那么改为文件将会从读写层下面的只读层复制到读写层，该文件的只读版本仍然存在，只是已经被读写层中该文件的副本所隐藏，此即下“写时复制(COW)”机制。
 
 
-![docker-data-volumes](http://dingdangkoudai.shop/docker/docker-data-volumes.png)
+![docker-data-volumes](http://www.selinux.tech/docker/docker-data-volumes.png)
 
 
 # 为什么要用到存储卷
@@ -88,5 +88,5 @@ Docker 支持在启动一个容器的时候直接复制其他的容器的存储�
 ```
 
 
-![docker share volumes][http://dingdangkoudai.shop/docker/dcoker-share-volumes.png]()
+![docker share volumes][http://www.selinux.tech/docker/dcoker-share-volumes.png]()
 
