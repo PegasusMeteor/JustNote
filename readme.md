@@ -2,7 +2,7 @@
 一本简单的运维笔记，用来记录和分享自己的学习与成长之路。
 
 **Author**: xiaoshuaigege  
-**Blog**: [www.selinux.tech](http://www.selinux.tech)  
+**Blog**: [selinux.tech](http://selinux.tech)  
 **51CTO**:[http://blog.51cto.com/xiaoshuaigege](http://blog.51cto.com/xiaoshuaigege)  
 
 
