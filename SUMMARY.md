@@ -1,6 +1,6 @@
 # Summary
-<!--* [Introduction](readme.md)
-* [chapter1-Linux基础知识](chapter1/readme.md)
+* [Introduction](readme.md)
+<!--* [chapter1-Linux基础知识](chapter1/readme.md)
   * [Section1-入门知识](chapter1/SECTION1.md)
   * [Section2-常用命令](chapter1/SECTION2.md)
 
@@ -18,7 +18,7 @@
     * [2.3 线性表的链式表示和实现](golang_structure/list/linklist/2-3.md)
         * [2.3.1 线性链表](golang_structure/list/linklist/2-3-1.md)
         * [2.3.2 循环链表](golang_structure/list/linklist/2-3-2.md)
-        * [2.3.3 双向链表](golang_structure/list/linklist/2-3-3.md)
+        * [2.3.3 双向链表](golang_structure/list/linklist/2-3-3.md)-->
   
 
 * [Docker](docker/readme.md)
@@ -31,7 +31,7 @@
   * [Docker私有Registry](docker/private-registry.md)
   * [Docker资源限制以及验证](docker/resource-limited.md)
   * [Docker开发(golang)](docker/dev-golang/readme.md)
-    * [golang template 格式化docker输出]()-->
+    * [golang template 格式化docker输出]()
 
 * [Kubernetes](kubernetes/readme.md)
   * [V1.11](kubernetes/V1.11/readme.md)
