@@ -2,7 +2,7 @@
 
 ## 镜像的相关操作 
 
-![镜像的相关操作](http://www.selinux.tech/docker/imge-operation.png)
+![镜像的相关操作](https://www.selinux.tech/docker/imge-operation.png)
 
 
 

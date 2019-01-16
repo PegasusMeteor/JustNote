@@ -6,7 +6,7 @@ github地址 [https://kubernetes.io/docs/concepts/services-networking/ingress/](
 
 ### ingress 介绍
 
-![nginx-ingress-controller](http://www.selinux.tech/k8s/nginx-ingress-controller.png)
+![nginx-ingress-controller](https://www.selinux.tech/k8s/nginx-ingress-controller.png)
 
 **后期要补充完善**
 
@@ -322,7 +322,7 @@ Events:
 
 此时，通过外部的浏览器来访问我们域名就可以访问到后端的应用。  
 
-![http://www.selinux.tech/k8s/ingress_test.png](http://www.selinux.tech/k8s/ingress_test.png)  
+![https://www.selinux.tech/k8s/ingress_test.png](https://www.selinux.tech/k8s/ingress_test.png)  
 
 同上，如果需要部署其他的应用，就按照这个过程来进行操作就可以了。  
 

@@ -1,6 +1,6 @@
 # 容器网络  
 
-![Docker容器网络的四种模式](http://www.selinux.tech/docker/docker-network.png)
+![Docker容器网络的四种模式](https://www.selinux.tech/docker/docker-network.png)
 
 ```shell
  ~]# ip netns help 
