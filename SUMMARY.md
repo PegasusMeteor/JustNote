@@ -2,40 +2,10 @@
 * [本书简介](readme.md)
 
 * [Docker](docker/readme.md)
-  * [Docker用法基础](docker/base-use.md)
-  * [Docker镜像管理基础](docker/images-manage.md)
-  * [Docker容器虚拟化网络概述](docker/virtual-network.md)
-  * [Docker容器网络](docker/container-network.md)
-  * [Docker存储卷](docker/volumes.md)
-  * [Dockerfile详解](docker/dockerfile.md)
-  * [Docker私有Registry](docker/private-registry.md)
-  * [Docker资源限制以及验证](docker/resource-limited.md)
-  * [Docker开发(golang)](docker/dev-golang/readme.md)
-    * [golang template 格式化docker输出]()
+
 
 * [Kubernetes](kubernetes/readme.md)
-  * [V1.11](kubernetes/V1.11/readme.md)
-    * [官方文档](kubernetes/V1.11/install/_index.md)
-      * [安装kubeadm](kubernetes/V1.11/install/install-kubeadm.md)
-      * [使用kubeadm创建单个master的集群](kubernetes/V1.11/install/create-cluster-kubeadm.md)
-      * [使用kubeadm配置集群中的每个kubelet](kubernetes/V1.11/install/kubelet-integration.md)
-      * [使用kubeadm自定义控制台配置](kubernetes/V1.11/install/control-plane-flags.md)
-      * [使用kubeadm创建高可用集群](kubernetes/V1.11/install/high-availability.md)
-      * [用kubeadm建立一个高可用的etcd集群](kubernetes/V1.11/install/setup-ha-etcd-with-kubeadm.md)
-      * [kubeadm故障排除](kubernetes/V1.11/install/troubleshooting-kubeadm.md)
-    * [kubernetes集群搭建(V1.11)](kubernetes/V1.11/k8s-install-v1.11.md)    
-    * [kubernetes应用入门(V1.11)](kubernetes/V1.11/k8s-quick-start-v1.11.md)   
-    * [kubernetes资源清单定义入门(V1.11)](kubernetes/V1.11/k8s-resource-inventory-v1.11.md) 
-    * [kubernetes pod 控制器一(V1.11)](kubernetes/V1.11/k8s-pod-controller-1-v1.11.md)
-    * [kubernetes pod 生命周期(V1.11)](kubernetes/V1.11/k8s-pod-lifecycle-v1.11.md)
-    * [kubernetes pod 控制器二(V1.11)](kubernetes/V1.11/k8s-pod-controller-2-v1.11.md)
-    * [kubernetes pod 控制器三(V1.11)](kubernetes/V1.11/k8s-pod-controller-3-v1.11.md)
-    * [kubernetes service资源(V1.11)](kubernetes/V1.11/k8s-service-v1.11.md)
-    * [kubernetes ingress(V1.11)](kubernetes/V1.11/k8s-ingress-v1.11.md)
-    * [kubernetes 存储卷(V1.11)](kubernetes/V1.11/k8s-volumes-v1.11.md)
-    * [kubernetes PV、PVC、configmap和secret(V1.11)](kubernetes/V1.11/k8s-pv-pvc-configmap-secret-v1.11.md)
-    * [kubernetes StatefulSet(V1.11)](kubernetes/V1.11/k8s-statefulset-v1.11.md)
-    
 
 
-    <!--* [kubernetes dashboard认证及分级授权(V1.11)](kubernetes/V1.11/k8s-dashboard-v1.11.md) -->
+* [DesignPattern](designpattern/readme.md)
+  * [七大原则]（designpattern/seven-principle.md）
