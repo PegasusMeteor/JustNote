@@ -8,4 +8,4 @@
 
 
 * [DesignPattern](designpattern/readme.md)
-  * [七大原则]（designpattern/seven-principle.md）
+  * [七大原则](designpattern/seven-principle.md)
