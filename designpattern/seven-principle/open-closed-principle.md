@@ -24,25 +24,25 @@ type CourseInterface interface {
 package openclose
 
 type JavaCourse struct {
-    id    int
-    name  string
-    price float32
+  id    int
+  name  string
+  price float32
 }
 
 func NewJavaCourse(id int, name string, price float32) *JavaCourse {
-    return &JavaCourse{id: id, name: name, price: price}
+  return &JavaCourse{id: id, name: name, price: price}
 }
 
 func (j *JavaCourse) GetID() int {
-    return j.id
+  return j.id
 }
 
 func (j *JavaCourse) GetName() string {
-    return j.name
+  return j.name
 }
 
 func (j *JavaCourse) GetPrice() float32 {
-    return j.price
+  return j.price
 }
 ```
 
@@ -50,15 +50,19 @@ func (j *JavaCourse) GetPrice() float32 {
 package openclose
 
 type JavaDiscountCourse struct {
-    JavaCourse
+  JavaCourse
 }
 
 func NewJavaDiscountCourse(ID int, name string, price float32) *JavaDiscountCourse {
-    return &JavaDiscountCourse{JavaCourse: *NewJavaCourse(ID, name, price)}
+  return &JavaDiscountCourse{JavaCourse: *NewJavaCourse(ID, name, price)}
+}
+
+func (j *JavaDiscountCourse) GetOriginPrice() float32 {
+  return j.GetPrice()
 }
 
 func (j *JavaDiscountCourse) GetDiscountPrice() float32 {
-    return j.price * 0.8
+  return j.GetPrice() * 0.8
 }
 
 ```
@@ -130,6 +134,9 @@ public class JavaDiscountCourse extends JavaCourse {
   public JavaDiscountCourse(Integer id, String name, Double price) {
     super(id, name, price);
   }
+  public Double getOriginPrice() {
+    return super.getPrice() ;
+  }
 
   public Double getDiscountPrice() {
     return super.getPrice() * 0.8;
@@ -150,7 +157,7 @@ public class Test {
             + " 名称:"
             + javaCourse.getName()
             + " 原价:"
-            + javaCourse.getPrice()
+            + javaCourse.getOriginPrice()
             + " 折后价格:"
             + javaCourse.getDiscountPrice()
             + "元");
