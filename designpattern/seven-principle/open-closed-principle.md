@@ -14,9 +14,9 @@
 package openclose
 
 type CourseInterface interface {
-    GetID() int
-    GetName() string
-    GetPrice() float32
+  GetID() int
+  GetName() string
+  GetPrice() float32
 }
 ```
 
