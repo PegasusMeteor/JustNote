@@ -1,0 +1,1 @@
+# 依赖倒转原则(Dependence  Inversion Principle, DIP)
