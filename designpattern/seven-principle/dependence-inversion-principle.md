@@ -24,7 +24,7 @@ func NewJavaCourse() *JavaCourse {
     return &JavaCourse{}
 }
 
-func (j JavaCourse) studyCourse() {
+func (JavaCourse) studyCourse() {
     fmt.Println("study java")
 }
 
