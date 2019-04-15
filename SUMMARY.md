@@ -8,7 +8,7 @@
 
 * [DesignPattern](designpattern/readme.md)
   * [七大原则](designpattern/seven-principle.md)
-    * [开闭原则(OCP)](designpattern/seven-principle/ppen-closed-principle.md)
+    * [开闭原则(OCP)](designpattern/seven-principle/open-closed-principle.md)
     * [单一职责原则(SRP)](designpattern/seven-principle/single-responsibility-principle.md)
     * [里氏代换原则(LSP)](designpattern/seven-principle/liskov-substitution-principle.md)
     * [依赖倒转原则(DIP)](designpattern/seven-principle/dependence-inversion-principle.md)
