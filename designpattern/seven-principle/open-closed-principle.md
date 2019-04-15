@@ -168,3 +168,7 @@ public class Test {
 ## UML
 
 ![开闭原则的UML类图](images/open-close-principle.png)
+
+## 总结
+
+从上面两个Demo 中，我们还能看出一个Java 和 Golang 的区别。Java中，虽然用子类示例化了接口，但是在使用子类的方法时，还是需要将接口转成子类，而Golang中没有这种要求。
