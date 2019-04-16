@@ -9,4 +9,4 @@
 
 - [《设计模式的艺术-刘伟》](https://blog.csdn.net/LoveLion/article/details/17517213)
 - [golang-design-pattern](https://github.com/senghoo/golang-design-pattern)
-- Java版示例来源，慕课网Geely老师《java设计模式精讲》
+- Java版示例来源，Geely老师《java设计模式精讲》
