@@ -10,6 +10,57 @@
 
 ## Golang Demo
 
+```go
+package interfacesegregation
+
+// 生产中根据实际情况，将接口拆分到不同的文件中
+type EatAnimalAction interface {
+    eat()
+}
+type FlyAnimalAction interface {
+    fly()
+}
+type SwimAnimalAction interface {
+    swim()
+}
+```
+
+```go
+package interfacesegregation
+
+import "fmt"
+
+type Bird struct {
+}
+
+func (Bird) fly() {
+    fmt.Println("bird fly")
+}
+
+func (Bird) eat() {
+    fmt.Println("bird eat")
+}
+
+```
+
+```go
+package interfacesegregation
+
+import "fmt"
+
+type Dog struct {
+}
+
+func (Dog) swim() {
+    fmt.Println("dog swim")
+}
+
+func (Dog) eat() {
+    fmt.Println("dog eat")
+}
+
+```
+
 ## Java Demo
 
 假设我们有这样一个接口，定义了动物的行为。
