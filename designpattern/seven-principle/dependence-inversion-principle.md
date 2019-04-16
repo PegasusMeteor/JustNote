@@ -1,6 +1,6 @@
 # 依赖倒置原则(Dependence  Inversion Principle, DIP)
 
-**依赖倒置原则(Dependency Inversion  Principle, DIP)**：高层模块不应该依赖于低层模块，二者应该依赖于其抽象。抽象不应该依赖于细节，细节应当依赖于抽象。换言之，要针对接口编程，而不是针对实现编程。
+&emsp;&emsp; **依赖倒置原则(Dependency Inversion  Principle, DIP)**：高层模块不应该依赖于低层模块，二者应该依赖于其抽象。抽象不应该依赖于细节，细节应当依赖于抽象。换言之，要针对接口编程，而不是针对实现编程。
 
 ## Golang Demo
 

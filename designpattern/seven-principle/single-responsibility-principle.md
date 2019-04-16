@@ -1,10 +1,57 @@
 # 单一职责原则(Single Responsibility Principle, SRP)
 
-**单一职责原则(Single Responsibility Principle, SRP)**：一个类只负责一个功能领域中的相应职责，或者可以定义为：就一个类而言，应该只有一个引起它变化的原因，不要存在多于一个导致类变更的原因。一个类/接口/方法只负责一项职责。  
-单一职责原则是高内聚低耦合的指导方针，可以降低类的复杂度，提高类的可读性，提高系统的可维护性、降低变更引起的风险。其实，通俗来理解，一个类不能太累。我们在传统的软件工程，或者老旧的系统中经常能够看到，一个代码上万行的类。这种情况可能是由于历史原因导致的，但是不可否认，维护起来难度简直太大。因此，我们在软件设计过程中，要尝试将职责进行分离，不通职责封装在不同的类中，这样就能够降低我们设计软件的复杂度了。  
-单一职责原则不仅仅适用于面向对象编程语言设计，只要是模块化的编程，都适用。  
+&emsp;&emsp; **单一职责原则(Single Responsibility Principle, SRP)**：一个类只负责一个功能领域中的相应职责，或者可以定义为：就一个类而言，应该只有一个引起它变化的原因，不要存在多于一个导致类变更的原因。一个类/接口/方法只负责一项职责。  
+&emsp;&emsp; 单一职责原则是高内聚低耦合的指导方针，可以降低类的复杂度，提高类的可读性，提高系统的可维护性、降低变更引起的风险。其实，通俗来理解，一个类不能太累。我们在传统的软件工程，或者老旧的系统中经常能够看到，一个代码上万行的类。这种情况可能是由于历史原因导致的，但是不可否认，维护起来难度简直太大。因此，我们在软件设计过程中，要尝试将职责进行分离，不通职责封装在不同的类中，这样就能够降低我们设计软件的复杂度了。  
+&emsp;&emsp; 单一职责原则不仅仅适用于面向对象编程语言设计，只要是模块化的编程，都适用。  
 
 ## Golang Demo
+
+接下来，我们以接口为例，来看看单一职责原则在golang编程中的体现。详细的例子可以参考下面的Java Demo.  
+
+```go
+package singleresponsibility
+
+type CourseContent interface {
+  getCourseName() string
+
+  getCourseVideo() []byte
+}
+```
+
+```go
+package singleresponsibility
+
+type CourseManager interface {
+  studyCourse()
+
+  refundCourse()
+}
+```
+
+```go
+package singleresponsibility
+
+import "fmt"
+
+type Course struct {
+}
+
+func (Course) studyCourse() {
+  fmt.Println("study")
+}
+
+func (Course) refundCourse() {
+  fmt.Println("refund")
+}
+
+func (Course) getCourseName() string {
+  return "course name"
+}
+
+func (Course) getCourseVideo() []byte {
+  return nil
+}
+```
 
 ## Java Demo
 
