@@ -14,7 +14,11 @@
   - [并发（concurrency）和并行（parallelism）](#%E5%B9%B6%E5%8F%91concurrency%E5%92%8C%E5%B9%B6%E8%A1%8Cparallelism)
   - [进程间通信（IPC，Inter-Process Communication）](#%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1ipcinter-process-communication)
   - [线程同步](#%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5)
-  - [协程与进程、线程](#%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%9B%E7%A8%8B%E7%BA%BF%E7%A8%8B)
+  - [Go的并发哲学](#go%E7%9A%84%E5%B9%B6%E5%8F%91%E5%93%B2%E5%AD%A6)
+  - [协程](#%E5%8D%8F%E7%A8%8B)
+    - [什么是协程](#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8D%8F%E7%A8%8B)
+    - [协程的调度MPG](#%E5%8D%8F%E7%A8%8B%E7%9A%84%E8%B0%83%E5%BA%A6mpg)
+    - [协程(Goroutine scheduler)的源码实现](#%E5%8D%8F%E7%A8%8Bgoroutine-scheduler%E7%9A%84%E6%BA%90%E7%A0%81%E5%AE%9E%E7%8E%B0)
 
 <!-- /TOC -->
 
@@ -95,4 +99,353 @@ go 官方有一篇bolg [Concurrency is not parallelism](https://blog.golang.org/
 - [优先级倒置](https://en.wikipedia.org/wiki/Priority_inversion)，在高优先级进程处于临界区时发生，并由中优先级进程中断。这种违反优先权规则的行为可能会在某些情况下发生，并可能导致实时系统的严重后果;
 - [忙等待](https://en.wikipedia.org/wiki/Busy_waiting)，当进程经常轮询以确定它是否可以访问关键部分时发生。这种频繁的轮询会拖延其他进程的处理时间。
 
-## 协程与进程、线程
+## Go的并发哲学
+
+Go鼓励使用channel在goroutine之间传递数据，而不是显式地使用锁来调解对共享数据的访问.[Share Memory By Communicating](https://blog.golang.org/share-memory-by-communicating)
+
+[Go的并发哲学](https://www.kancloud.cn/mutouzhang/go/596822)
+
+## 协程
+
+下面来到了今天的主角，Goroutine。  
+
+### 什么是协程
+
+Goroutine是Go中最基本的组织单位之一，gotoutine是一个并发的函数（记住：不一定是并行）和其他代码一起运行.
+
+```go
+func main() {
+    go sayHello()
+    // continue doing other things
+}
+
+func sayHello() {
+    fmt.Println("hello")
+}
+```
+
+或者使用匿名函数来启动go协程
+
+```go
+go func(str string) {
+fmt.Println(str)
+}("hello")
+```
+
+Goroutines对Go来说是独一无二的。它们不是操作系统线程，它们不完全是绿色的线程(例如JVM管理的线程)，它们是更高级别的抽象，被称为协程(coroutines)。协程是非抢占的并发子程序，也就是说，它们不能被中断。
+
+下面是从[goroutine背后的知识](http://www.sizeofvoid.net/goroutine-under-the-hood/)摘录的几点内容。
+
+- goroutine是Go语言运行库的功能，不是操作系统提供的功能，goroutine不是用线程实现的。
+
+- goroutine就是一段代码，一个函数入口，以及在堆上为其分配的一个堆栈。所以它非常廉价，我们可以很轻松的创建上万个goroutine，但它们并不是被操作系统所调度执行,go runtime 有自己的scheduler。
+
+- 除了被系统调用阻塞的线程外，Go运行库最多会启动$GOMAXPROCS个线程来运行goroutine，现在go应用程序已经默认使用$GOMAXPROCS
+
+- goroutine是协作式调度的，如果goroutine会执行很长时间，而且不是通过等待读取或写入channel的数据来同步的话，就需要主动调用Gosched()来让出CPU
+
+- 和所有其他并发框架里的协程一样，goroutine里所谓“无锁”的优点只在单线程下有效，如果$GOMAXPROCS > 1并且协程间需要通信，Go运行库会负责加锁保护数据
+
+- **Web等服务端程序要处理的请求从本质上来讲是并行处理的问题，每个请求基本独立，互不依赖，几乎没有数据交互，这不是一个并发编程的模型**，而并发编程框架只是解决了其语义表述的复杂性，并不是从根本上提高处理的效率，也许是并发连接和并发编程的英文都是concurrent吧，很容易产生“并发编程框架和coroutine可以高效处理大量并发连接”的误解。
+
+### 协程的调度MPG
+
+如果要理解协程的调度，或者看懂 Goroutine scheduler 代码的话，就不得不了解一下MPG。
+
+我们引申出三个定义
+
+```go
+G - goroutine.
+M - worker thread, or machine.
+P - processor, a resource that is required to execute Go code.
+    M must have an associated P to execute Go code, however it can be
+    blocked or in a syscall w/o an associated P.
+```
+
+**用下面三个图形来表示。**
+
+![MPG](../images/MPG.png)
+
+**MPG的运行状态I**
+
+![MPG的运行状态Ⅰ](../images/MPG2.png)
+
+- 当前程序有三个M，如果三个M在同一个CPU上运行就是并发，不同CPU就是并行。
+- M1.M2,M3都在执行G，同时队列中分别有不同的G在等待获取P，来运行。
+- 从这个图的感觉上来看，这一点与线程有点类似，但是Goroutine是逻辑态的，因此go很容易就开启上万Goroutine。
+- 其他编程语言实现的线程往往是内核态或者用户态，有时还需要互相转化，比较重量级，很容易耗光物理资源。
+
+**MPG的运行状态Ⅱ**
+![MPG的运行状态Ⅱ](../images/MPG3.png)
+
+- 我们分成两个部分来看，首先看左边的部分。M0正在执行G0，另外有三个协程在等待。
+- 如果G0阻塞，比如读取文件或者数据库读写等
+- 这时就会创建M1 Worker thread(也有可能从现有的线程池中取出新的线程),并且将等待的三个G放到M1下开始执行,M0下的G0依然执行自己的耗时操作。
+- 这样的MPG调度模式,可以既让G0执行，同时也不会让队列的其他协程一直阻塞，仍然可以并发/并行执行。
+- 等到G0不阻塞了，M0会被放到空闲的主线程(从已有的线程池中取)继续执行。
+
+MPG的源代码在 [src/runtime/rumtime2.go](https://github.com/golang/go/blob/master/src/runtime/runtime2.go)
+
+### 协程(Goroutine scheduler)的源码实现
+
+接下来，我们就来看下go rutime的启动过程，源码位置 [src/runtime/proc.go](https://github.com/golang/go/blob/master/src/runtime/proc.go)
+
+go 的运行时是由汇编来实现的，在源码中有汇编代码，我们可以自编译。也可以使用GDB调试来实验go的运行时。所以，如果要看goroutine创建的话，一定要结合GDB调试。补充一点：go在build的时候，是把自己的运行时也一起build到bin中了，所以go的可执行文件一般比较大。  
+
+首先是main goroutine
+
+```go
+// The main goroutine.
+func main() {
+    // 获取一个G,一般就是main
+    g := getg()
+
+    // Racectx of m0->g0 is used only as the parent of the main goroutine.
+    // It must not be used for anything else.
+    g.m.g0.racectx = 0
+
+    //
+    // Max stack size is 1 GB on 64-bit, 250 MB on 32-bit.
+    // Using decimal instead of binary GB and MB because
+    // they look nicer in the stack overflow failure message.
+    if sys.PtrSize == 8 {
+        maxstacksize = 1000000000
+    } else {
+        maxstacksize = 250000000
+    }
+
+    // Allow newproc to start new Ms.
+    mainStarted = true
+
+    if GOARCH != "wasm" { // no threads on wasm yet, so no sysmon
+        systemstack(func() {
+            newm(sysmon, nil)
+        })
+    }
+
+    // Lock the main goroutine onto this, the main OS thread,
+    // during initialization. Most programs won't care, but a few
+    // do require certain calls to be made by the main thread.
+    // Those can arrange for main.main to run in the main thread
+    // by calling runtime.LockOSThread during initialization
+    // to preserve the lock.
+    lockOSThread()
+
+    if g.m != &m0 {
+        throw("runtime.main not on m0")
+    }
+
+    doInit(&runtime_inittask) // must be before defer
+    if nanotime() == 0 {
+        throw("nanotime returning zero")
+    }
+
+    // Defer unlock so that runtime.Goexit during init does the unlock too.
+    needUnlock := true
+    defer func() {
+        if needUnlock {
+            unlockOSThread()
+        }
+    }()
+
+    // Record when the world started.
+    runtimeInitTime = nanotime()
+
+    // 开启GC
+    gcenable()
+
+    main_init_done = make(chan bool)
+    // 进行一些检查
+    if iscgo {
+        if _cgo_thread_start == nil {
+            throw("_cgo_thread_start missing")
+        }
+        if GOOS != "windows" {
+            if _cgo_setenv == nil {
+                throw("_cgo_setenv missing")
+            }
+            if _cgo_unsetenv == nil {
+                throw("_cgo_unsetenv missing")
+            }
+        }
+        if _cgo_notify_runtime_init_done == nil {
+            throw("_cgo_notify_runtime_init_done missing")
+        }
+        // Start the template thread in case we enter Go from
+        // a C-created thread and need to create a new thread.
+        startTemplateThread()
+        cgocall(_cgo_notify_runtime_init_done, nil)
+    }
+
+    doInit(&main_inittask)
+
+    close(main_init_done)
+
+    needUnlock = false
+    unlockOSThread()
+
+    if isarchive || islibrary {
+        // A program compiled with -buildmode=c-archive or c-shared
+        // has a main, but it is not executed.
+        return
+    }
+    fn := main_main // make an indirect call, as the linker doesn't know the address of the main package when laying down the runtime
+    fn()
+    // 调试的
+    if raceenabled {
+        racefini()
+    }
+
+    // Make racy client program work: if panicking on
+    // another goroutine at the same time as main returns,
+    // let the other goroutine finish printing the panic trace.
+    // Once it does, it will exit. See issues 3934 and 20018.
+    if atomic.Load(&runningPanicDefers) != 0 {
+        // Running deferred functions should not take long.
+        for c := 0; c < 1000; c++ {
+            if atomic.Load(&runningPanicDefers) == 0 {
+                break
+            }
+            Gosched()
+        }
+    }
+    if atomic.Load(&panicking) != 0 {
+        gopark(nil, nil, waitReasonPanicWait, traceEvGoStop, 1)
+    }
+
+    exit(0)
+    for {
+        var x *int32
+        *x = 0
+    }
+}
+
+```
+
+如何创建一个goroutine呢？
+
+```go
+// Create a new g running fn with siz bytes of arguments.
+// Put it on the queue of g's waiting to run.
+// The compiler turns a go statement into a call to this.
+// Cannot split the stack because it assumes that the arguments
+// are available sequentially after &fn; they would not be
+// copied if a stack split occurred.
+//go:nosplit
+func newproc(siz int32, fn *funcval) {
+    argp := add(unsafe.Pointer(&fn), sys.PtrSize)
+    gp := getg()
+    pc := getcallerpc()
+    systemstack(func() {
+        newproc1(fn, (*uint8)(argp), siz, gp, pc)
+    })
+}
+
+// Create a new g running fn with narg bytes of arguments starting
+// at argp. callerpc is the address of the go statement that created
+// this. The new g is put on the queue of g's waiting to run.
+func newproc1(fn *funcval, argp *uint8, narg int32, callergp *g, callerpc uintptr) {
+    _g_ := getg()
+
+    if fn == nil {
+        _g_.m.throwing = -1 // do not dump full stacks
+        throw("go of nil func value")
+    }
+    acquirem() // disable preemption because it can be holding p in a local var
+    siz := narg
+    siz = (siz + 7) &^ 7
+
+    // We could allocate a larger initial stack if necessary.
+    // Not worth it: this is almost always an error.
+    // 4*sizeof(uintreg): extra space added below
+    // sizeof(uintreg): caller's LR (arm) or return address (x86, in gostartcall).
+    if siz >= _StackMin-4*sys.RegSize-sys.RegSize {
+        throw("newproc: function arguments too large for new goroutine")
+    }
+
+    _p_ := _g_.m.p.ptr()
+    newg := gfget(_p_)
+    if newg == nil {
+        newg = malg(_StackMin)
+        casgstatus(newg, _Gidle, _Gdead)
+        allgadd(newg) // publishes with a g->status of Gdead so GC scanner doesn't look at uninitialized stack.
+    }
+    if newg.stack.hi == 0 {
+        throw("newproc1: newg missing stack")
+    }
+
+    if readgstatus(newg) != _Gdead {
+        throw("newproc1: new g is not Gdead")
+    }
+
+    totalSize := 4*sys.RegSize + uintptr(siz) + sys.MinFrameSize // extra space in case of reads slightly beyond frame
+    totalSize += -totalSize & (sys.SpAlign - 1)                  // align to spAlign
+    sp := newg.stack.hi - totalSize
+    spArg := sp
+    if usesLR {
+        // caller's LR
+        *(*uintptr)(unsafe.Pointer(sp)) = 0
+        prepGoExitFrame(sp)
+        spArg += sys.MinFrameSize
+    }
+    if narg > 0 {
+        memmove(unsafe.Pointer(spArg), unsafe.Pointer(argp), uintptr(narg))
+        // This is a stack-to-stack copy. If write barriers
+        // are enabled and the source stack is grey (the
+        // destination is always black), then perform a
+        // barrier copy. We do this *after* the memmove
+        // because the destination stack may have garbage on
+        // it.
+        if writeBarrier.needed && !_g_.m.curg.gcscandone {
+            f := findfunc(fn.fn)
+            stkmap := (*stackmap)(funcdata(f, _FUNCDATA_ArgsPointerMaps))
+            if stkmap.nbit > 0 {
+                // We're in the prologue, so it's always stack map index 0.
+                bv := stackmapdata(stkmap, 0)
+                bulkBarrierBitmap(spArg, spArg, uintptr(bv.n)*sys.PtrSize, 0, bv.bytedata)
+            }
+        }
+    }
+
+    memclrNoHeapPointers(unsafe.Pointer(&newg.sched), unsafe.Sizeof(newg.sched))
+    newg.sched.sp = sp
+    newg.stktopsp = sp
+    newg.sched.pc = funcPC(goexit) + sys.PCQuantum // +PCQuantum so that previous instruction is in same function
+    newg.sched.g = guintptr(unsafe.Pointer(newg))
+    gostartcallfn(&newg.sched, fn)
+    newg.gopc = callerpc
+    newg.ancestors = saveAncestors(callergp)
+    newg.startpc = fn.fn
+    if _g_.m.curg != nil {
+        newg.labels = _g_.m.curg.labels
+    }
+    if isSystemGoroutine(newg, false) {
+        atomic.Xadd(&sched.ngsys, +1)
+    }
+    newg.gcscanvalid = false
+    casgstatus(newg, _Gdead, _Grunnable)
+
+    if _p_.goidcache == _p_.goidcacheend {
+        // Sched.goidgen is the last allocated id,
+        // this batch must be [sched.goidgen+1, sched.goidgen+GoidCacheBatch].
+        // At startup sched.goidgen=0, so main goroutine receives goid=1.
+        _p_.goidcache = atomic.Xadd64(&sched.goidgen, _GoidCacheBatch)
+        _p_.goidcache -= _GoidCacheBatch - 1
+        _p_.goidcacheend = _p_.goidcache + _GoidCacheBatch
+    }
+    newg.goid = int64(_p_.goidcache)
+    _p_.goidcache++
+    if raceenabled {
+        newg.racectx = racegostart(callerpc)
+    }
+    if trace.enabled {
+        traceGoCreate(newg, newg.startpc)
+    }
+    runqput(_p_, newg, true)
+
+    if atomic.Load(&sched.npidle) != 0 && atomic.Load(&sched.nmspinning) == 0 && mainStarted {
+        wakep()
+    }
+    releasem(_g_.m)
+}
+```
