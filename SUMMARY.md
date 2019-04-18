@@ -44,3 +44,5 @@
     * [访问者模式](designpattern/behavioral-principle/visitor-pattern.md)
 
 * [Golang](golang/readme.md)
+  * [Goroutines](golang/goroutines/index.md)
+  * [Channel](golang/channel/index.md)
