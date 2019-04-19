@@ -5,6 +5,7 @@
 <!-- TOC -->
 
 - [Goroutine](#goroutine)
+  - [提出问题](#%E6%8F%90%E5%87%BA%E9%97%AE%E9%A2%98)
   - [进程与线程](#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B)
     - [产生的背景](#%E4%BA%A7%E7%94%9F%E7%9A%84%E8%83%8C%E6%99%AF)
     - [相关概念](#%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
@@ -14,13 +15,23 @@
   - [并发（concurrency）和并行（parallelism）](#%E5%B9%B6%E5%8F%91concurrency%E5%92%8C%E5%B9%B6%E8%A1%8Cparallelism)
   - [进程间通信（IPC，Inter-Process Communication）](#%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1ipcinter-process-communication)
   - [线程同步](#%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5)
+    - [同步的方法(以java为例)](#%E5%90%8C%E6%AD%A5%E7%9A%84%E6%96%B9%E6%B3%95%E4%BB%A5java%E4%B8%BA%E4%BE%8B)
   - [Go的并发哲学](#go%E7%9A%84%E5%B9%B6%E5%8F%91%E5%93%B2%E5%AD%A6)
   - [协程](#%E5%8D%8F%E7%A8%8B)
     - [什么是协程](#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8D%8F%E7%A8%8B)
     - [协程的调度(MPG)](#%E5%8D%8F%E7%A8%8B%E7%9A%84%E8%B0%83%E5%BA%A6mpg)
     - [协程(Goroutine scheduler)的源码实现](#%E5%8D%8F%E7%A8%8Bgoroutine-scheduler%E7%9A%84%E6%BA%90%E7%A0%81%E5%AE%9E%E7%8E%B0)
+  - [一些参考](#%E4%B8%80%E4%BA%9B%E5%8F%82%E8%80%83)
 
 <!-- /TOC -->
+
+## 提出问题
+
+- go 是如何天然支持高并发的？
+- goroutine的调度机制？
+- goroutine的底层实现？
+- channel的底层实现？
+- channel如何做到了goroutine-safe?
 
 ## 进程与线程
 
@@ -99,6 +110,58 @@ go 官方有一篇bolg [Concurrency is not parallelism](https://blog.golang.org/
 - [优先级倒置](https://en.wikipedia.org/wiki/Priority_inversion)，在高优先级进程处于临界区时发生，并由中优先级进程中断。这种违反优先权规则的行为可能会在某些情况下发生，并可能导致实时系统的严重后果;
 - [忙等待](https://en.wikipedia.org/wiki/Busy_waiting)，当进程经常轮询以确定它是否可以访问关键部分时发生。这种频繁的轮询会拖延其他进程的处理时间。
 
+### 同步的方法(以java为例)
+
+- 同步方法
+
+```java
+public synchronized void save(){}
+```
+
+- 同步代码块
+
+```java
+synchronized(object){}
+```
+
+- 使用特殊域变量(volatile)实现线程同步
+
+```java
+可以参考前面线程安全的单例模式
+```
+
+- 使用重入锁实现线程同步
+
+ReenreantLock类的常用方法有：
+ReentrantLock() : 创建一个ReentrantLock实例
+lock() : 获得锁
+unlock() : 释放锁
+
+这种方式类似于golang中的lock。
+
+```java
+class Test {
+
+            private int count = 100;
+            //需要声明这个锁
+            private Lock lock = new ReentrantLock();
+            public int getAccount() {
+                return account;
+            }
+            //这里不再需要synchronized
+            public void save(int num) {
+                lock.lock();
+                try{
+                    count += num;
+                }finally{
+                    lock.unlock();
+                }
+            }
+        ｝
+```
+
+- ...等等其他的方式
+
 ## Go的并发哲学
 
 Go鼓励使用channel在goroutine之间传递数据，而不是显式地使用锁来调解对共享数据的访问.[Share Memory By Communicating](https://blog.golang.org/share-memory-by-communicating)
@@ -163,11 +226,9 @@ P - processor, a resource that is required to execute Go code.
 ```
 
 **用下面三个图形来表示。**
-
 ![MPG](../images/MPG.png)
 
 **MPG的运行状态I**
-
 ![MPG的运行状态Ⅰ](../images/MPG2.png)
 
 - 当前程序有三个M，如果三个M在同一个CPU上运行就是并发，不同CPU就是并行。
@@ -176,7 +237,6 @@ P - processor, a resource that is required to execute Go code.
 - 其他编程语言实现的线程往往是内核态或者用户态，有时还需要互相转化，比较重量级，很容易耗光物理资源。
 
 **MPG的运行状态Ⅱ**  
-
 ![MPG的运行状态Ⅱ](../images/MPG3.png)
 
 - 我们分成两个部分来看，首先看左边的部分。M0正在执行G0，另外有三个协程在等待。
@@ -187,11 +247,118 @@ P - processor, a resource that is required to execute Go code.
 
 MPG的源代码在 [src/runtime/rumtime2.go](https://github.com/golang/go/blob/master/src/runtime/runtime2.go)
 
+**MPG的状态定义**
+下面我们贴一下MPG的状态定义，这将有利于我们在后面分析goroutine源码。  
+
+首先是G的状态定义，状态都是常量。
+
+```go
+// defined constants
+const (
+    // G status
+    //
+    // Beyond indicating the general state of a G, the G status
+    // acts like a lock on the goroutine's stack (and hence its
+    // ability to execute user code).
+    //
+    // If you add to this list, add to the list
+    // of "okay during garbage collection" status
+    // in mgcmark.go too.
+    //
+    // TODO(austin): The _Gscan bit could be much lighter-weight.
+    // For example, we could choose not to run _Gscanrunnable
+    // goroutines found in the run queue, rather than CAS-looping
+    // until they become _Grunnable. And transitions like
+    // _Gscanwaiting -> _Gscanrunnable are actually okay because
+    // they don't affect stack ownership.
+
+    // _Gidle means this goroutine was just allocated and has not
+    // yet been initialized.
+    _Gidle = iota // 0
+
+    // _Grunnable means this goroutine is on a run queue. It is
+    // not currently executing user code. The stack is not owned.
+    _Grunnable // 1
+
+    // _Grunning means this goroutine may execute user code. The
+    // stack is owned by this goroutine. It is not on a run queue.
+    // It is assigned an M and a P.
+    _Grunning // 2
+
+    // _Gsyscall means this goroutine is executing a system call.
+    // It is not executing user code. The stack is owned by this
+    // goroutine. It is not on a run queue. It is assigned an M.
+    _Gsyscall // 3
+
+    // _Gwaiting means this goroutine is blocked in the runtime.
+    // It is not executing user code. It is not on a run queue,
+    // but should be recorded somewhere (e.g., a channel wait
+    // queue) so it can be ready()d when necessary. The stack is
+    // not owned *except* that a channel operation may read or
+    // write parts of the stack under the appropriate channel
+    // lock. Otherwise, it is not safe to access the stack after a
+    // goroutine enters _Gwaiting (e.g., it may get moved).
+    _Gwaiting // 4
+
+    // _Gmoribund_unused is currently unused, but hardcoded in gdb
+    // scripts.
+    _Gmoribund_unused // 5
+
+    // _Gdead means this goroutine is currently unused. It may be
+    // just exited, on a free list, or just being initialized. It
+    // is not executing user code. It may or may not have a stack
+    // allocated. The G and its stack (if any) are owned by the M
+    // that is exiting the G or that obtained the G from the free
+    // list.
+    _Gdead // 6
+
+    // _Genqueue_unused is currently unused.
+    _Genqueue_unused // 7
+
+    // _Gcopystack means this goroutine's stack is being moved. It
+    // is not executing user code and is not on a run queue. The
+    // stack is owned by the goroutine that put it in _Gcopystack.
+    _Gcopystack // 8
+
+    // _Gscan combined with one of the above states other than
+    // _Grunning indicates that GC is scanning the stack. The
+    // goroutine is not executing user code and the stack is owned
+    // by the goroutine that set the _Gscan bit.
+    //
+    // _Gscanrunning is different: it is used to briefly block
+    // state transitions while GC signals the G to scan its own
+    // stack. This is otherwise like _Grunning.
+    //
+    // atomicstatus&~Gscan gives the state the goroutine will
+    // return to when the scan completes.
+    _Gscan         = 0x1000
+    _Gscanrunnable = _Gscan + _Grunnable // 0x1001
+    _Gscanrunning  = _Gscan + _Grunning  // 0x1002
+    _Gscansyscall  = _Gscan + _Gsyscall  // 0x1003
+    _Gscanwaiting  = _Gscan + _Gwaiting  // 0x1004
+)
+```
+
+接下来是P的状态。P的状态相比G来说，简单许多。
+
+```go
+const (
+    // P status
+    _Pidle    = iota
+    _Prunning // Only this P is allowed to change from _Prunning.
+    _Psyscall
+    _Pgcstop
+    _Pdead
+)
+```
+
+M本身没有像P、G一样的状态定义，但是感兴趣的话，可以查看一下M的结构体定义来进行了解。
+
 ### 协程(Goroutine scheduler)的源码实现
 
 接下来，我们就来看下go rutime的启动过程，源码位置 [src/runtime/proc.go](https://github.com/golang/go/blob/master/src/runtime/proc.go)
 
-go 的运行时是由汇编来实现的，在源码中有汇编代码，我们可以自编译。也可以使用GDB调试来实验go的运行时。所以，如果要看goroutine创建的话，一定要结合GDB调试。补充一点：go在build的时候，是把自己的运行时也一起build到bin中了，所以go的可执行文件一般比较大。  
+go 的运行时包含了一些汇编的内容，在源码中有汇编代码，我们可以自编译。也可以使用GDB调试来实验go的运行时，这里我们暂时不深入。所以，如果要看goroutine创建的话，一定要结合GDB调试。补充一点：go在build的时候，是把自己的运行时也一起build到bin中了，所以go的可执行文件一般比较大。  
 
 首先是main goroutine
 
@@ -450,3 +617,10 @@ func newproc1(fn *funcval, argp *uint8, narg int32, callergp *g, callerpc uintpt
     releasem(_g_.m)
 }
 ```
+
+## 一些参考
+
+- [goroutine背后的知识](http://www.sizeofvoid.net/goroutine-under-the-hood/)
+- [Go的并发哲学](https://www.kancloud.cn/mutouzhang/go/596822)
+- [深入浅出java多线程](https://redspider.gitbook.io/concurrent/di-yi-pian-ji-chu-pian/1)
+- [协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
