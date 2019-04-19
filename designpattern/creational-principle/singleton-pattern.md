@@ -25,7 +25,7 @@
 
 ## 懒汉式单例
 
-### Golang Demo
+### Golang Demo 1
 
 ```go
 package singleton
@@ -43,7 +43,7 @@ func GetInstense() *LazySingleton {
 }
 ```
 
-### Java Demo
+### Java Demo 1
 
 ```java
 package tech.selinux.design.pattern.creational.singleton;
@@ -64,7 +64,7 @@ public class LazySingleton {
 
 懒汉式单例模式是最基础的一种写法，但是如果我们在并发环境下去调用GetInstance()的时候，可能会创建出多个instance，这样就违背了我们单例的初衷，所以我们对这个方法进行一个加锁机制，这样就能够保证，每次调用时首先会获取锁资源，保证了实例的单一性。
 
-### Golang Demo
+### Golang Demo 2
 
 ```go
 package singleton
@@ -88,7 +88,7 @@ func GetInstense() *LazySingleton {
 }
 ```
 
-### Java Demo
+### Java Demo 2
 
 ```java
 package tech.selinux.design.pattern.creational.singleton;
