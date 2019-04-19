@@ -166,7 +166,7 @@ class Test {
 
 Go鼓励使用channel在goroutine之间传递数据，而不是显式地使用锁来调解对共享数据的访问.[Share Memory By Communicating](https://blog.golang.org/share-memory-by-communicating)
 
-[Go的并发哲学](https://www.kancloud.cn/mutouzhang/go/596822)
+[《Cuncurrency in Go》Go的并发哲学](https://www.kancloud.cn/mutouzhang/go/596822)
 
 ## 协程
 
