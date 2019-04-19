@@ -37,7 +37,7 @@
 
 在最开始，我们先来老生长谈一下什么是进程、线程。 或许每个人都知道进程和线程，但是有几个人能够快速准确的说出进程是什么呢？  
 
-维基百科中关于 [进程的定义](https://en.wikipedia.org/wiki/Process_(computing))
+维基百科中关于 [进程的定义](https://zh.wikipedia.org/wiki/%E8%A1%8C%E7%A8%8B)
 
 ### 产生的背景
 
@@ -91,12 +91,12 @@ go 官方有一篇bolg [Concurrency is not parallelism](https://blog.golang.org/
 主要的IPC方法
 
 - 文件(文件锁 log-->file-->filebeat)
-- [信号](https://en.wikipedia.org/wiki/Signal_(IPC)) (SIGILL、SIGKILL、ctrl+c==SIGINT ...)
+- [信号](https://zh.wikipedia.org/wiki/Unix%E4%BF%A1%E5%8F%B7) (SIGILL、SIGKILL、ctrl+c==SIGINT ...)
 - [socket](https://en.wikipedia.org/wiki/Berkeley_sockets) (tcp 三次握手)
 - [message queue](https://en.wikipedia.org/wiki/Message_queue)
 - 管道pipe (ps -aux | grep nginx)
 - [命名管道FIFO](https://en.wikipedia.org/wiki/Named_pipe) (mkfifo my_pipe ; gzip -9 -c < my_pipe > out.gz &  ;cat file > my_pipe)  
-- [信号量](https://en.wikipedia.org/wiki/Semaphore_(programming)) (信号量与信号不是一个问题，P(wait) 申请,V(signal)释放)
+- [信号量](https://zh.wikipedia.org/wiki/%E4%BF%A1%E5%8F%B7%E9%87%8F) (信号量与信号不是一个问题，P(wait) 申请,V(signal)释放)
 - [共享内存](https://en.wikipedia.org/wiki/Shared_memory)
 - [消息传递](https://en.wikipedia.org/wiki/Message_passing)（filebeat --> logstash -->es）
 - [内存映射文件](https://en.wikipedia.org/wiki/Memory-mapped_file)
@@ -225,10 +225,10 @@ P - processor, a resource that is required to execute Go code.
     blocked or in a syscall w/o an associated P.
 ```
 
-**用下面三个图形来表示。**
+**用下面三个图形来表示。**  
 ![MPG](../images/MPG.png)
 
-**MPG的运行状态I**
+**MPG的运行状态I**  
 ![MPG的运行状态Ⅰ](../images/MPG2.png)
 
 - 当前程序有三个M，如果三个M在同一个CPU上运行就是并发，不同CPU就是并行。
