@@ -3,6 +3,7 @@
 <!-- TOC -->
 
 - [Channel](#channel)
+  - [提出问题](#%E6%8F%90%E5%87%BA%E9%97%AE%E9%A2%98)
   - [Channel定义](#%08channel%E5%AE%9A%E4%B9%89)
   - [make channel](#make-channel)
   - [chansend](#chansend)
@@ -12,20 +13,33 @@
 
 <!-- /TOC -->
 
+## 提出问题
+
+经过自己很长一段时间的实验，发现带着问题来阅读源码是非常高效的，因为源码一般大而杂，分支也比较多，稍不留神就容易走进细枝末节跳不出来了。所以我们这里先抛出几个问题，然后带着问题一起去源码中寻找答案。  
+
+- channel的数据结构是怎么，内部又包含了哪些组件
+- goroutine向channel中发送数据的阻塞机制是什么
+- 有缓冲和无缓冲在实现过程中有哪些区别
+- channel-safe的实现机制是什么
+- write-to-channel 与 read-from-channel 是怎么协作的
+- channel在关闭之后还可以做到能读不能写，那关闭时需要注意什么
+
+接下来我们将一些比较重要的源码，以及源码分析过程中的备注都贴到下方。
+
 ## Channel定义
 
 源码位置 [/src/runtime/chan.go](https://github.com/golang/go/blob/master/src/runtime/chan.go)
 
 ```go
 type hchan struct {
-    qcount   uint           // 队列中数据个数
-    dataqsiz uint           // channel 大小
-    buf      unsafe.Pointer // 存放数据的环形数组
+    qcount   uint           // qcount 是 buf 中已塞进的元素数量
+    dataqsiz uint           // channel 缓存大小，就是make(chan,size)中的size
+    buf      unsafe.Pointer // 根据make(chan,size) 中的size，以及elemtype构建出来的内存区域大小
     elemsize uint16         //channel 中数据类型的大小
     closed   uint32         // 表示 channel 是否关闭
     elemtype *_type         // 元素数据类型
-    sendx    uint           // send 的数组索引,用来记录发送的位置
-    recvx    uint           // recv 的数组索引,用来记录接收的位置
+    sendx    uint           // send 的数组索引
+    recvx    uint           // recv 的数组索引
     recvq    waitq          // 由 recv 行为（也就是 <-ch）阻塞在 channel 上的 goroutine 队列
     sendq    waitq          // 由 send 行为 (也就是 ch<-) 阻塞在 channel 上的 goroutine 队列
 
@@ -35,7 +49,7 @@ type hchan struct {
     // Do not change another G's status while holding this lock
     // (in particular, do not ready a G), as this can deadlock
     // with stack shrinking.
-    lock mutex              // 互斥锁
+    lock mutex
 }
 
 type waitq struct {
@@ -54,10 +68,13 @@ sudog 是一种非常重要的数据结构，相当于我们前面介绍的G。
 ```go
 // sudog represents a g in a wait list, such as for sending/receiving
 // on a channel.
-//
+// sudog 表示一个在 wait list 中的g
 // sudog is necessary because the g ↔ synchronization object relation
-// is many-to-many. A g can be on many wait lists, so there may be
-// many sudogs for one g; and many gs may be waiting on the same
+// is many-to-many.
+// A g can be on many wait lists, so there may be
+// many sudogs for one g;
+//
+// and many gs may be waiting on the same
 // synchronization object, so there may be many sudogs for one object.
 //
 // sudogs are allocated from a special pool. Use acquireSudog and
@@ -96,13 +113,11 @@ type sudog struct {
 创建一个go channel
 
 ```go
-// reflect_makechan 估计是由汇编实现的runtime来调用。
 //go:linkname reflect_makechan reflect.makechan
 func reflect_makechan(t *chantype, size int) *hchan {
     return makechan(t, size)
 }
 
-// makechan64 同上
 func makechan64(t *chantype, size int64) *hchan {
     if int64(int(size)) != size {
         panic(plainError("makechan: size out of range"))
@@ -148,11 +163,13 @@ func makechan(t *chantype, size int) *hchan {
     default:
         // Elements contain pointers.
         c = new(hchan)
+        // 根据channel中存储的数据类型，分配的一段内存空间
         c.buf = mallocgc(mem, elem, true)
     }
 
     c.elemsize = uint16(elem.size)
     c.elemtype = elem
+    // channel 缓存大小
     c.dataqsiz = uint(size)
 
     if debugChan {
@@ -160,13 +177,31 @@ func makechan(t *chantype, size int) *hchan {
     }
     return c
 }
+
 ```
+
+makechan 这里有几个需要注意的点。  
+
+-  根据channel中传递的元素类型(`makechan(type,size)`)，计算出一块内存大小，后期创建一块内存区域, 对应代码是
+
+```go
+mem, overflow := math.MulUintptr(elem.size, uintptr(size))
+```
+
+- `qcount` 记录的是buf 中的数据数量，后面会有增减。`dataqsiz` 记录的是 `makechan(type,size)` 中的size，不会变。要记住，要不然后面会混。
 
 ## chansend
 
 向channel中发送数据。
 
 ```go
+// channel send 数据的入口
+// entry point for c <- x from compiled code
+//go:nosplit
+func chansend1(c *hchan, elem unsafe.Pointer) {
+    chansend(c, elem, true, getcallerpc())
+}
+
 /*
  * generic single channel send/recv
  * If block is not nil,
@@ -204,19 +239,26 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
     }
 
     // Fast path: check for failed non-blocking operation without acquiring the lock.
+    // 检查失败的非阻塞操作而不获取锁定。
     //
     // After observing that the channel is not closed, we observe that the channel is
-    // not ready for sending. Each of these observations is a single word-sized read
+    // not ready for sending.
+    // 在观察到通道未关闭后，我们发现通道尚未准备好发送。
+    // Each of these observations is a single word-sized read
     // (first c.closed and second c.recvq.first or c.qcount depending on kind of channel).
-    // Because a closed channel cannot transition from 'ready for sending' to
+
+    // 这些观察中的每一个都是单个字大小的读取（第一个c.closed和第二个c.recvq.first或c.qcount，取决于通道的类型）。
+    // Because a closed channel cannot transition(转换) from 'ready for sending' to
     // 'not ready for sending', even if the channel is closed between the two observations,
-    // they imply a moment between the two when the channel was both not yet closed
+    // they imply(意味着) a moment between the two when the channel was both not yet closed
     // and not ready for sending. We behave as if we observed the channel at that moment,
     // and report that the send cannot proceed.
+    //
     //
     // It is okay if the reads are reordered here: if we observe that the channel is not
     // ready for sending and then observe that it is not closed, that implies that the
     // channel wasn't closed during the first observation.
+
     if !block && c.closed == 0 && ((c.dataqsiz == 0 && c.recvq.first == nil) ||
         (c.dataqsiz > 0 && c.qcount == c.dataqsiz)) {
         return false
@@ -236,6 +278,8 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
         panic(plainError("send on closed channel"))
     }
 
+    // 这是一个出队列的操作
+    // 一单这里进去了，说明buf已空
     if sg := c.recvq.dequeue(); sg != nil {
         // 寻找一个等待中的 receiver
         // 越过 channel 的 buffer
@@ -252,6 +296,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
     // dataqsize 是 buffer 的总大小
     // 说明还有余量
     if c.qcount < c.dataqsiz {
+        // 存入内存buf
         // Space is available in the channel buffer. Enqueue the element to send.
         qp := chanbuf(c, c.sendx)
         if raceenabled {
@@ -336,6 +381,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 // sg must already be dequeued from c.
 // ep must be non-nil and point to the heap or the caller's stack.
 func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
+    //忽略
     if raceenabled {
         if c.dataqsiz == 0 {
             racesync(c, sg)
@@ -373,13 +419,28 @@ func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
 }
 ```
 
-前面我们提到过，channel线程安全的原因就是有锁机制，所以向channel中写入数据的话，首先要获取锁，然后发送数据，发送完成之后，释放锁。
+前面我们提到过，channel线程安全的原因就是有锁机制，所以向channel中写入数据的话，首先要获取锁，然后发送数据，发送完成之后，释放锁。  
+
+通过代码我们能看出，发送数据时，首先会查看recvq中是否有是否有goroutine在等待，如果有直接讲数据发送给他。
 
 ## chanrecv
 
 与发送数据一样，读取数据也要首先获取锁，然后才能读取。
 
 ```go
+
+// entry points for <- c from compiled code
+//go:nosplit
+func chanrecv1(c *hchan, elem unsafe.Pointer) {
+    chanrecv(c, elem, true)
+}
+
+//go:nosplit
+func chanrecv2(c *hchan, elem unsafe.Pointer) (received bool) {
+    _, received = chanrecv(c, elem, true)
+    return
+}
+
 // chanrecv receives on channel c and writes the received data to ep.
 // ep may be nil, in which case received data is ignored.
 // If block == false and no elements are available, returns (false, false).
@@ -450,6 +511,7 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
 
     // sender 队列中有 sudog 在等待
     // 直接从该 sudog 中获取数据拷贝到当前 g 即可
+    // 一旦执行到这里，说明buf已满
     if sg := c.sendq.dequeue(); sg != nil {
         // Found a waiting sender. If buffer is size 0, receive value
         // directly from sender. Otherwise, receive from head of queue
@@ -580,9 +642,26 @@ func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
 
 ```
 
+**画重点:**
+
+下面这段代码很重要，它解释了sendx和recvx的大小，最大recvx不会超过dataqsiz
+
+```go
+if c.recvx == c.dataqsiz {
+    c.recvx = 0
+}
+c.sendx = c.recvx // c.sendx = (c.sendx+1) % c.dataqsiz
+```
+
+接收数据的时候分为几个过程
+
+- 如果 dataqsiz = 0 ，就直接从发送方接收数据
+- 否则，从发送方的等待队列头部取出一条数据,添加到接收方的队列的尾部
+
 ## close
 
 ```go
+
 
 func closechan(c *hchan) {
     // 关闭一个 nil channel 会直接 panic
@@ -598,17 +677,20 @@ func closechan(c *hchan) {
         panic(plainError("close of closed channel"))
     }
 
+    // 忽略
     if raceenabled {
         callerpc := getcallerpc()
         racewritepc(c.raceaddr(), callerpc, funcPC(closechan))
         racerelease(c.raceaddr())
     }
 
+    // 先讲 close 标志置为1
     c.closed = 1
 
     var glist gList
 
     // release all readers
+    // 将所有的recvq 出队列
     for {
         sg := c.recvq.dequeue()
         // 弹出的 sudog 是 nil
@@ -668,7 +750,9 @@ func closechan(c *hchan) {
         goready(gp, 3)
     }
 }
+
 ```
+
 
 ## 参考链接
 
@@ -676,3 +760,4 @@ func closechan(c *hchan) {
 - [Go Channel 源码剖析](http://legendtkl.com/categories/golang)
 - [Channel 从使用到源码分析](https://github.com/cch123/golang-notes/blob/master/channel.md)
 - [理解go channel](https://blog.lab99.org/post/golang-2017-10-04-video-understanding-channels.html#select)
+- [Go Chanel 使用与原理 三](https://segmentfault.com/a/1190000018531960)
