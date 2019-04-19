@@ -192,3 +192,7 @@ public class LazyDoubleCheckSingleton {
   }
 }
 ```
+
+---
+
+未完，待续...
