@@ -24,8 +24,8 @@ type hchan struct {
     elemsize uint16         //channel 中数据类型的大小
     closed   uint32         // 表示 channel 是否关闭
     elemtype *_type         // 元素数据类型
-    sendx    uint           // send 的数组索引
-    recvx    uint           // recv 的数组索引
+    sendx    uint           // send 的数组索引,用来记录发送的位置
+    recvx    uint           // recv 的数组索引,用来记录接收的位置
     recvq    waitq          // 由 recv 行为（也就是 <-ch）阻塞在 channel 上的 goroutine 队列
     sendq    waitq          // 由 send 行为 (也就是 ch<-) 阻塞在 channel 上的 goroutine 队列
 
@@ -35,7 +35,7 @@ type hchan struct {
     // Do not change another G's status while holding this lock
     // (in particular, do not ready a G), as this can deadlock
     // with stack shrinking.
-    lock mutex
+    lock mutex              // 互斥锁
 }
 
 type waitq struct {
@@ -670,9 +670,9 @@ func closechan(c *hchan) {
 }
 ```
 
-
 ## 参考链接
 
-- [https://www.cnblogs.com/zkweb/p/7815600.html](https://www.cnblogs.com/zkweb/p/7815600.html)
-- [http://legendtkl.com/categories/golang](http://legendtkl.com/categories/golang)
-- [http://xargin.com/channel-from-usage-to-src-analysis/](http://xargin.com/channel-from-usage-to-src-analysis/)
+- [协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
+- [Go Channel 源码剖析](http://legendtkl.com/categories/golang)
+- [Channel 从使用到源码分析](https://github.com/cch123/golang-notes/blob/master/channel.md)
+- [理解go channel](https://blog.lab99.org/post/golang-2017-10-04-video-understanding-channels.html#select)
