@@ -17,7 +17,7 @@
   - [Go的并发哲学](#go%E7%9A%84%E5%B9%B6%E5%8F%91%E5%93%B2%E5%AD%A6)
   - [协程](#%E5%8D%8F%E7%A8%8B)
     - [什么是协程](#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8D%8F%E7%A8%8B)
-    - [协程的调度MPG](#%E5%8D%8F%E7%A8%8B%E7%9A%84%E8%B0%83%E5%BA%A6mpg)
+    - [协程的调度(MPG)](#%E5%8D%8F%E7%A8%8B%E7%9A%84%E8%B0%83%E5%BA%A6mpg)
     - [协程(Goroutine scheduler)的源码实现](#%E5%8D%8F%E7%A8%8Bgoroutine-scheduler%E7%9A%84%E6%BA%90%E7%A0%81%E5%AE%9E%E7%8E%B0)
 
 <!-- /TOC -->
@@ -95,7 +95,7 @@ go 官方有一篇bolg [Concurrency is not parallelism](https://blog.golang.org/
 线程同步被定义为一种机制，可确保两个或多个并发进程或线程不会同时执行称为临界区的某个特定程序段.
 
 - [死锁](https://en.wikipedia.org/wiki/Deadlock)，当许多进程正在等待某个其他进程持有的共享资源（临界区）时发生。在这种情况下，进程只是等待并且不再执行;
-- [饥饿](https://en.wikipedia.org/wiki/Starvation_(computer_science)))，当进程等待进入临界区时发生，但其他进程独占关键部分，第一个进程被迫无限期等待;
+- [饥饿](https://en.wikipedia.org/wiki/Starvation_(computer_science))，当进程等待进入临界区时发生，但其他进程独占关键部分，第一个进程被迫无限期等待;
 - [优先级倒置](https://en.wikipedia.org/wiki/Priority_inversion)，在高优先级进程处于临界区时发生，并由中优先级进程中断。这种违反优先权规则的行为可能会在某些情况下发生，并可能导致实时系统的严重后果;
 - [忙等待](https://en.wikipedia.org/wiki/Busy_waiting)，当进程经常轮询以确定它是否可以访问关键部分时发生。这种频繁的轮询会拖延其他进程的处理时间。
 
@@ -111,7 +111,7 @@ Go鼓励使用channel在goroutine之间传递数据，而不是显式地使用�
 
 ### 什么是协程
 
-Goroutine是Go中最基本的组织单位之一，gotoutine是一个并发的函数（记住：不一定是并行）和其他代码一起运行.
+Goroutine是Go中最基本的组织单位之一，最直观来说，gotoutine就是一个并发的函数（记住：不一定是并行）和其他代码一起运行.
 
 ```go
 func main() {
@@ -148,7 +148,7 @@ Goroutines对Go来说是独一无二的。它们不是操作系统线程，它�
 
 - **Web等服务端程序要处理的请求从本质上来讲是并行处理的问题，每个请求基本独立，互不依赖，几乎没有数据交互，这不是一个并发编程的模型**，而并发编程框架只是解决了其语义表述的复杂性，并不是从根本上提高处理的效率，也许是并发连接和并发编程的英文都是concurrent吧，很容易产生“并发编程框架和coroutine可以高效处理大量并发连接”的误解。
 
-### 协程的调度MPG
+### 协程的调度(MPG)
 
 如果要理解协程的调度，或者看懂 Goroutine scheduler 代码的话，就不得不了解一下MPG。
 
@@ -175,7 +175,8 @@ P - processor, a resource that is required to execute Go code.
 - 从这个图的感觉上来看，这一点与线程有点类似，但是Goroutine是逻辑态的，因此go很容易就开启上万Goroutine。
 - 其他编程语言实现的线程往往是内核态或者用户态，有时还需要互相转化，比较重量级，很容易耗光物理资源。
 
-**MPG的运行状态Ⅱ**
+**MPG的运行状态Ⅱ**  
+
 ![MPG的运行状态Ⅱ](../images/MPG3.png)
 
 - 我们分成两个部分来看，首先看左边的部分。M0正在执行G0，另外有三个协程在等待。
