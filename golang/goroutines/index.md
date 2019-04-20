@@ -215,7 +215,7 @@ Goroutines对Go来说是独一无二的。它们不是操作系统线程，它�
 
 如果要理解协程的调度，或者看懂 Goroutine scheduler 代码的话，就不得不了解一下MPG。
 
-我们引申出三个定义
+我们引出三个定义
 
 ```go
 G - goroutine.
@@ -225,6 +225,41 @@ P - processor, a resource that is required to execute Go code.
     blocked or in a syscall w/o an associated P.
 ```
 
+> 下面的内容引用自[协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
+
+**G (goroutine)**
+G是goroutine的头文字, goroutine可以解释为受管理的轻量线程, goroutine使用go关键词创建.
+
+举例来说, func main() { go other() }, 这段代码创建了两个goroutine,
+一个是main, 另一个是other, 注意main本身也是一个goroutine.
+
+goroutine的新建, 休眠, 恢复, 停止都受到go运行时的管理.
+goroutine执行异步操作时会进入休眠状态, 待操作完成后再恢复, 无需占用系统线程,
+goroutine新建或恢复时会添加到运行队列, 等待M取出并运行.
+
+**M (machine)**
+M是machine的头文字, 在当前版本的golang中等同于系统线程.
+M可以运行两种代码:
+
+go代码, 即goroutine, M运行go代码需要一个P
+原生代码, 例如阻塞的syscall, M运行原生代码不需要P
+M会从运行队列中取出G, 然后运行G, 如果G运行完毕或者进入休眠状态, 则从运行队列中取出下一个G运行, 周而复始.
+有时候G需要调用一些无法避免阻塞的原生代码, 这时M会释放持有的P并进入阻塞状态, 其他M会取得这个P并继续运行队列中的G.
+go需要保证有足够的M可以运行G, 不让CPU闲着, 也需要保证M的数量不能过多.
+
+**P (process)**
+P是process的头文字, 代表M运行G所需要的资源.
+一些讲解协程的文章把P理解为cpu核心, 其实这是错误的.
+虽然P的数量默认等于cpu核心数, 但可以通过环境变量GOMAXPROC修改, 在实际运行时P跟cpu核心并无任何关联.
+
+P也可以理解为控制go代码的并行度的机制,
+如果P的数量等于1, 代表当前最多只能有一个线程(M)执行go代码,
+如果P的数量等于2, 代表当前最多只能有两个线程(M)执行go代码.
+执行原生代码的线程数量不受P控制.
+
+因为同一时间只有一个线程(M)可以拥有P, P中的数据都是锁自由(lock free)的, 读写这些数据的效率会非常的高.
+
+**关于协程的调度，我们用下面几张简单的图示来进行一下讲解。**  
 **用下面三个图形来表示。**  
 ![MPG](../images/MPG.png)
 
