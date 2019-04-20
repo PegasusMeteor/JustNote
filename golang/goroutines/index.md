@@ -247,6 +247,44 @@ P - processor, a resource that is required to execute Go code.
 
 MPG的源代码在 [src/runtime/rumtime2.go](https://github.com/golang/go/blob/master/src/runtime/runtime2.go)
 
+> 下面的内容引用自[协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
+
+G里面比较重要的成员如下
+
+- stack: 当前g使用的栈空间, 有lo和hi两个成员
+- stackguard0: 检查栈空间是否足够的值, 低于这个值会扩张栈, 0是go代码使用的
+- stackguard1: 检查栈空间是否足够的值, 低于这个值会扩张栈, 1是原生代码使用的
+- m: 当前g对应的m
+- sched: g的调度数据, 当g中断时会保存当前的pc和rsp等值到这里, 恢复运行时会使用这里的值
+- atomicstatus: g的当前状态
+- schedlink: 下一个g, 当g在链表结构中会使用
+- preempt: g是否被抢占中
+- lockedm: g是否要求要回到这个M执行, 有的时候g中断了恢复会要求使用原来的M执行
+
+M里面比较重要的成员如下
+
+- g0: 用于调度的特殊g, 调度和执行系统调用时会切换到这个g
+- curg: 当前运行的g
+- p: 当前拥有的P
+- nextp: 唤醒M时, M会拥有这个P
+- park: M休眠时使用的信号量, 唤醒M时会通过它唤醒
+- schedlink: 下一个m, 当m在链表结构中会使用
+- mcache: 分配内存时使用的本地分配器, 和p.mcache一样(拥有P时会复制过来)
+- lockedg: lockedm的对应值
+
+P里面比较重要的成员如下
+
+- status: p的当前状态
+- link: 下一个p, 当p在链表结构中会使用
+- m: 拥有这个P的M
+- mcache: 分配内存时使用的本地分配器
+- runqhead: 本地运行队列的出队序号
+- runqtail: 本地运行队列的入队序号
+- runq: 本地运行队列的数组, 可以保存256个G
+- gfree: G的自由列表, 保存变为_Gdead后可以复用的G实例
+- gcBgMarkWorker: 后台GC的worker函数, 如果它存在M会优先执行它
+- gcw: GC的本地工作队列, 详细将在下一篇(GC篇)分析
+
 **MPG的状态定义**
 下面我们贴一下MPG的状态定义，这将有利于我们在后面分析goroutine源码。  
 
@@ -274,20 +312,24 @@ const (
 
     // _Gidle means this goroutine was just allocated and has not
     // yet been initialized.
+    // 表示G刚刚新建, 仍未初始化
     _Gidle = iota // 0
 
     // _Grunnable means this goroutine is on a run queue. It is
     // not currently executing user code. The stack is not owned.
+    // 表示G在运行队列中, 等待M取出并运行
     _Grunnable // 1
 
     // _Grunning means this goroutine may execute user code. The
     // stack is owned by this goroutine. It is not on a run queue.
     // It is assigned an M and a P.
+    // 表示M正在运行这个G, 这时候M会拥有一个P
     _Grunning // 2
 
     // _Gsyscall means this goroutine is executing a system call.
     // It is not executing user code. The stack is owned by this
     // goroutine. It is not on a run queue. It is assigned an M.
+    // 表示M正在运行这个G发起的系统调用, 这时候M并不拥有P
     _Gsyscall // 3
 
     // _Gwaiting means this goroutine is blocked in the runtime.
@@ -298,6 +340,7 @@ const (
     // write parts of the stack under the appropriate channel
     // lock. Otherwise, it is not safe to access the stack after a
     // goroutine enters _Gwaiting (e.g., it may get moved).
+    // 表示G在等待某些条件完成, 这时候G不在运行也不在运行队列中(可能在channel的等待队列中)
     _Gwaiting // 4
 
     // _Gmoribund_unused is currently unused, but hardcoded in gdb
@@ -310,6 +353,7 @@ const (
     // allocated. The G and its stack (if any) are owned by the M
     // that is exiting the G or that obtained the G from the free
     // list.
+    // 表示G未被使用, 可能已执行完毕(并在freelist中等待下次复用)
     _Gdead // 6
 
     // _Genqueue_unused is currently unused.
@@ -318,6 +362,7 @@ const (
     // _Gcopystack means this goroutine's stack is being moved. It
     // is not executing user code and is not on a run queue. The
     // stack is owned by the goroutine that put it in _Gcopystack.
+    //  表示G正在获取一个新的栈空间并把原来的内容复制过去(用于防止GC扫描)
     _Gcopystack // 8
 
     // _Gscan combined with one of the above states other than
@@ -344,10 +389,15 @@ const (
 ```go
 const (
     // P status
+    // 当M发现无待运行的G时会进入休眠, 这时M拥有的P会变为空闲并加到空闲P链表中
     _Pidle    = iota
+    // 当M拥有了一个P后, 这个P的状态就会变为运行中, M运行G会使用这个P中的资源
     _Prunning // Only this P is allowed to change from _Prunning.
+    // 当go调用原生代码, 原生代码又反过来调用go代码时, 使用的P会变为此状态
     _Psyscall
+    // 当gc停止了整个世界(STW)时, P会变为此状态
     _Pgcstop
+    // 当P的数量在运行时改变, 且数量减少时多余的P会变为此状态
     _Pdead
 )
 ```
