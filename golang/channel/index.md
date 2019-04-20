@@ -32,16 +32,16 @@
 
 ```go
 type hchan struct {
-    qcount   uint           // qcount 是 buf 中已塞进的元素数量
-    dataqsiz uint           // channel 缓存大小，就是make(chan,size)中的size
-    buf      unsafe.Pointer // 根据make(chan,size) 中的size，以及elemtype构建出来的内存区域大小
+    qcount   uint           // qcount 是 buf 中已塞进的元素数量,当前队列中的元素数量
+    dataqsiz uint           // 队列可以容纳的元素数量, 如果为0表示这个channel无缓冲区，就是make(chan,size)中的size
+    buf      unsafe.Pointer // 队列的缓冲区, 结构是环形队列
     elemsize uint16         //channel 中数据类型的大小
     closed   uint32         // 表示 channel 是否关闭
-    elemtype *_type         // 元素数据类型
-    sendx    uint           // send 的数组索引
-    recvx    uint           // recv 的数组索引
-    recvq    waitq          // 由 recv 行为（也就是 <-ch）阻塞在 channel 上的 goroutine 队列
-    sendq    waitq          // 由 send 行为 (也就是 ch<-) 阻塞在 channel 上的 goroutine 队列
+    elemtype *_type         // 元素的类型, 判断是否调用写屏障时使用
+    sendx    uint           // 发送元素的序号
+    recvx    uint           // 接收元素的序号
+    recvq    waitq          // 当前等待从channel接收数据的G的链表(实际类型是sudog的链表),由 recv 行为（也就是 <-ch）阻塞在 channel 上的 goroutine 队列
+    sendq    waitq          // 当前等待发送数据到channel的G的链表(实际类型是sudog的链表),由 send 行为 (也就是 ch<-) 阻塞在 channel 上的 goroutine 队列
 
     // lock protects all fields in hchan, as well as several
     // fields in sudogs blocked on this channel.
@@ -182,7 +182,7 @@ func makechan(t *chantype, size int) *hchan {
 
 makechan 这里有几个需要注意的点。  
 
--  根据channel中传递的元素类型(`makechan(type,size)`)，计算出一块内存大小，后期创建一块内存区域, 对应代码是
+- 根据channel中传递的元素类型(`makechan(type,size)`)，计算出一块内存大小，后期创建一块内存区域, 对应代码是
 
 ```go
 mem, overflow := math.MulUintptr(elem.size, uintptr(size))
@@ -423,6 +423,44 @@ func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
 
 通过代码我们能看出，发送数据时，首先会查看recvq中是否有是否有goroutine在等待，如果有直接讲数据发送给他。
 
+发送数据到channel实际调用的是runtime.chansend1函数, chansend1函数调用了chansend函数, 流程是:
+
+> 下面的文字引用自 [协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
+
+- 检查channel.recvq是否有等待中的接收者的G
+  - 如果有, 表示channel无缓冲区或者缓冲区为空
+  - 调用send函数
+    - 如果sudog.elem不等于nil, 调用sendDirect函数从发送者直接复制元素
+    - 等待接收的sudog.elem是指向接收目标的内存的指针, 如果是接收目标是_则elem是nil, 可以省略复制
+    - 等待发送的sudog.elem是指向来源目标的内存的指针
+    - 复制后调用goready恢复发送者的G
+      - 切换到g0调用ready函数, 调用完切换回来
+        - 把G的状态由等待中(_Gwaiting)改为待运行(_Grunnable)
+        - 把G放到P的本地运行队列
+        - 如果当前有空闲的P, 但是无自旋的M(nmspinning等于0), 则唤醒或新建一个M
+  - 从发送者拿到数据并唤醒了G后, 就可以从chansend返回了
+- 判断是否可以把元素放到缓冲区中
+  - 如果缓冲区有空余的空间, 则把元素放到缓冲区并从chansend返回
+- 无缓冲区或缓冲区已经写满, 发送者的G需要等待
+  - 获取当前的g
+  - 新建一个sudog
+  - 设置sudog.elem = 指向发送内存的指针
+  - 设置sudog.g = g
+  - 设置sudog.c = channel
+  - 设置g.waiting = sudog
+  - 把sudog放入channel.sendq
+  - 调用goparkunlock函数
+    - 调用gopark函数
+      - 通过mcall函数调用park_m函数
+        - mcall函数和上面说明的一样, 会把当前的状态保存到g.sched, 然后切换到g0和g0的栈空间并执行指定的函数
+        - park_m函数首先把G的状态从运行中(_Grunning)改为等待中(_Gwaiting)
+        - 然后调用dropg函数解除M和G之间的关联
+        - 再调用传入的解锁函数, 这里的解锁函数会对解除channel.lock的锁定
+        - 最后调用schedule函数继续调度
+- 从这里恢复表示已经成功发送或者channel已关闭
+  - 检查sudog.param是否为nil, 如果为nil表示channel已关闭, 抛出panic
+  - 否则释放sudog然后返回
+
 ## chanrecv
 
 与发送数据一样，读取数据也要首先获取锁，然后才能读取。
@@ -653,10 +691,35 @@ if c.recvx == c.dataqsiz {
 c.sendx = c.recvx // c.sendx = (c.sendx+1) % c.dataqsiz
 ```
 
-接收数据的时候分为几个过程
+> 下面的文字引用自 [协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
 
-- 如果 dataqsiz = 0 ，就直接从发送方接收数据
-- 否则，从发送方的等待队列头部取出一条数据,添加到接收方的队列的尾部
+从channel接收数据实际调用的是runtime.chanrecv1函数, chanrecv1函数调用了chanrecv函数, 流程是:
+
+- 检查channel.sendq中是否有等待中的发送者的G
+  - 如果有, 表示channel无缓冲区或者缓冲区已满, 这两种情况需要分别处理(为了保证入出队顺序一致)
+  - 调用recv函数
+    - 如果无缓冲区, 调用recvDirect函数把元素直接复制给接收者
+    - 如果有缓冲区代表缓冲区已满
+      - 把队列中下一个要出队的元素直接复制给接收者
+      - 把发送的元素复制到队列中刚才出队的位置
+      - 这时候缓冲区仍然是满的, 但是发送序号和接收序号都会增加1
+    - 复制后调用goready恢复接收者的G, 处理同上
+  - 把数据交给接收者并唤醒了G后, 就可以从chanrecv返回了
+- 判断是否可以从缓冲区获取元素
+  - 如果缓冲区有元素, 则直接取出该元素并从chanrecv返回
+- 无缓冲区或缓冲区无元素, 接收者的G需要等待
+  - 获取当前的g
+  - 新建一个sudog
+  - 设置sudog.elem = 指向接收内存的指针
+  - 设置sudog.g = g
+  - 设置sudog.c = channel
+  - 设置g.waiting = sudog
+  - 把sudog放入channel.recvq
+  - 调用goparkunlock函数, 处理同上
+- 从这里恢复表示已经成功接收或者channel已关闭
+  - 检查sudog.param是否为nil, 如果为nil表示channel已关闭
+  - 和发送不一样的是接收不会抛panic, 会通过返回值通知channel已关闭
+  - 释放sudog然后返回
 
 ## close
 
@@ -753,6 +816,14 @@ func closechan(c *hchan) {
 
 ```
 
+> 下面的文字引用自 [协程的实现原理](https://www.cnblogs.com/zkweb/p/7815600.html)
+
+关闭channel实际调用的是closechan函数, 流程是:
+
+- 设置channel.closed = 1
+- 枚举channel.recvq, 清零它们sudog.elem, 设置sudog.param = nil
+- 枚举channel.sendq, 设置sudog.elem = nil, 设置sudog.param = nil
+- 调用goready函数恢复所有接收者和发送者的G
 
 ## 参考链接
 
