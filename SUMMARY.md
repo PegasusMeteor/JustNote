@@ -53,4 +53,4 @@
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
 
-* [architecture](architecture/readme.md)
+<!-- * [architecture](architecture/readme.md) -->
