@@ -47,7 +47,8 @@
   * [源码阅读](golang/source/readme.md)
     * [Goroutines](golang/source/goroutine.md)
     * [Channel](golang/source/channel.md)
-  <!-- * [gin](golang/gin/readme.md) -->
+  * [GO WEB 编程](golang/gin/readme.md)
+    * [快速开始](golang/gin/quick-start.md)
   <!-- * [ORM](golang/orm/readme.md) -->
   <!-- * [gRPC+gRPC Gateway](golang/grpc/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
