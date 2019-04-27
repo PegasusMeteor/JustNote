@@ -1,5 +1,7 @@
 # 快速开始
 
+## 初始化gin工程
+
 1、下载并安装gin
 
 ```shell
@@ -54,3 +56,18 @@ go run main.go
 ```
 
 命令行或者浏览器访问 http://localhost:8090/ping 就可以啦。
+
+## 初始化前端工程 Ant Design Pro
+
+Ant Design Pro 的安装比较简单，可以参考官方repo. [Ant Design Pro](https://github.com/ant-design/ant-design-pro/blob/master/README.zh-CN.md)
+
+```shell
+$ git clone https://github.com/PegasusMeteor/ant-design-pro.git --depth=1
+$ cd ant-design-pro
+$ npm install
+$ npm start         # 访问 http://localhost:8000
+```
+
+安装的过程可能会花费一点时间，安装完成之后，直接在浏览器界面访问 http://localhost:8000 就可以了。如果网络环境很差劲的话，可以尝试使用cnpm来解决问题。
+
+**备注**，为了避免官方代码更新频率过快，对我们学习过程中的使用事例造成影响，我对官方库进行了fork，以后的修改都将在此库的基础上进行。
