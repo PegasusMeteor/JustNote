@@ -31,24 +31,24 @@
     * [桥接模式](designpattern/structural-principle/bridge-pattern.md)
     * [代理模式](designpattern/structural-principle/proxy-pattern.md)
   * [行为型模式](designpattern/behavioral-pattern.md)
-    * [责任链模式](designpattern/behavioral-principle/chain-of-responsibility-pattern.md)
-    * [命令模式](designpattern/behavioral-principle/command-pattern.md)
-    * [解释器模式](designpattern/behavioral-principle/interpreter-pattern.md)
-    * [迭代器模式](designpattern/behavioral-principle/iterator-pattern.md)
-    * [中介者模式](designpattern/behavioral-principle/mediator-pattern.md)
-    * [备忘录模式](designpattern/behavioral-principle/memento-pattern.md)
-    * [观察者模式](designpattern/behavioral-principle/observer-pattern.md)
-    * [状态模式](designpattern/behavioral-principle/state-pattern.md)
-    * [策略模式](designpattern/behavioral-principle/strategy-pattern.md)
     * [模板方法模式](designpattern/behavioral-principle/template-method-pattern.md)
+    * [迭代器模式](designpattern/behavioral-principle/iterator-pattern.md)
+    * [策略模式](designpattern/behavioral-principle/strategy-pattern.md)
+    * [解释器模式](designpattern/behavioral-principle/interpreter-pattern.md)
+    * [观察者模式](designpattern/behavioral-principle/observer-pattern.md)
+    * [备忘录模式](designpattern/behavioral-principle/memento-pattern.md)
+    * [命令模式](designpattern/behavioral-principle/command-pattern.md)
+    * [中介者模式](designpattern/behavioral-principle/mediator-pattern.md)
+    * [责任链模式](designpattern/behavioral-principle/chain-of-responsibility-pattern.md)
     * [访问者模式](designpattern/behavioral-principle/visitor-pattern.md)
+    * [状态模式](designpattern/behavioral-principle/state-pattern.md)
 
 * [Golang](golang/readme.md)
   * [源码阅读](golang/source/readme.md)
     * [Goroutines](golang/source/goroutine.md)
     * [Channel](golang/source/channel.md)
-  * [GO WEB 编程](golang/gin/readme.md)
-    * [快速开始](golang/gin/quick-start.md)
+  <!-- * [GO WEB 编程](golang/gin/readme.md) -->
+    <!-- * [快速开始](golang/gin/quick-start.md) -->
   <!-- * [ORM](golang/orm/readme.md) -->
   <!-- * [gRPC+gRPC Gateway](golang/grpc/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
