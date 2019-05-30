@@ -55,8 +55,9 @@
   <!-- * [爬虫](golang/crawler/readme.md) -->
 
 <!-- * [Vue](vue/readme.md) -->
-<!-- * [Java](java/readme.md) -->
-  <!-- * [Spring boot](spring/springmvc/readme.md) -->
-  <!-- * [Spring cloud](spring/springcloud/readme.md) -->
+* [Java](java/readme.md)
+  * [深入拆解JVM](java/jvm/readme.md)
+  <!-- * [Spring boot](java/springboot/readme.md) -->
+  <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
 <!-- * [architecture](architecture/readme.md) -->
