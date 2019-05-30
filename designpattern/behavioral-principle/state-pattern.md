@@ -48,6 +48,15 @@ type VideoContext struct {
     videoState IVideoState
 }
 
+func NewVideoContext() *VideoContext {
+    v := &VideoContext{}
+    PLAY_STATE.videoContext = v
+    PAUSE_STATE.videoContext = v
+    STOP_STATE.videoContext = v
+    SPEED_STATE.videoContext = v
+    return v
+}
+
 func (v *VideoContext) SetVideoState(videoState IVideoState) {
     v.videoState = videoState
 
@@ -194,11 +203,7 @@ import (
 )
 
 func ExampleState() {
-    videoContext := &VideoContext{}
-    PLAY_STATE.videoContext = videoContext
-    PAUSE_STATE.videoContext = videoContext
-    STOP_STATE.videoContext = videoContext
-    SPEED_STATE.videoContext = videoContext
+    videoContext := NewVideoContext()
 
     videoContext.SetVideoState(PLAY_STATE)
     fmt.Printf("current state : %v \n", reflect.TypeOf(videoContext.videoState).Name())
