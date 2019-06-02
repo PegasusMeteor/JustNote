@@ -50,13 +50,22 @@
   <!-- * [GO WEB 编程](golang/gin/readme.md) -->
     <!-- * [快速开始](golang/gin/quick-start.md) -->
   <!-- * [ORM](golang/orm/readme.md) -->
-  <!-- * [gRPC+gRPC Gateway](golang/grpc/readme.md) -->
+  * [gRPC](golang/grpc/readme.md)
+    * [What is gRPC](golang/grpc/what-grpc.md)
+    * [gRPC Concepts](golang/grpc/grpc-concepts.md)
+    * [Go Quick Start](golang/grpc/quick-start.md)
+    * [gRPC Basics](golang/grpc/grpc-basic.md)
+  <!-- * [gRPC-Web] -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
 
 <!-- * [Vue](vue/readme.md) -->
 * [Java](java/readme.md)
-  * [深入拆解JVM](java/jvm/readme.md)
+  * [Java Core](java/core/readme.md)
+    * [JVM 如何加载类](java/core/jvm-load-class.md)
+    * [JVM 垃圾回收](java/core/jvm-gc.md)
+    * [JVM 与 Hadoop](java/core/jvm-hadoop.md)
+  <!-- * [Spring](java/spring/readme.md) -->
   <!-- * [Spring boot](java/springboot/readme.md) -->
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
