@@ -15,6 +15,7 @@
     - [Update the server](#update-the-server)
     - [Update the client](#update-the-client)
     - [Run](#run)
+  - [NEXT](#next)
 
 ## 先决条件
 <!-- /TOC -->
@@ -191,3 +192,8 @@ go run greeter_client/main.go
 2019/06/02 19:25:56 Greeting: Hello world
 2019/06/02 19:25:56 Greeting: Hello again world
 ```
+
+## NEXT
+
+- [What is gRPC](what-grpc.md)
+- [gRPC Concepts](grpc-concepts.md)
