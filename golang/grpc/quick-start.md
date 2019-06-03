@@ -101,7 +101,7 @@ go run greeter_client/main.go
 
 位于 `helloworld/helloworld.proto` 文件中。
 
-```go
+```protobuf
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
@@ -124,7 +124,7 @@ message HelloReply {
 
 编辑`helloworld/helloworld.proto` 文件，添加一个 `SayHelloAgain` 的方法，它与 `SayHello` 方法接收同样的参数，有同样的返回值。
 
-```go
+```protobuf
 
 // The greeting service definition.
 service Greeter {

@@ -51,10 +51,10 @@
     <!-- * [快速开始](golang/gin/quick-start.md) -->
   <!-- * [ORM](golang/orm/readme.md) -->
   * [gRPC](golang/grpc/readme.md)
+    * [Quick Start](golang/grpc/quick-start.md)
     * [What is gRPC](golang/grpc/what-grpc.md)
-    * [gRPC Concepts](golang/grpc/grpc-concepts.md)
-    * [Go Quick Start](golang/grpc/quick-start.md)
-    * [gRPC Basics](golang/grpc/grpc-basic.md)
+    * [gRPC 概念](golang/grpc/grpc-concepts.md)
+    * [gRPC 基础 Golang版](golang/grpc/grpc-basic.md)
   <!-- * [gRPC-Web] -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
