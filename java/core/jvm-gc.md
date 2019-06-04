@@ -181,8 +181,8 @@ JVM 的可配置参数列表 [java vmoptions](https://www.oracle.com/technetwork
 
 ## 参考文献
 
-[深入拆解JVM](https://time.geekbang.org/column/article/13091)
-[JVM 垃圾回收](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/jvm/JVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6.md)
-[JVM 内存区域](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.md)
-[JVM (Java Virtual Machine) Architecture](https://www.javatpoint.com/internal-details-of-jvm)
-[Java 核心技术](https://time.geekbang.org/column/article/10325)
+- [深入拆解JVM](https://time.geekbang.org/column/article/13091)
+- [JVM 垃圾回收](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/jvm/JVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6.md)
+- [JVM 内存区域](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.md)
+- [JVM (Java Virtual Machine) Architecture](https://www.javatpoint.com/internal-details-of-jvm)
+- [Java 核心技术](https://time.geekbang.org/column/article/10325)
