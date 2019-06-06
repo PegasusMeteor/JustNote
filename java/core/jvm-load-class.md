@@ -8,6 +8,8 @@
 
 <!-- /TOC -->
 
+本文转载自 [深入拆解JVM](https://time.geekbang.org/column/article/11523)
+
 我们知道，一个java程序，从写完到运行需要经过几个过程。从JVM视角来看，执行 Java 代码首先需要将它编译而成的 class 文件加载到 JVM 中。加载后的 Java 类会被存放于方法区(Method Area)中。实际运行时，虚拟机会执行方法 区内的代码。  
 
 那么，JVM到底是如何加载Java Class的？  
