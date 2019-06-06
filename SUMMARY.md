@@ -69,4 +69,5 @@
   <!-- * [Spring boot](java/springboot/readme.md) -->
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
-<!-- * [architecture](architecture/readme.md) -->
+* [Architecture](architecture/readme.md)
+  * [Service Mesh](architecture/service-mesh.md)

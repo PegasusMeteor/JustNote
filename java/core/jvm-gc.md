@@ -1,4 +1,23 @@
 # JVM GC
+<!-- TOC -->
+
+- [JVM GC](#jvm-gc)
+  - [JVM 中的内存区域划分](#jvm-%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E5%88%92%E5%88%86)
+    - [第一，程序计数器(PC，Program Counter Register)。](#%E7%AC%AC%E4%B8%80%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8pcprogram-counter-register)
+    - [第二，Java 虚拟机栈(Java Virtual Machine Stack)](#%E7%AC%AC%E4%BA%8Cjava-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88java-virtual-machine-stack)
+    - [第三，堆(Heap)](#%E7%AC%AC%E4%B8%89%E5%A0%86heap)
+    - [第四，方法区(Method Area)。](#%E7%AC%AC%E5%9B%9B%E6%96%B9%E6%B3%95%E5%8C%BAmethod-area)
+    - [第五，运行时常量池(Run-Time Constant Pool)](#%E7%AC%AC%E4%BA%94%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0run-time-constant-pool)
+    - [第六，本地方法栈(Native Method Stack)](#%E7%AC%AC%E5%85%AD%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88native-method-stack)
+  - [引用计数法与可达性分析](#%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E6%B3%95%E4%B8%8E%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90)
+  - [Stop-the-world 以及安全点](#stop-the-world-%E4%BB%A5%E5%8F%8A%E5%AE%89%E5%85%A8%E7%82%B9)
+  - [垃圾回收的三种方式](#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%9A%84%E4%B8%89%E7%A7%8D%E6%96%B9%E5%BC%8F)
+  - [Java 常见的垃圾收集器有哪些](#java-%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E6%9C%89%E5%93%AA%E4%BA%9B)
+  - [垃圾回收过程的理解](#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E8%BF%87%E7%A8%8B%E7%9A%84%E7%90%86%E8%A7%A3)
+  - [补充](#%E8%A1%A5%E5%85%85)
+  - [参考文献](#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE)
+
+<!-- /TOC -->
 
 ## JVM 中的内存区域划分
 
