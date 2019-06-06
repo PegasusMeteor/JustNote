@@ -16,9 +16,9 @@
 
 <!-- /TOC -->
 
-## G1GC 的相关概念
+本文转载自美团技术博客 [Java Hotspot G1 GC的一些关键技术](https://tech.meituan.com/2016/09/23/g1.html)
 
-G1GC部分内容转载自美团技术博客 [Java Hotspot G1 GC的一些关键技术](https://tech.meituan.com/2016/09/23/g1.html)
+## G1GC 的相关概念
 
 G1 GC，全称Garbage-First Garbage Collector，通过-XX:+UseG1GC参数来启用,作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，相信熟悉JVM的同学们都不会对它感到陌生。在JDK 9中，G1被提议设置为默认垃圾收集器（JEP 248）。在官网中，是这样描述G1的:
 
@@ -377,4 +377,4 @@ Heap after GC invocations=13 (full 1):
 
 这次发生global concurrent marking的原因是：humongous allocation，上面提过在巨大对象分配之前，会检测到old generation 使用占比是否超过了 initiating heap occupancy percent（45%），因为 1449132032(used)+ 579608(allocation request:) > 1449551430(threshold)，所以触发了本次global concurrent marking。对于具体执行过程，上面的表格已经详细讲解了。值得注意的是上文中所说的initial mark往往伴随着一次YGC，在日志中也有体现：GC pause (G1 Humongous Allocation) (young) (initial-mark)。
 
-**以上G1GC内容转载自美团技术博客** [Java Hotspot G1 GC的一些关键技术](https://tech.meituan.com/2016/09/23/g1.html)
+**本文转载自美团技术博客** [Java Hotspot G1 GC的一些关键技术](https://tech.meituan.com/2016/09/23/g1.html)
