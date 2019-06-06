@@ -64,6 +64,7 @@
   * [Java Core](java/core/readme.md)
     * [JVM 如何加载类](java/core/jvm-load-class.md)
     * [JVM 垃圾回收](java/core/jvm-gc.md)
+    * [JVM G1GC](java/core/jvm-g1gc.md)
     * [JVM 与 Hadoop](java/core/jvm-hadoop.md)
   <!-- * [Spring](java/spring/readme.md) -->
   <!-- * [Spring boot](java/springboot/readme.md) -->
