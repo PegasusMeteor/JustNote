@@ -26,7 +26,8 @@ G1 GC，全称Garbage-First Garbage Collector，通过-XX:+UseG1GC参数来启�
 >
 > - Can operate concurrently with applications threads like the CMS collector.
 > - Compact free space without lengthy GC induced pause times.
-> - Need more predictable GC pause durations. > * Do not want to sacrifice a lot of throughput performance.
+> - Need more predictable GC pause durations.
+> - Do not want to sacrifice a lot of throughput performance.
 > - Do not require a much larger Java heap.
 
 从官网的描述中，我们知道G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能的满足垃圾收集暂停时间的要求。它是专门针对以下应用场景设计的:

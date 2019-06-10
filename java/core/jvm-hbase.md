@@ -31,7 +31,7 @@
 参数|含义
 -|-
 -XX:+UseG1GC| 显式地要求使用G1 GC
--Xms64G | 设置JVM最大可用内存为
+-Xms64G | 设置JVM初始堆内存为64G
 -Xmx64G | 设置JVM最大可用内存为64G
 -XX:PermSize=256m | JVM初始分配的非堆内存
 -XX:G1NewSizePercent=4 | 新生代最小值，默认值5%
@@ -134,10 +134,10 @@ Heap ≥ (M + B + O + E) ÷ 0.7
 
 ### Step 4: 配置其他建议的参数以提高GC的性能
 
--XX:MaxTenuringThreshold = 1
--XX:G1HeapWastePercent = 10
--XX:G1MixedGCCountTarget = 16
--XX:G1HeapRegionSize = #M  #必须是2的幂，在[1..32]范围内,理想情况下，＃是这样的：堆大小÷＃MB = 2048个region。
+- -XX:MaxTenuringThreshold = 1
+- -XX:G1HeapWastePercent = 10
+- -XX:G1MixedGCCountTarget = 16
+- -XX:G1HeapRegionSize = #M  #必须是2的幂，在[1..32]范围内,理想情况下，＃是这样的：堆大小÷＃MB = 2048个region。
 
 ### Run it
 
