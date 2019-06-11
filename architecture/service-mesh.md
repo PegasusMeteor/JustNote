@@ -33,6 +33,8 @@
   - [Microservices & Service Mesh](#microservices--service-mesh)
   - [参考](#%E5%8F%82%E8%80%83)
 
+本文中有些图片的显示会有格式上的问题，建议 点击  [这里](https://github.com/PegasusMeteor/JustNote/blob/master/architecture/service-mesh.md) 查看原文。
+
 <!-- /TOC -->
 ## What's a service mesh
 
@@ -135,11 +137,6 @@ Linkerd Dashboard 可以实时查看服务的运行状态.它可用于查看 特
 Prometheus 是一种云原生的监控解决方案，用来收集和存储所有的Linkerd metrics。它作为 `control plane`的一部分，并且为 CLI,Dashboard,Grafana 提供相应的数据。
 
 `data plane`中的代理暴露了 `4191` 的端口，用来给Prometheus收集数据，每10秒钟刷新一次。 这些指标 可以给其他的Linkerd 组件使用，例如 CLI 和dashboard。
-
-<div  align="center">
- <object data="images/prometheus.svg" type="image/svg+xml" width = "400px" height = "400px" alt="Metrics Collection"/>
- <img src="images/prometheus.svg" width = "400px" height = "400px" alt="Metrics Collection"/>
-</div>
 
 ![Metrics Collection](images/prometheus.svg)
 
