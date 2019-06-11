@@ -253,7 +253,7 @@ jvm 中默认的 eden与s0，s1 的比例是 8:1:1
 
 [After GC , the address of the object in memory be changed and why the object reference still valid?](https://stackoverflow.com/questions/15218438/after-gc-the-address-of-the-object-in-memory-be-changed-and-why-the-object-ref)
 
-gc 复制存活的对象，其原来的地址
+gc 复制存活的对象，其原来的地址会发生变化。不过这些jvm就帮我们处理好了，对于程序员来说，这些是无感知的。
 
 ## 参考文献
 
