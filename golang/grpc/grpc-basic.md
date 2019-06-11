@@ -8,6 +8,10 @@
   - [生成server端和client 端代码](#%E7%94%9F%E6%88%90server%E7%AB%AF%E5%92%8Cclient-%E7%AB%AF%E4%BB%A3%E7%A0%81)
   - [编写Server端](#%E7%BC%96%E5%86%99server%E7%AB%AF)
     - [实现接口](#%E5%AE%9E%E7%8E%B0%E6%8E%A5%E5%8F%A3)
+    - [启动server端](#%E5%90%AF%E5%8A%A8server%E7%AB%AF)
+  - [编写client端](#%E7%BC%96%E5%86%99client%E7%AB%AF)
+    - [创建一个存根/客户端](#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%AD%98%E6%A0%B9%E5%AE%A2%E6%88%B7%E7%AB%AF)
+    - [调用服务端方法](#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%96%B9%E6%B3%95)
 
 <!-- /TOC -->
 
@@ -234,5 +238,260 @@ func (s *routeGuideServer) ListFeatures(rect *pb.Rectangle, stream pb.RouteGuide
 如你所见，这次与简单请求的request和reponse不同，这里获取了两个比较复杂的参数`pb.Rectangle`, `RouteGuide_ListFeaturesServer`来进行处理并构建response。在这个方法里，我们构建了多个 Feature 对象，并使用send方法将他们写入到`RouteGuide_ListFeaturesServer`中。返回了一个nil的错误。gRPC层会将其转换为适当的RPC状态，以便在链路中发送。
 
 **Client-side streaming RPC**
+
+接下来来看一个比较复杂的。客户端流式gRPC.服务端从客户端获取一系列的`Points`返回单个`RouteSummary`.
+
+```go
+// RecordRoute records a route composited of a sequence of points.
+//
+// It gets a stream of points, and responds with statistics about the "trip":
+// number of points,  number of known features visited, total distance traveled, and
+// total time spent.
+func (s *routeGuideServer) RecordRoute(stream pb.RouteGuide_RecordRouteServer) error {
+    var pointCount, featureCount, distance int32
+    var lastPoint *pb.Point
+    startTime := time.Now()
+    for {
+        point, err := stream.Recv()
+        if err == io.EOF {
+            endTime := time.Now()
+            return stream.SendAndClose(&pb.RouteSummary{
+                PointCount:   pointCount,
+                FeatureCount: featureCount,
+                Distance:     distance,
+                ElapsedTime:  int32(endTime.Sub(startTime).Seconds()),
+            })
+        }
+        if err != nil {
+            return err
+        }
+        pointCount++
+        for _, feature := range s.savedFeatures {
+            if proto.Equal(feature.Location, point) {
+                featureCount++
+            }
+        }
+        if lastPoint != nil {
+            distance += calcDistance(lastPoint, point)
+        }
+        lastPoint = point
+    }
+}
+
+```
+
+正如我们所看到的，这次没有接收任何的request 请求参数，而是直接接收了一个 `RouteGuide_RecordRouteServer`流。服务端通过这个流**读写**消息。读的话，使用`Recv()`方法，返回单个response 使用它的 `SendAndClose()` 方法。
+
+在这个方法体中，我们使用 `RouteGuide_RecordRouteServer`的`Recv()` 方法，重复读取客户端的请求到某一个实体中（本例中是point）,直到读取不出任何消息为止。 服务端需要去检查每一次Read返回的错误。如果error为nil，说明当前流没有问题，可以继续读取。如果是`io.EOF`，说明当前读取已经结束，server端可以返回 `RouteSummary`,如果它有其他类型的值，则将其原样返回。RPC会自动将其转换成相应的RPC 状态。
+
+**Bidirectional streaming RPC**
+
+废话不多说，上来先看下代码
+
+```go
+
+// RouteChat receives a stream of message/location pairs, and responds with a stream of all
+// previous messages at each of those locations.
+func (s *routeGuideServer) RouteChat(stream pb.RouteGuide_RouteChatServer) error {
+    for {
+        in, err := stream.Recv()
+        if err == io.EOF {
+            return nil
+        }
+        if err != nil {
+            return err
+        }
+        key := serialize(in.Location)
+
+        s.mu.Lock()
+        s.routeNotes[key] = append(s.routeNotes[key], in)
+        // Note: this copy prevents blocking other clients while serving this one.
+        // We don't need to do a deep copy, because elements in the slice are
+        // insert-only and never modified.
+        rn := make([]*pb.RouteNote, len(s.routeNotes[key]))
+        copy(rn, s.routeNotes[key])
+        s.mu.Unlock()
+
+        for _, note := range rn {
+            if err := stream.Send(note); err != nil {
+                return err
+            }
+        }
+    }
+}
+```
+
+这次我们又接收到了`RouteGuide_RouteChatServer`流，与客户端流式RPC一样，仍然可以使用它来读写数据。但是，这次我们可以在客户端还在向stream中写数据的同时就返回值。
+
+从代码中可以看出，server端这里读写数据的方法非常类似于客户端流式RPC里面的方法，无非就是这里使用了 `send()`方法，而不是`SendAndClose()`方法。因为send可以发送多个reponse。尽管每一端都能够按照对方发送消息的顺序读取其相应的消息，但是客户端和服务端都可以按照任何顺序进行读写，这两个流完全独立运行。
+
+### 启动server端
+
+一旦实现了所有的方法，我们就需要开启一个gRPC server，让客户端能够访问我们的服务。
+
+```go
+flag.Parse()
+    lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+    if err != nil {
+        log.Fatalf("failed to listen: %v", err)
+    }
+    // 是否使用TLS
+    var opts []grpc.ServerOption
+    if *tls {
+        if *certFile == "" {
+            *certFile = testdata.Path("server1.pem")
+        }
+        if *keyFile == "" {
+            *keyFile = testdata.Path("server1.key")
+        }
+        creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+        if err != nil {
+            log.Fatalf("Failed to generate credentials %v", err)
+        }
+        opts = []grpc.ServerOption{grpc.Creds(creds)}
+    }
+    grpcServer := grpc.NewServer(opts...)
+    pb.RegisterRouteGuideServer(grpcServer, newServer())
+    grpcServer.Serve(lis)
+```
+
+- 指定端口
+- 启动 gRPC server实例
+- 将我们实现的service注册到 the gRPC server.
+- `Serve()`方法启动，`Stop()`方法停止
+
+## 编写client端
+
+接下来就开始编写一个 gRPC client 来访问 `RouteGuide` 服务。 示例 代码 [grpc-go/examples/route_guide/client/client.go](https://github.com/grpc/grpc-go/blob/master/examples/route_guide/client/client.go)  
+
+### 创建一个存根/客户端
+
+为了调用服务端发方法，需要创建一个 gRPC channel 来跟server端进行通信。使用 `grpc.Dial()`方法，传入server端的地址和端口来实现。
+
+```go
+conn, err := grpc.Dial(*serverAddr)
+if err != nil {
+    ...
+}
+defer conn.Close()
+```
+
+还可以使用 `DialOptions` 在 `grpc.Dial` 设置使用证书认证等，例如下面这样
+
+```go
+flag.Parse()
+    var opts []grpc.DialOption
+    if *tls {
+        if *caFile == "" {
+            *caFile = testdata.Path("ca.pem")
+        }
+        creds, err := credentials.NewClientTLSFromFile(*caFile, *serverHostOverride)
+        if err != nil {
+            log.Fatalf("Failed to create TLS credentials %v", err)
+        }
+        opts = append(opts, grpc.WithTransportCredentials(creds))
+    } else {
+        opts = append(opts, grpc.WithInsecure())
+    }
+    conn, err := grpc.Dial(*serverAddr, opts...)
+    if err != nil {
+        log.Fatalf("fail to dial: %v", err)
+    }
+    defer conn.Close()
+```
+
+gRPC channel 建立好之后，需要一个client stub来 执行RPC调用。我们使用 `.proto` 文件中生成的 `pb` 包中的 `NewRouteGuideClient` 方法来创建。
+
+```go
+client := pb.NewRouteGuideClient(conn)
+
+```
+
+### 调用服务端方法
+
+接下来我们看客户端如何调用服务端方法。**请注意,在gRPC-Go中，RPC以阻塞/同步模式运行，这意味着RPC调用等待服务器响应，并将返回响应或错误。**
+
+**Simple RPC**
+
+```go
+  feature, err := client.GetFeature(context.Background(), &pb.Point{409146138, -746188906})
+  if err != nil {
+        ...
+  }
+```
+
+就像调用本地方法一样简单，在方法中我们构造了一个 `protocol buffers` 对象 `db.Point`,我们还传递了一个context.Context对象，它允许我们在必要时更改RPC的行为，例如rpc调用还在进行时取消RPC. 如果没有出现错误，我们就能收到 server端的返回值。
+
+看一下完整的写法。
+
+```go
+// printFeature gets the feature for the given point.
+func printFeature(client pb.RouteGuideClient, point *pb.Point) {
+   log.Printf("Getting feature for point (%d, %d)", point.Latitude, point.Longitude)
+   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+   defer cancel()
+   feature, err := client.GetFeature(ctx, point)
+   if err != nil {
+      log.Fatalf("%v.GetFeatures(_) = _, %v: ", client, err)
+   }
+   log.Println(feature)
+}
+
+```
+
+**Server-side streaming RPC**
+
+接下来调用服务端流式RPC方法 `ListFeatures`，这个方法返回一系列的地理数据 `Features`.
+
+```go
+rect := &pb.Rectangle{ ... }  // initialize a pb.Rectangle
+stream, err := client.ListFeatures(context.Background(), rect)
+if err != nil {
+    ...
+}
+for {
+    feature, err := stream.Recv()
+    if err == io.EOF {
+        break
+    }
+    if err != nil {
+        log.Fatalf("%v.ListFeatures(_) = _, %v", client, err)
+    }
+    log.Println(feature)
+}
+```
+
+与简单的RPC调用一样，传入了context.Context来进行request，但是与其不一样的是，这次没有简单收到了一个repsonse对象，而是接收到了一个`RouteGuide_ListFeaturesClient`实例。客户端会使用 `RouteGuide_ListFeaturesClient` 来读取server端的消息。
+
+我们使用 `RouteGuide_ListFeaturesClient`的`Recv（）`方法重复读取服务端对  `protocol buffers`对象（在本例中为Feature）的响应，直到没有更多消息为止。客户端需要对每一个调用中返回的error进行判断，错误的处理方式与server端类似。
+
+看下完整的写法。
+
+```go
+// printFeatures lists all the features within the given bounding Rectangle.
+func printFeatures(client pb.RouteGuideClient, rect *pb.Rectangle) {
+   log.Printf("Looking for features within %v", rect)
+   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+   defer cancel()
+   stream, err := client.ListFeatures(ctx, rect)
+   if err != nil {
+      log.Fatalf("%v.ListFeatures(_) = _, %v", client, err)
+   }
+   for {
+      feature, err := stream.Recv()
+      if err == io.EOF {
+         break
+      }
+      if err != nil {
+         log.Fatalf("%v.ListFeatures(_) = _, %v", client, err)
+      }
+      log.Println(feature)
+   }
+}
+```
+
+**Client-side streaming RPC**
+
+未完待续
 
 https://grpc.io/docs/tutorials/basic/go/
