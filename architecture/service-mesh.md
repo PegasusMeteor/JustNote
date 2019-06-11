@@ -137,7 +137,7 @@ Prometheus 是一种云原生的监控解决方案，用来收集和存储所有
 `data plane`中的代理暴露了 `4191` 的端口，用来给Prometheus收集数据，每10秒钟刷新一次。 这些指标 可以给其他的Linkerd 组件使用，例如 CLI 和dashboard。
 
 <div  align="center">
- <img src="images/prometheus.svg" width = "400" height = "400" alt="Metrics Collection (出处 https://linkerd.io/images/architecture/prometheus.svg)" align=center />
+ <img src="images/prometheus.svg" width = "400px" height = "400px" alt="Metrics Collection"/>
 </div>
 
 ![Metrics Collection (出处 https://linkerd.io/images/architecture/prometheus.svg)](images/prometheus.svg)
@@ -282,6 +282,9 @@ Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求�
 
 ![微服务逻辑(https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/images/microservices-logical.svg)](images/microservices-logical.svg)
 
+**那么到底解决了什么微服务中的哪些问题呢？**
+
+http://www.servicemesher.com/blog/how-service-mesh-addresses-3-major-microservices/
 
 ## 参考
 
