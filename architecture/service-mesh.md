@@ -136,6 +136,11 @@ Prometheus 是一种云原生的监控解决方案，用来收集和存储所有
 
 `data plane`中的代理暴露了 `4191` 的端口，用来给Prometheus收集数据，每10秒钟刷新一次。 这些指标 可以给其他的Linkerd 组件使用，例如 CLI 和dashboard。
 
+<div  align="center">
+ <object data="images/prometheus.svg" type="image/svg+xml" width = "400px" height = "400px" alt="Metrics Collection"/>
+ <img src="images/prometheus.svg" width = "400px" height = "400px" alt="Metrics Collection"/>
+</div>
+
 ![Metrics Collection](images/prometheus.svg)
 
 ## Istio
@@ -144,7 +149,7 @@ Prometheus 是一种云原生的监控解决方案，用来收集和存储所有
 
 #### Architecture
 
-![Istio Architecture](images/istio-arch.svg)
+![Istio Architecture 出处(https://istio.io/docs/concepts/what-is-istio/arch.svg)](images/istio-arch.svg)
 
 Istio Service Mesh 逻辑上分为`data plane`和 `control plane`。
 
@@ -174,7 +179,7 @@ Mixer 是一个独立于平台的组件，负责在服务网格上执行访问�
 
 Mixer 中包括一个灵活的插件模型，使其能够接入到各种主机环境和基础设施后端，从这些细节中抽象出 Envoy 代理和 Istio 管理的服务。
 
-![Mixer 拓扑](images/topology-without-cache.svg)
+![Mixer 拓扑(https://istio.io/docs/concepts/policies-and-telemetry/topology-without-cache.svg)](images/topology-without-cache.svg)
 
 #### Pilot
 
@@ -182,15 +187,15 @@ Pilot 为 Envoy sidecar 提供服务发现功能，为智能路由（例如 A/B 
 
 Pilot 将平台特定的服务发现机制抽象化并将其合成为符合 Envoy 数据平面 API 的任何 sidecar 都可以使用的标准格式。这种松散耦合使得 Istio 能够在多种环境下运行（例如，Kubernetes、Consul、Nomad），同时保持用于流量管理的相同操作界面。
 
-![polit架构](images/PilotAdapters.svg)
+![polit架构(https://istio.io/docs/concepts/traffic-management/PilotAdapters.svg)](images/PilotAdapters.svg)
 
 #### Citadel
 
 Citadel 通过内置身份和凭证管理赋能强大的服务间和最终用户身份验证。可用于升级服务网格中未加密的流量，并为运维人员提供基于服务标识而不是网络控制的强制执行策略的能力。从 0.5 版本开始，Istio 支持基于角色的访问控制，以控制谁可以访问您的服务，而不是基于不稳定的三层或四层网络标识。
 
-![Istio 安全架构](images/istio-architecuture.svg)
+![Istio 安全架构(https://istio.io/docs/concepts/security/architecture.svg)](images/istio-architecuture.svg)
 
-![Istio 授权架构](images/istio-authz.svg)
+![Istio 授权架构(https://istio.io/docs/concepts/security/authz.svg)](images/istio-authz.svg)
 
 #### Galley
 
