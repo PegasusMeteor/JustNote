@@ -12,6 +12,7 @@
   - [编写client端](#%E7%BC%96%E5%86%99client%E7%AB%AF)
     - [创建一个存根/客户端](#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%AD%98%E6%A0%B9%E5%AE%A2%E6%88%B7%E7%AB%AF)
     - [调用服务端方法](#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%96%B9%E6%B3%95)
+    - [Run it](#run-it)
 
 <!-- /TOC -->
 
@@ -492,6 +493,100 @@ func printFeatures(client pb.RouteGuideClient, rect *pb.Rectangle) {
 
 **Client-side streaming RPC**
 
-未完待续
+客户端流方法RPC 方法 RecordRoute类似于服务器端方法，除了我们只传递方法一个上下文并获取一个可以读写消息的RouteGuide_RecordRouteClient流。
 
-https://grpc.io/docs/tutorials/basic/go/
+```go
+// runRecordRoute sends a sequence of points to server and expects to get a RouteSummary from server.
+func runRecordRoute(client pb.RouteGuideClient) {
+    // Create a random number of random points
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    pointCount := int(r.Int31n(100)) + 2 // Traverse at least two points
+    var points []*pb.Point
+    for i := 0; i < pointCount; i++ {
+        points = append(points, randomPoint(r))
+    }
+    log.Printf("Traversing %d points.", len(points))
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    stream, err := client.RecordRoute(ctx)
+    if err != nil {
+        log.Fatalf("%v.RecordRoute(_) = _, %v", client, err)
+    }
+    for _, point := range points {
+        if err := stream.Send(point); err != nil {
+            log.Fatalf("%v.Send(%v) = %v", stream, point, err)
+        }
+    }
+    reply, err := stream.CloseAndRecv()
+    if err != nil {
+        log.Fatalf("%v.CloseAndRecv() got error %v, want %v", stream, err, nil)
+    }
+    log.Printf("Route summary: %v", reply)
+}
+
+```
+
+`RouteGuide_RecordRouteClient` 流有一个Send()方法，我们可以用它向server端发送request请求。一旦我们使用 `Send()`方法发送完了请求，我们就需要调用 `CloseAndRecv()`关闭这个流，以便gRPC知道我们已经完成了写操作并希望收到response。`CloseAndRecv()` 方法会返回RPC结果的状态。如果err为nil，那么第一个结果 reply 就是这次请求正确的结果返回值。
+
+**Bidirectional streaming RPC**
+
+最后，我们来看下双向流式RPC调用 `RouteChat（）`。 与`RecordRoute`的情况一样，我们只传递方法一个上下文对象并返回一个我们可用于写入和读取消息的流。 但是，我们能够我们能够在向这个流写入数据的同时就通过这个流获取到一些返回值。
+
+下面看下完整的代码实现
+
+```go
+// runRouteChat receives a sequence of route notes, while sending notes for various locations.
+func runRouteChat(client pb.RouteGuideClient) {
+    notes := []*pb.RouteNote{
+        {Location: &pb.Point{Latitude: 0, Longitude: 1}, Message: "First message"},
+        {Location: &pb.Point{Latitude: 0, Longitude: 2}, Message: "Second message"},
+        {Location: &pb.Point{Latitude: 0, Longitude: 3}, Message: "Third message"},
+        {Location: &pb.Point{Latitude: 0, Longitude: 1}, Message: "Fourth message"},
+        {Location: &pb.Point{Latitude: 0, Longitude: 2}, Message: "Fifth message"},
+        {Location: &pb.Point{Latitude: 0, Longitude: 3}, Message: "Sixth message"},
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    stream, err := client.RouteChat(ctx)
+    if err != nil {
+        log.Fatalf("%v.RouteChat(_) = _, %v", client, err)
+    }
+    waitc := make(chan struct{})
+    go func() {
+        for {
+            in, err := stream.Recv()
+            if err == io.EOF {
+                // read done.
+                close(waitc)
+                return
+            }
+            if err != nil {
+                log.Fatalf("Failed to receive a note : %v", err)
+            }
+            log.Printf("Got message %s at point(%d, %d)", in.Message, in.Location.Latitude, in.Location.Longitude)
+        }
+    }()
+    for _, note := range notes {
+        if err := stream.Send(note); err != nil {
+            log.Fatalf("Failed to send a note: %v", err)
+        }
+    }
+    stream.CloseSend()
+    <-waitc
+}
+
+```
+
+读写消息的方式 与 客户端流式RPC 调用很类似，无非就是需要使用 `CloseSend()`方法来关闭流。尽管客户端和服务端都会按照对方写入的消息顺序来读取，但是他们可以以任意的顺序写入,这个流是完全独立运行的。
+
+### Run it
+
+接下来运行以下 server端和client 端试一下。
+
+```shell
+go run server/server.go
+```
+
+```shell
+go run client/client.go
+```
