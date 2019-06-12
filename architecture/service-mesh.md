@@ -30,7 +30,16 @@
       - [实例（Instance）](#%E5%AE%9E%E4%BE%8Binstance)
       - [规则（Rule）](#%E8%A7%84%E5%88%99rule)
   - [Linkerd Or Istio](#linkerd-or-istio)
+    - [Linkerd的特点](#linkerd%E7%9A%84%E7%89%B9%E7%82%B9)
+    - [Istio的特点](#istio%E7%9A%84%E7%89%B9%E7%82%B9)
   - [Microservices & Service Mesh](#microservices--service-mesh)
+  - [总结](#%E6%80%BB%E7%BB%93)
+  - [实现原理](#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [Service Mesh 的实现原理](#service-mesh-%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+      - [SideCar](#sidecar)
+      - [Control Plane](#control-plane-1)
+      - [Data Plane](#data-plane)
+    - [到底解决了什么问题](#%E5%88%B0%E5%BA%95%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98)
   - [参考](#%E5%8F%82%E8%80%83)
 
 本文中有些图片的显示会有格式上的问题，建议 点击  [这里](https://github.com/PegasusMeteor/JustNote/blob/master/architecture/service-mesh.md) 查看原文。
@@ -274,15 +283,133 @@ Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求�
 
 ## Linkerd Or Istio
 
-这里参考了国外网友进行的一个比较 [Linkerd or Istio?](https://itnext.io/linkerd-or-istio-2e3ce781fa3a)
+这里有国外网友进行的一个比较 [Linkerd or Istio?](https://itnext.io/linkerd-or-istio-2e3ce781fa3a)
+
+下面是我将Linkerd和Istio官方网站上的内容进行的摘录。
+
+### Linkerd的特点
+
+摘录地址 [Features](https://linkerd.io/2/features/)
+
+Feature | comment
+-|-
+Automatic Proxy Injection | 可以配置为自动将数据平面代理注入服务。
+Automatic mTLS | 自动为网状应用程序之间的所有通信启用安全传输（TLS）。
+Dashboard and Grafana |提供了一个Web dashboard，以及预先配置的Grafana仪表板。
+Experimental: CNI Plugin | 可以配置为运行CNI插件，自动重写每个pod的iptables规则。
+Experimental: High Availability | 可以配置为在高可用性（HA）模式下运行其 `control plane`。
+HTTP, HTTP/2, and gRPC Proxying | 自动为HTTP，HTTP / 2和gRPC连接启用高级功能（包括指标，负载平衡，重试等）
+Ingress |  可以与 ingress controller 结合工作
+Load Balancing | 自动在HTTP，HTTP / 2和gRPC连接上跨所有目标端点负载均衡请求。
+Retries and Timeouts | 为指定的服务配置超时重传
+Service Profiles | 支持定义服务配置文件，以启用每个路由度量标准和功能，例如重试和超时。
+TCP Proxying and Protocol Detection | 能够代理所有TCP流量，包括TLS连接，WebSockets和HTTP隧道。
+Telemetry and Monitoring | 自动从通过它发送流量的所有服务中收集指标。
+
+### Istio的特点
+
+摘录地址[功能状态](https://istio.io/zh/about/feature-stages/)，这个地址列表每个月都会进行更新。
+
+**流量管理**
+
+功能|阶段
+-|-
+协议: HTTP1.1 / HTTP2 / gRPC / TCP | Stable
+协议: Websockets / MongoDB | Beta
+流量控制: 基于标签和内容的路由以及流量迁移 | Beta
+弹性保障: 超时、重试、连接池以及外部检测 | Beta
+网关: 所有协议的 Ingress, Egress | Beta
+网关中的 TLS 终结器以及 SNI 支持 | Beta
+在 Envoy 中使用自定义过滤器 | Alpha
+
+**可观察性**
+
+功能|阶段
+-|-
+Prometheus 集成 | Stable
+本地日志记录（STDIO） | Stable
+Statsd 集成 | Stable
+客户端和服务端的遥测报告 | Stable
+Grafana 中的 Service Dashboard | Beta
+Grafana 中的 Istio 组件 Dashboard | Beta
+Stackdriver 集成 | Alpha
+SolarWinds 集成 | Alpha
+Zipkin/Jaeger 的分布式追踪 | Alpha
+服务追踪 | Alpha
+Fluentd 日志记录 | Alpha
+追踪采样 | Alpha
+
+**安全和策略实施**
+
+功能 | 阶段
+-|-
+Deny Checker | Stable
+List Checker | Stable
+插入外部 CA 密钥和证书 | Stable
+服务间的双向 TLS 认证 | Stable
+Kubernetes：服务凭证分发 | Stable
+VM：服务凭证分发 | Beta
+双向 TLS 的迁移 | Beta
+认证策略 | Alpha
+最终用户（JWT）认证 | Alpha
+OPA Checker | Alpha
+RBAC | Alpha
+
+**核心**
+
+功能 | 阶段
+-|-
+Kubernetes：Envoy 安装和流量拦截 | Stable
+Kubernetes：Istio 控制平面安装 | Stable
+属性表达语言 | Stable
+Mixer 适配器认证模型 | Stable
+Helm | Beta
+多集群安装 | Alpha
+Kubernetes：Istio 控制平面升级 | Beta
+Consul 集成 | Alpha
+基本配置资源校验 | Alpha
+Mixer 遥测收集（追踪、日志记录、监控） | Alpha
+自定义 Mixer 构建模型 | Alpha
+进程外 Mixer 适配器（ gRPC Adapters ） | Alpha
+
+**从上面列举的众多特性中可以看出，Istio似乎具有更多的特性，但是实际生产中，具体使用哪一个，还是要结合自己的实际需要来进行判断。而且，功能多并不一定是好事。**
 
 ## Microservices & Service Mesh
 
+下面这张图表示了我们常用的微服务逻辑
+
 ![微服务逻辑(https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/images/microservices-logical.svg)](images/microservices-logical.svg)
 
-**那么到底解决了什么微服务中的哪些问题呢？**
+前面说过，服务网格业内并没有统一的标准抽象架构，所以我们以Istio的一个架构为例。
 
-http://www.servicemesher.com/blog/how-service-mesh-addresses-3-major-microservices/
+![服务网格逻辑(https://cdn-images-1.medium.com/max/2600/0*D9e6BM78JIG179r3.png)](images/istio-architecuture.png)
+
+## 总结
+
+## 实现原理
+
+### Service Mesh 的实现原理
+
+#### SideCar 
+
+#### Control Plane
+
+- 服务发现
+- 负载均衡
+- 请求路由
+- 故障处理
+- 安全认证
+- 监控上报
+- 日志记录
+- 资源配额
+
+#### Data Plane
+
+### 到底解决了什么问题
+
+1、跨语言服务调用的需要,现有的很多开源微服务框架要么与特定的语言绑定如dubbo和spring cloud只支持java，要么是与语言无关如gRPC，需要定义IDL文件,然后根据这个文件生成不同语言的client和server，并且很多功能例如超时重传，负载均衡,服务发现等都需要各自实现一遍,开发成本高。
+2、云原生应用的需要，现在越来越多的微服务进行了容器化，并且开始在如kubernetes这样的平台上运行。传统的服务治理，需要在业务代码里集成服务框架的SDK,这就比较麻烦，而Service Mesh 可以无侵入的进行服务治理，比较符合云原生的理念。
+
 
 ## 参考
 
