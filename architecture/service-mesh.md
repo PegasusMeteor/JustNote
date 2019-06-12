@@ -145,7 +145,7 @@ Prometheus 是一种云原生的监控解决方案，用来收集和存储所有
 
 `data plane`中的代理暴露了 `4191` 的端口，用来给Prometheus收集数据，每10秒钟刷新一次。 这些指标 可以给其他的Linkerd 组件使用，例如 CLI 和dashboard。
 
-![Metrics Collection](images/prometheus.svg)
+![Metrics Collection](images/prometheus.png)
 
 ## Istio
 
@@ -153,7 +153,7 @@ Prometheus 是一种云原生的监控解决方案，用来收集和存储所有
 
 #### Architecture
 
-![Istio Architecture 出处(https://istio.io/docs/concepts/what-is-istio/arch.svg)](images/istio-arch.svg)
+![Istio Architecture 出处(https://istio.io/docs/concepts/what-is-istio/arch.svg)](images/istio-arch.png)
 
 Istio Service Mesh 逻辑上分为`data plane`和 `control plane`。
 
@@ -183,7 +183,7 @@ Mixer 是一个独立于平台的组件，负责在服务网格上执行访问�
 
 Mixer 中包括一个灵活的插件模型，使其能够接入到各种主机环境和基础设施后端，从这些细节中抽象出 Envoy 代理和 Istio 管理的服务。
 
-![Mixer 拓扑(https://istio.io/docs/concepts/policies-and-telemetry/topology-without-cache.svg)](images/topology-without-cache.svg)
+![Mixer 拓扑(https://istio.io/docs/concepts/policies-and-telemetry/topology-without-cache.svg)](images/topology-without-cache.png)
 
 #### Pilot
 
@@ -191,15 +191,15 @@ Pilot 为 Envoy sidecar 提供服务发现功能，为智能路由（例如 A/B 
 
 Pilot 将平台特定的服务发现机制抽象化并将其合成为符合 Envoy 数据平面 API 的任何 sidecar 都可以使用的标准格式。这种松散耦合使得 Istio 能够在多种环境下运行（例如，Kubernetes、Consul、Nomad），同时保持用于流量管理的相同操作界面。
 
-![polit架构(https://istio.io/docs/concepts/traffic-management/PilotAdapters.svg)](images/PilotAdapters.svg)
+![polit架构(https://istio.io/docs/concepts/traffic-management/PilotAdapters.svg)](images/PilotAdapters.png)
 
 #### Citadel
 
 Citadel 通过内置身份和凭证管理赋能强大的服务间和最终用户身份验证。可用于升级服务网格中未加密的流量，并为运维人员提供基于服务标识而不是网络控制的强制执行策略的能力。从 0.5 版本开始，Istio 支持基于角色的访问控制，以控制谁可以访问您的服务，而不是基于不稳定的三层或四层网络标识。
 
-![Istio 安全架构(https://istio.io/docs/concepts/security/architecture.svg)](images/istio-architecuture.svg)
+![Istio 安全架构(https://istio.io/docs/concepts/security/architecture.svg)](images/istio-architecuture.png)
 
-![Istio 授权架构(https://istio.io/docs/concepts/security/authz.svg)](images/istio-authz.svg)
+![Istio 授权架构(https://istio.io/docs/concepts/security/authz.svg)](images/istio-authz.png)
 
 #### Galley
 
@@ -212,7 +212,7 @@ Istio 提供灵活的模型来执行授权策略，并为网格中的服务收�
 
 Mixer 是负责提供策略控制和遥测收集的 Istio 组件:
 
-![Mixer 拓扑(https://istio.io/docs/concepts/policies-and-telemetry/topology-without-cache.svg)](images/topology-without-cache.svg)
+![Mixer 拓扑(https://istio.io/docs/concepts/policies-and-telemetry/topology-without-cache.svg)](images/topology-without-cache.png)
 
 在每次请求执行先决条件检查之前以及在每次报告遥测请求之后，Envoy sidecar 在逻辑上调用 Mixer。 该 Sidecar 具有本地缓存​，从而可以在缓存中执行相对较大比例的前提条件检查。此外，sidecar 缓冲出站遥测，使其实际上不需要经常调用 Mixer。
 
@@ -227,7 +227,7 @@ Mixer 是高度模块化和可扩展的组件。它的一个关键功能就是�
 
 Mixer 处理不同基础设施后端的灵活性是通过使用通用插件模型实现的。每个插件都被称为 Adapter，Mixer 通过它们与不同的基础设施后端连接，这些后端可提供核心功能，例如日志、监控、配额、ACL 检查等。通过配置能够决定在运行时使用的确切的适配器套件，并且可以轻松扩展到新的或定制的基础设施后端。
 
-![Mixer 及其适配器(出处https://istio.io/docs/concepts/policies-and-telemetry/adapters.svg)](images/istio-adapter.svg)
+![Mixer 及其适配器(出处https://istio.io/docs/concepts/policies-and-telemetry/adapters.svg)](images/istio-adapter.png)
 
 #### 可靠性和延迟
 
@@ -241,7 +241,7 @@ Mixer 是一个高可用的组件，其设计有助于提高整体可用性并�
 
 网格中每个服务都会有对应的 Sidecar 代理在运行，因此在内存消耗方面，Sidecar 必须厉行节约，这就限制了本地缓存和缓冲的可能数量。然而，独立运行 的 Mixer 可以使用相当大的缓存和输出缓冲区。因此，Mixer 可用作 Sidecar 的高度扩展且高度可用的二级缓存.
 
-![Mixer 拓扑(出处https://istio.io/docs/concepts/policies-and-telemetry/topology-with-cache.svg)](images/topology-with-cache.svg)
+![Mixer 拓扑(出处https://istio.io/docs/concepts/policies-and-telemetry/topology-with-cache.svg)](images/topology-with-cache.png)
 
 由于 Mixer 的预期可用性远高于大多数基础设施后端（通常这些可用性可能达到 99.9％）。Mixer 的本地缓存和缓冲不仅有助于减少延迟，而且即使在后端无响应时也能继续运行，从而有助于屏蔽基础设施后端故障。
 
@@ -264,7 +264,7 @@ destination.service.name: example
 
 Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求都会调用 Mixer，为 Mixer 提供一组描述请求和请求周围环境的属性。基于 Envoy sidecar 的配置和给定的特定属性集，Mixer 会调用各种基础设施后端。
 
-![属性机(https://istio.io/docs/concepts/policies-and-telemetry/machine.svg)](images/attribute-machine.svg)
+![属性机(https://istio.io/docs/concepts/policies-and-telemetry/machine.svg)](images/attribute-machine.png)
 
 #### 属性词汇
 
@@ -376,7 +376,7 @@ Mixer 遥测收集（追踪、日志记录、监控） | Alpha
 
 下面这张图表示了我们常用的微服务逻辑
 
-![微服务逻辑(https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/images/microservices-logical.svg)](images/microservices-logical.svg)
+![微服务逻辑(https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/images/microservices-logical.svg)](images/microservices-logical.png)
 
 前面说过，服务网格业内并没有统一的标准抽象架构，所以我们以Istio的一个架构为例。
 
