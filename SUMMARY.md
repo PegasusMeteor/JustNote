@@ -65,6 +65,7 @@
     * [JVM 如何加载类](java/core/jvm-load-class.md)
     * [JVM 垃圾回收](java/core/jvm-gc.md)
     * [JVM G1GC](java/core/jvm-g1gc.md)
+    * [JVM G1GC Q&A](java/core/jvm-g1gc-qa.md)
     * [JVM 与 Hbase](java/core/jvm-hbase.md)
   <!-- * [Spring](java/spring/readme.md) -->
   <!-- * [Spring boot](java/springboot/readme.md) -->
