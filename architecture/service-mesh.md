@@ -34,11 +34,9 @@
     - [Istio的特点](#istio%E7%9A%84%E7%89%B9%E7%82%B9)
   - [Microservices & Service Mesh](#microservices--service-mesh)
   - [总结](#%E6%80%BB%E7%BB%93)
-  - [实现原理](#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-    - [Service Mesh 的实现原理](#service-mesh-%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [实现原理](#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
       - [SideCar](#sidecar)
       - [Control Plane](#control-plane-1)
-      - [Data Plane](#data-plane)
     - [到底解决了什么问题](#%E5%88%B0%E5%BA%95%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98)
   - [参考](#%E5%8F%82%E8%80%83)
 
@@ -289,7 +287,7 @@ Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求�
 
 ### Linkerd的特点
 
-摘录地址 [Features](https://linkerd.io/2/features/)
+摘录地址 [Linkerd Features](https://linkerd.io/2/features/)
 
 Feature | comment
 -|-
@@ -308,7 +306,7 @@ Telemetry and Monitoring | 自动从通过它发送流量的所有服务中收�
 
 ### Istio的特点
 
-摘录地址[功能状态](https://istio.io/zh/about/feature-stages/)，这个地址列表每个月都会进行更新。
+摘录地址 [Istio的功能状态](https://istio.io/zh/about/feature-stages/)，这个地址列表每个月都会进行更新。
 
 **流量管理**
 
@@ -382,34 +380,56 @@ Mixer 遥测收集（追踪、日志记录、监控） | Alpha
 
 前面说过，服务网格业内并没有统一的标准抽象架构，所以我们以Istio的一个架构为例。
 
-![服务网格逻辑(https://cdn-images-1.medium.com/max/2600/0*D9e6BM78JIG179r3.png)](images/istio-architecuture.png)
+![服务网格逻辑(https://cdn-images-1.medium.com/max/2600/0*D9e6BM78JIG179r3.png)](images/istio-architecuture2.png)
 
 ## 总结
 
-## 实现原理
+### 实现原理
 
-### Service Mesh 的实现原理
+综合上面我们介绍的两种Service Mesh 组件来看，他们都具备下面几方面内容。同时，从参考了大部分的国内自研ServerMesh工具来看，大体上也是采用下面的这种思路，接下来，我们总结一下。
 
-#### SideCar 
+#### SideCar
+
+SideCar 模式，是Service Mesh 的一个重点内容。首先来看下传统的微服务中，服务与服务之间是怎么样的一个关系。
+
+![传统微服务架构（https://medium.com/microservices-in-practice/service-mesh-for-microservices-2953109a3c9a）](images/traditional-micro.png)
+
+其中的 `NetworkFunctions` 就包括了我们平常使用的熔断降级，负载均衡等一系列的功能。
+
+那么升级之后的ServiceMesh又应该怎么来理解呢？
+
+![升级之后的ServiceMesh架构（https://medium.com/microservices-in-practice/service-mesh-for-microservices-2953109a3c9a）](images/morden-servicemesh.png)
+
+可以看到,原本服务框架中需要在我们每个服务里面实现的一些框架功能诸如 服务发现，负载均衡，熔断降级都由SideCar来实现了，而我们的服务代码，业务代码再也不用关心与业务本身无关的内容了。
 
 #### Control Plane
 
-- 服务发现
-- 负载均衡
-- 请求路由
-- 故障处理
-- 安全认证
-- 监控上报
-- 日志记录
-- 资源配额
+sidecar 实现了服务的拦截调用功能，所有的服务都通过SideCar来进行转发和流量处理，这样所有的sidecar再通过一个Control Plane作为中心点来管控全局，这就形成了一个服务网格。有了前面SideCar的作用，controlplane 作为一个中心点的作用就很明显了。
 
-#### Data Plane
+- 服务发现, 我们写的服务通过sidecar 注册到Control Plane 的注册中心，这样当，服务需要进行其他服务调用的时候，先经过SideCar，然后SideCar 去Control Plane  注册中心 查询相应的服务提供者的列表。
+- 负载均衡 ,承接上一步，拿到了服务提供者的列表之后，SideCar就根据一定的负载均衡算法选择一个节点进行调用。同时通过ControlPlane 也可以修改这些SideCar的负载均衡算法。
+- 请求路由,SideCar 从ControlPlane 拿到服务提供者列表之后，也可以通过ControlPlane来进行控制，例如 A/B Test,流量切换等等。
+- 故障处理,服务之间调用如果出现故障，就需要加以控制，超时重传，熔断等，这些都可以通过SideCar转发时，通过ControlPlane动态配置。
+- 安全认证,通过ControlPlane 控制哪个服务可以被谁进行访问，以及访问哪些信息
+- 监控上报,所有SideCar转发的信息都会经过ControlPlane，再由ControlPlane发送给监控系统，例如Prometheus。
+- 日志记录,所有SideCar转发的日志信息也会经过ControlPlane，再由ControlPlane发送给日志系统。
+- 资源配额,例如可以在ControlPlane里面对每个服务配置最大调用次数，这样SideCar转发调用时就会进行次数的审计。
+
+最终，我们祭出这张图应该就可以理解了。
+
+![趣味sidecar](images/sidecar-controlplane.png)
 
 ### 到底解决了什么问题
 
-1、跨语言服务调用的需要,现有的很多开源微服务框架要么与特定的语言绑定如dubbo和spring cloud只支持java，要么是与语言无关如gRPC，需要定义IDL文件,然后根据这个文件生成不同语言的client和server，并且很多功能例如超时重传，负载均衡,服务发现等都需要各自实现一遍,开发成本高。
+1、跨语言服务调用的需要,现有的很多开源微服务框架要么与特定的语言绑定如dubbo和spring cloud,只支持java，要么是与语言无关如gRPC，需要定义IDL文件,然后根据这个文件生成不同语言的client和server，并且很多功能例如超时重传，负载均衡,服务发现等都需要各自实现一遍,开发成本高。
+
 2、云原生应用的需要，现在越来越多的微服务进行了容器化，并且开始在如kubernetes这样的平台上运行。传统的服务治理，需要在业务代码里集成服务框架的SDK,这就比较麻烦，而Service Mesh 可以无侵入的进行服务治理，比较符合云原生的理念。
 
+3、分布式跟踪以及性能瓶颈判断。现有的微服务架构中，很难做到一次请求的全链路跟踪判断，以及我们在分析系统瓶颈时，找到具体的关键瓶颈点。然而服务网格解决了这个问题。服务网格提供了分布式跟踪，能够轻松的分析出哪些服务导致了请求延迟或者造成了系统瓶颈。
+
+4、提供了指标集合,服务网格好像一个监控系统一样，提供了一个收集指标的能力，称为遥测数据。以Istio为例，其中Mixer 及其适配器就是这样的作用。根据这些数据，我们能够了解到在各个时间维度上，应用程序发生了什么，同时这些指标可以作为了解应用程序是否健壮的关键数据。也可以为系统调优提供有用参数依据。
+
+至于现有的微服务如何与Service Mesh结合起来，就可以参考下面这篇文章 [Service Mesh vs API Gateway](https://medium.com/microservices-in-practice/service-mesh-vs-api-gateway-a6d814b9bf56)
 
 ## 参考
 
