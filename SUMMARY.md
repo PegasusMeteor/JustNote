@@ -55,6 +55,7 @@
     * [What is gRPC](golang/grpc/what-grpc.md)
     * [gRPC 概念](golang/grpc/grpc-concepts.md)
     * [gRPC 基础 Golang版](golang/grpc/grpc-basic.md)
+  <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [gRPC-Web] -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
