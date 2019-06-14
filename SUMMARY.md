@@ -62,7 +62,7 @@
 
 <!-- * [Vue](vue/readme.md) -->
 * [Java](java/readme.md)
-  * [Java Core](java/java-core.md)
+  * [Java Core](java/core.md)
     * [JVM 如何加载类](java/core/jvm-load-class.md)
     * [JVM 垃圾回收](java/core/jvm-gc.md)
     * [JVM G1GC](java/core/jvm-g1gc.md)
