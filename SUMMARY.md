@@ -55,7 +55,6 @@
     * [What is gRPC](golang/grpc/what-grpc.md)
     * [gRPC 概念](golang/grpc/grpc-concepts.md)
     * [gRPC 基础 Golang版](golang/grpc/grpc-basic.md)
-    * [gRPC 原理](golang/grpc/principle.md)
     * [Protocol Buffers 介绍](golang/grpc/protocol-buffers.md)
     * [Http 2.0](golang/grpc/http2.md)
     * [Envoy](golang/grpc/envoy.md)

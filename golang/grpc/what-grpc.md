@@ -1,5 +1,35 @@
 # What is gRPC
 
+<!-- TOC -->
+
+- [What is gRPC](#what-is-grpc)
+  - [什么是RPC？](#%E4%BB%80%E4%B9%88%E6%98%AFrpc)
+  - [OverView](#overview)
+  - [Working with Protocol Buffers](#working-with-protocol-buffers)
+
+<!-- /TOC -->
+
+## 什么是RPC？
+
+首先，什么是RPC？
+
+RPC简称远程过程调用，是一个用于构建基于Client和Server分布式应用程序的技术。目前业界已经有了很多的框架能够用来构建基于RPC的分布式应用，例如SpringBoot，Dubbo和gRPC。
+
+RPC 标准最早是由Bruce Jay Nelson 写的论文 [Implementing Remote Procedure Calls](http://www.cs.cmu.edu/~dga/15-712/F07/papers/birrell842.pdf)中提出的，后期的所有的RPC框架都是在这个标准模式的基础上构建出来的。
+
+![RPC](iamges/rpc-principle.png)
+
+具体的执行过程就是下面这个样子
+
+- 客户端发起一个远程调用,它实际上是调用本地的Client Stub
+- Client Stub 将接受到的参数进行按照约定的协议规范进行编码，并封装到即将发送的Message中。
+- Client Stub 将消息发送给RPC Runtime，然后通过网络将包 发送给Server端
+- 服务器端的 RPCRuntime 收到请求后，交给提供方 Stub 进行解码，然后调用服务端的方法， 服务端执行方法，返回结果
+- 服务端的处理结果 同样再经过Server Stub 打包，然后传递给RPC Runtime。
+- 服务端的RPC Runtime再把数据通过网络发送给Client端。
+- Client 端接收到消息，然后进行Unpack，处理
+
+
 ## OverView
 
 在gRPC中，客户端应用程序可以直接调用不同计算机上的服务应用程序上的方法，就像它是本地对象一样，使我们可以更轻松地创建分布式应用程序和服务。 与许多RPC系统一样，gRPC基于定义服务的思想，指定可以使用其参数和返回类型远程调用的方法。 在服务器端,服务端实现此接口并运行gRPC服务来处理客户端调用。 在客户端，客户端有一个存根（在某些语言中称为客户端），它提供与服务器相同的方法。服务端与客户端一一对应。
