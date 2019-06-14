@@ -62,6 +62,7 @@ go run main.go
 Ant Design Pro 的安装比较简单，可以参考官方repo. [Ant Design Pro](https://github.com/ant-design/ant-design-pro/blob/master/README.zh-CN.md)
 
 ```shell
+
 $ git clone https://github.com/PegasusMeteor/ant-design-pro.git --depth=1
 $ cd ant-design-pro
 $ npm install

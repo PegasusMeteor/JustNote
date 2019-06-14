@@ -44,13 +44,13 @@
     * [状态模式](designpattern/behavioral-principle/state-pattern.md)
 
 * [Golang](golang/readme.md)
-  * [源码阅读](golang/source/readme.md)
+  * [源码阅读](golang/source/source.md)
     * [Goroutines](golang/source/goroutine.md)
     * [Channel](golang/source/channel.md)
   <!-- * [GO WEB 编程](golang/gin/readme.md) -->
     <!-- * [快速开始](golang/gin/quick-start.md) -->
   <!-- * [ORM](golang/orm/readme.md) -->
-  * [gRPC](golang/grpc/readme.md)
+  * [gRPC](golang/grpc/grpc.md)
     * [Quick Start](golang/grpc/quick-start.md)
     * [What is gRPC](golang/grpc/what-grpc.md)
     * [gRPC 概念](golang/grpc/grpc-concepts.md)
@@ -62,7 +62,7 @@
 
 <!-- * [Vue](vue/readme.md) -->
 * [Java](java/readme.md)
-  * [Java Core](java/core/readme.md)
+  * [Java Core](java/core/java-core.md)
     * [JVM 如何加载类](java/core/jvm-load-class.md)
     * [JVM 垃圾回收](java/core/jvm-gc.md)
     * [JVM G1GC](java/core/jvm-g1gc.md)
