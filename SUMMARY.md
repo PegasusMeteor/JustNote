@@ -58,8 +58,8 @@
     * [Protocol Buffers 介绍](golang/grpc/protocol-buffers.md)
     * [Http 2.0](golang/grpc/http2.md)
     * [Envoy](golang/grpc/envoy.md)
-  <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [gRPC-Web] -->
+  <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
 
@@ -76,4 +76,5 @@
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
 * [Architecture](architecture/readme.md)
+  * [Envoy](architecture/envoy.md)
   * [Service Mesh](architecture/service-mesh.md)
