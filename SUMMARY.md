@@ -51,13 +51,13 @@
     <!-- * [快速开始](golang/gin/quick-start.md) -->
   <!-- * [ORM](golang/orm/readme.md) -->
   * [gRPC](golang/grpc.md)
-    * [Quick Start](golang/grpc/quick-start.md)
-    * [What is gRPC](golang/grpc/what-grpc.md)
-    * [gRPC 概念](golang/grpc/grpc-concepts.md)
-    * [gRPC 基础 Golang版](golang/grpc/grpc-basic.md)
-    * [Protocol Buffers 介绍](golang/grpc/protocol-buffers.md)
-    * [Http 2.0](golang/grpc/http2.md)
-    * [Envoy](golang/grpc/envoy.md)
+    * [1、快速开始](golang/grpc/quick-start.md)
+    * [2、什么是gRPC](golang/grpc/what-grpc.md)
+    * [3、gRPC概念梳理](golang/grpc/grpc-concepts.md)
+    * [4、基于Golang的gRPC入门](golang/grpc/grpc-basic.md)
+    * [5、gRPC组件ProtocolBuffers介绍](golang/grpc/protocol-buffers.md)
+    * [6、gRPC组件Http 2.0](golang/grpc/http2.md)
+    * [7、服务注册与发现之Envoy](golang/grpc/envoy.md)
   <!-- * [gRPC-Web] -->
   <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
