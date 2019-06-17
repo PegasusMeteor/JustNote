@@ -57,7 +57,7 @@
     * [4、基于Golang的gRPC入门](golang/grpc/grpc-basic.md)
     * [5、gRPC组件ProtocolBuffers介绍](golang/grpc/protocol-buffers.md)
     * [6、gRPC组件Http 2.0](golang/grpc/http2.md)
-    * [7、服务注册与发现之Envoy](golang/grpc/envoy.md)
+    * [7、服务注册与发现之Consul](golang/grpc/consul.md)
   <!-- * [gRPC-Web] -->
   <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
