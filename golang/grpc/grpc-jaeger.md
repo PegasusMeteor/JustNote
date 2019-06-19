@@ -1,3 +1,12 @@
-# Opentracing
+# 分布式链路追踪
 
-ZipKin,Jaeger 分别介绍下，Opentracing介绍下
+[尝鲜一下](https://github.com/opentracing-contrib/java-opentracing-walkthrough)
+
+## Opentracing
+
+- [opentracing.io](https://opentracing.io/)
+- [OpenTracing 详解](https://pjw.io/articles/2018/05/08/opentracing-explanations/#section-5)
+
+## ZipKin
+
+## Jaeger

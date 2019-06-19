@@ -59,7 +59,7 @@
     * [6、gRPC组件Http 2.0](golang/grpc/http2.md)
     * [7、错误处理和Debug](golang/grpc/error-debug.md)
     * [8、gRPC身份验证](golang/grpc/authentication.md)
-    * [9、服务注册与发现之Consul](golang/grpc/consul.md)
+    * [9、服务注册与发现](golang/grpc/consul.md)
     * [10、gRPC与gRPC Gateway](golang/grpc/grpc-gateway.md)
     * [11、opentracing与Jaeger](golang/grpc/grpc-jaeger.md)
   <!-- * [gRPC-Web] -->
