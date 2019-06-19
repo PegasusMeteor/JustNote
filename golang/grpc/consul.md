@@ -10,13 +10,13 @@
 
 为了便于测试，我们这里采用 consul on docker 的形式安装。可以参考 consul 在dockerhub上的文章 [Consul and Docker](https://hub.docker.com/_/consul)
 
-**1、将image pull 下来,采用最新版本就可以。**
+### 1、将image pull 下来,采用最新版本就可以。
 
 ```shell
 docker pull consul
 ```
 
-**2、 启动一个consul server**
+### 2、 启动一个consul server
 
 ```shell
 docker run -d --name=dev-consul -p 8500:8500 -e CONSUL_BIND_INTERFACE=eth0 consul
@@ -63,8 +63,7 @@ lo        Link encap:Local Loopback
 
  例如，如果该服务器在内部地址172.17.0.2上运行，则可以通过启动另外两个实例并告诉它们加入第一个节点来运行三节点集群以进行开发。
 
-**3、加入另外两个节点**
-
+### 3、加入另外两个节点
 
 ```shell
 
@@ -85,7 +84,7 @@ Node          Address          Status  Type    Build  Protocol  DC   Segment
 7bc5b37a4e1a  172.17.0.4:8301  alive   server  1.5.1  2         dc1  <all>
 ```
 
-**4、客户端模式下运行Consul Agent**
+### 4、客户端模式下运行Consul Agent
 
 ```shell
 docker run -d  --name=dev-consul-agent   -e CONSUL_CLIENT_INTERFACE=eth0 consul agent  -retry-join=172.17.0.2
@@ -131,3 +130,273 @@ $ docker logs 7509e2b8a31a
     2019/06/18 07:58:00 [INFO] agent: Synced node info
 ```
 
+此时此刻，我们再去查看一下 consul member 的话，可以看到有3个server一个client.
+
+```shell
+$ docker exec -t dev-consul consul members
+Node          Address          Status  Type    Build  Protocol  DC   Segment
+3a993c913dfa  172.17.0.3:8301  alive   server  1.5.1  2         dc1  <all>
+47b494323296  172.17.0.2:8301  alive   server  1.5.1  2         dc1  <all>
+7bc5b37a4e1a  172.17.0.4:8301  alive   server  1.5.1  2         dc1  <all>
+7509e2b8a31a  172.17.0.5:8301  alive   client  1.5.1  2         dc1  <default>
+```
+
+consul 正常启动后，浏览器访问 ip:8500 就可以看到consul的UI界面了。
+
+![consul UI界面](iamges/consul.png)
+
+## 服务注册
+
+接下来，我们正式进入gRPC 服务注册的过程了。
+
+官方给出的例子中，已经进行了详细了案例介绍，我们可以根据官方的示例，写出我们的服务注册和发现 [grpc-examples](https://github.com/grpc/grpc-go/tree/master/examples)
+
+我们以官方的helloword示例为例，进行注册与发现的改造。
+
+首先在server端实现向consul中注册服务，并添加上health check
+
+```go
+
+// ConsulService 根据自己的需求进行的服务定制
+type ConsulService struct {
+    IP   string
+    Port int
+    Tag  []string
+    Name string
+}
+
+//RegisterService 向consul中注册服务
+func RegisterService(consulAddress string, service *ConsulService) {
+    consulConfig := api.DefaultConfig()
+    consulConfig.Address = consulAddress
+    client, err := api.NewClient(consulConfig)
+    if err != nil {
+        log.Errorf("New consul client err \n: %v", err)
+        return
+    }
+
+    agent := client.Agent()
+    interval := time.Duration(10) * time.Second
+    deregister := time.Duration(1) * time.Minute
+
+    reg := &api.AgentServiceRegistration{
+        ID:      fmt.Sprintf("%v-%v-%v", service.Name, service.IP, service.Port), // 服务节点的名称
+        Name:    service.Name,                                                    // 服务名称
+        Tags:    service.Tag,                                                     // tag，可以为空
+        Port:    service.Port,                                                    // 服务端口
+        Address: service.IP,                                                      // 服务 IP
+        // In Consul 0.7 and later, checks that are associated with a service
+        // may also contain this optional DeregisterCriticalServiceAfter field,
+        // which is a timeout in the same Go time format as Interval and TTL. If
+        // a check is in the critical state for more than this configured value,
+        // then its associated service (and all of its associated checks) will
+        // automatically be deregistered.
+        Check: &api.AgentServiceCheck{ // 健康检查
+            Interval:                       interval.String(),                                               // 健康检查间隔
+            GRPC:                           fmt.Sprintf("%v:%v/%v", service.IP, service.Port, service.Name), // grpc 支持，执行健康检查的地址，service 会传到 Health.Check 函数中
+            DeregisterCriticalServiceAfter: deregister.String(),                                             // 注销时间，相当于过期时间
+        },
+    }
+
+    log.Printf("registing to %v\n", consulAddress)
+    if err := agent.ServiceRegister(reg); err != nil {
+        log.Printf("Service Register error\n%v", err)
+        return
+    }
+
+}
+
+```
+
+## 服务发现
+
+服务发现，在client端启动时，不再是直接去找server端进行通信，而是根据我们配置的consul的地址，进行服务发现，然后根据获取的服务地址进行与Server端的通信。
+
+```go
+package consul
+
+import (
+    "errors"
+    "fmt"
+    "regexp"
+    "sync"
+
+    "google.golang.org/grpc/serviceconfig"
+
+    "github.com/hashicorp/consul/api"
+    log "github.com/sirupsen/logrus"
+    "google.golang.org/grpc/resolver"
+)
+
+const (
+    defaultPort = "8500"
+)
+
+var (
+    errMissingAddr = errors.New("consul resolver: missing address")
+
+    errAddrMisMatch = errors.New("consul resolver: invalied uri")
+
+    errEndsWithColon = errors.New("consul resolver: missing port after port-separator colon")
+
+    regexConsul, _ = regexp.Compile("^([A-z0-9.]+)(:[0-9]{1,5})?/([A-z_]+)$")
+)
+
+// Init consul resolver
+func Init() {
+    log.Printf("calling consul init\n")
+    resolver.Register(NewBuilder())
+}
+
+type consulBuilder struct {
+}
+
+type consulResolver struct {
+    address              string
+    wg                   sync.WaitGroup
+    clientConn           resolver.ClientConn
+    name                 string
+    disableServiceConfig bool
+    lastIndex            uint64
+}
+
+// NewBuilder new consulBuilder
+func NewBuilder() resolver.Builder {
+    return &consulBuilder{}
+}
+
+func (cb *consulBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOption) (resolver.Resolver, error) {
+
+    log.Printf("calling consul build\n")
+    log.Printf("target: %v\n", target)
+    host, port, name, err := parseTarget(fmt.Sprintf("%s/%s", target.Authority, target.Endpoint))
+    if err != nil {
+        return nil, err
+    }
+
+    cr := &consulResolver{
+        address:              fmt.Sprintf("%s%s", host, port),
+        name:                 name,
+        clientConn:           cc,
+        disableServiceConfig: opts.DisableServiceConfig,
+        lastIndex:            0,
+    }
+
+    cr.wg.Add(1)
+    go cr.watcher()
+    return cr, nil
+
+}
+
+func (cr *consulResolver) watcher() {
+    log.Printf("calling consul watcher\n")
+    config := api.DefaultConfig()
+    config.Address = cr.address
+    client, err := api.NewClient(config)
+    if err != nil {
+        log.Printf("error create consul client: %v\n", err)
+        return
+    }
+
+    for {
+        services, metainfo, err := client.Health().Service(cr.name, cr.name, true, &api.QueryOptions{WaitIndex: cr.lastIndex})
+        if err != nil {
+            log.Printf("error retrieving instances from Consul: %v", err)
+        }
+
+        cr.lastIndex = metainfo.LastIndex
+        var newAddrs []resolver.Address
+        for _, service := range services {
+            addr := fmt.Sprintf("%v:%v", service.Service.Address, service.Service.Port)
+            newAddrs = append(newAddrs, resolver.Address{Addr: addr})
+        }
+        log.Printf("adding service addrs\n")
+        log.Printf("newAddrs: %v\n", newAddrs)
+
+        serviceConfig, err := serviceconfig.Parse(cr.name)
+        if err != nil {
+            state := resolver.State{
+                Addresses:     newAddrs,
+                ServiceConfig: serviceConfig,
+            }
+            cr.clientConn.UpdateState(state)
+        } else {
+            log.Error(err.Error())
+        }
+
+    }
+
+}
+
+func (cb *consulBuilder) Scheme() string {
+    return "consul"
+}
+
+func (cr *consulResolver) ResolveNow(opt resolver.ResolveNowOption) {
+}
+
+func (cr *consulResolver) Close() {
+}
+
+func parseTarget(target string) (host, port, name string, err error) {
+
+    log.Printf("target uri: %v\n", target)
+    if target == "" {
+        return "", "", "", errMissingAddr
+    }
+
+    if !regexConsul.MatchString(target) {
+        return "", "", "", errAddrMisMatch
+    }
+
+    groups := regexConsul.FindStringSubmatch(target)
+    host = groups[1]
+    port = groups[2]
+    name = groups[3]
+    if port == "" {
+        port = defaultPort
+    }
+    return host, port, name, nil
+}
+
+```
+
+## Try it
+
+1. 启动我们的server端服务,然后查看Consul中是否有成功注册
+
+```shell
+
+$ go run server/cmd/main.go
+
+INFO[0000] registing to 192.168.53.205:8500
+INFO[0006] health checking
+INFO[0016] health checking
+INFO[0026] health checking
+INFO[0036] health checking
+
+```
+
+![注册服务](iamges/consul-register.png)  
+
+1. 启动我们的客户端就能够输出下面的信息，这就成功发现了服务并发送了消息了,同时server端也能够收到相应的消息。
+
+```shell
+$ go run client/cmd/main.go
+INFO[0000] calling consul init
+INFO[0000] calling consul build
+INFO[0000] target: {consul 192.168.53.205:8500 helloworld}
+INFO[0000] target uri: 192.168.53.205:8500/helloworld
+INFO[0000] calling consul watcher
+INFO[0000] adding service addrs
+INFO[0000] newAddrs: [{192.168.53.205:50051 0  <nil>}]
+2019/06/19 14:26:49 Greeting: Hello world
+
+```
+
+[本示例完整的代码地址](https://github.com/PegasusMeteor/grpc-examples/tree/master/grpc-consul)
+
+## 参考
+
+- [用consul做grpc的服务发现](https://segmentfault.com/a/1190000018424798)
+- [consul api](https://godoc.org/github.com/hashicorp/consul/api#Agent.ServiceRegister)
