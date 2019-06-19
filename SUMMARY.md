@@ -80,6 +80,6 @@
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
 * [Architecture](architecture/readme.md)
-  * [Consul](architecture/consul.md)
+  <!-- * [Consul](architecture/consul.md) -->
   * [Envoy](architecture/envoy.md)
   * [Service Mesh](architecture/service-mesh.md)
