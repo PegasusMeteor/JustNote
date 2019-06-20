@@ -13,11 +13,11 @@
 
 传送门 [Jayger && ZipKin](../../architecture/Jaeger-zipkin.md)
 
-## 尝鲜一下
+## [尝鲜一下](https://github.com/opentracing-contrib/java-opentracing-walkthrough)
 
 在前面的两篇文章中，我们已经普及了什么是OpenTracing，以及Jaeger和ZipKin的简单比较。接下来，就来按照官方的例子进行一个简单的尝试，然后再抽丝剥茧，看看如何在我们的工程代码中进行实现。
 
-[尝鲜一下](https://github.com/opentracing-contrib/java-opentracing-walkthrough)
+[官方DEMO](https://github.com/opentracing-contrib/java-opentracing-walkthrough)
 
 ### Setup MicroDonuts
 
