@@ -10,7 +10,7 @@
 
 为了便于测试，我们这里采用 consul on docker 的形式安装。可以参考 consul 在dockerhub上的文章 [Consul and Docker](https://hub.docker.com/_/consul)
 
-### 1、将image pull 下来,采用最新版本就可以。
+### 1、将image pull 下来,采用最新版本就可以
 
 ```shell
 docker pull consul

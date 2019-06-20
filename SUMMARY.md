@@ -61,7 +61,7 @@
     * [8、gRPC身份验证](golang/grpc/authentication.md)
     * [9、服务注册与发现](golang/grpc/consul.md)
     * [10、gRPC与gRPC Gateway](golang/grpc/grpc-gateway.md)
-    * [11、opentracing与Jaeger](golang/grpc/grpc-jaeger.md)
+    * [11、gRPC与分布式链路追踪](golang/grpc/grpc-tracing.md)
   <!-- * [gRPC-Web] -->
   <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
@@ -80,6 +80,8 @@
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
 * [Architecture](architecture/readme.md)
-  <!-- * [Consul](architecture/consul.md) -->
+  * [Opentracing](architecture/opentracing.md)
+  * [Jaeger && ZipKin](architecture/Jaeger-zipkin.md)
+  * [Consul](architecture/consul.md)
   * [Envoy](architecture/envoy.md)
   * [Service Mesh](architecture/service-mesh.md)
