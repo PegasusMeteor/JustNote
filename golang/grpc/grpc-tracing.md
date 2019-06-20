@@ -59,7 +59,6 @@ docker run -d -p 5775:5775/udp -p 16686:16686 jaegertracing/all-in-one:latest
 
 ## gRPC 集成 Jaeger
 
-在前面的对比中，我们已经大体上介绍过Jaeger的区别，同时我们也介绍了二者在现有云原生生态中的发展。所以，我们这里选择了Jaeger来进行学习。
+在前面的对比中，我们已经大体上介绍过Jaeger 和 ZipKin 的区别，同时我们也介绍了二者在现有云原生生态中的发展。所以，我们这里选择了Jaeger来进行学习。
 
 下面我们就介绍一下，如何在gRPC中集成Jaeger。
-
