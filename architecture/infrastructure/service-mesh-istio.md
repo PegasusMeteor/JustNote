@@ -1,5 +1,7 @@
 # Service Mesh : Istio详解
 
+本篇文章是基于 [官方网站](https://istio.io/zh/docs/concepts/what-is-istio/) 和 《Service Mesh实战用Istio软负载实现服务网格》的学习笔记
+
 ## 两个平面
 
 首先还是来看Istio官方给出的架构。
@@ -66,9 +68,13 @@ Envoy 之所以提供两种形式的健康性检查，是为了避免将不可�
 
 ### Pilot
 
-    Pilot 为 Envoy sidecar 提供服务发现功能，为智能路由（例如 A/B 测试、金丝雀部署等）和弹性（超时、重试、熔断器等）提供流量管理功能。它将控制流量行为的高级路由规则转换为特定于 Envoy 的配置，并在运行时将它们传播到 sidecar。
+    Pilot 为 Envoy sidecar 提供服务发现功能，为智能路由（例如 A/B 测试、金丝雀部署等）和
+    弹性（超时、重试、熔断器等）提供流量管理功能。它将控制流量行为的高级路由规则转换为特定于 
+    Envoy 的配置，并在运行时将它们传播到 sidecar。
 
-    Pilot 将平台特定的服务发现机制抽象化并将其合成为符合 Envoy 数据平面 API 的任何 sidecar 都可以使用的标准格式。这种松散耦合使得 Istio 能够在多种环境下运行（例如，Kubernetes、Consul、Nomad），同时保持用于流量管理的相同操作界面。
+    Pilot 将平台特定的服务发现机制抽象化并将其合成为符合 Envoy 数据平面 API 的任何 sidecar 
+    都可以使用的标准格式。这种松散耦合使得 Istio 能够在多种环境下运行（例如，Kubernetes、Consul、Nomad），
+    同时保持用于流量管理的相同操作界面。
 
 也就是说，在Istio架构中，Polit是对多种容器平台的抽象，通过适配器模式形成统一接口，官方可以支持K8S,Cloud Foundry,Apache Mesos。
 
@@ -78,9 +84,11 @@ Pilot 为Data Plane 的SideCar 提供服务发现能力，但是本身不做服�
 
 ### Mixer
 
-    Mixer 是一个独立于平台的组件，负责在服务网格上执行访问控制和使用策略，并从 Envoy 代理和其他服务收集遥测数据。代理提取请求级属性，发送到 Mixer 进行评估。
+    Mixer 是一个独立于平台的组件，负责在服务网格上执行访问控制和使用策略，并从 Envoy 代理
+    和其他服务收集遥测数据。代理提取请求级属性，发送到 Mixer 进行评估。
 
-    Mixer 中包括一个灵活的插件模型，使其能够接入到各种主机环境和基础设施后端，从这些细节中抽象出 Envoy 代理和 Istio 管理的服务。
+    Mixer 中包括一个灵活的插件模型，使其能够接入到各种主机环境和基础设施后端，从这些细节
+    中抽象出 Envoy 代理和 Istio 管理的服务。
 
 从逻辑上可以看出 Mixer 可以提供 两种服务, **后端逻辑抽象 +  中心化的控制**
 
@@ -104,14 +112,66 @@ Mixer 提供了丰富的接口，为众多组件提供了强大的扩展支持�
 
 Mixer 就是整个大系统的链路数据以及分析中心。
 
+### Citadel
+
+[Citadel](https://istio.io/zh/docs/concepts/security/) 通过内置身份和凭证管理赋能强大的服务间和最终用户身份验证。可用于升级服务网格中未加密的流量，并为运维人员提供基于服务标识而不是网络控制的强制执行策略的能力。从 0.5 版本开始，Istio 支持基于角色的访问控制，以控制谁可以访问您的服务，而不是基于不稳定的三层或四层网络标识。
+
+从 Istio 0.6 开始，Citadel 具备了一个可选的健康检查功能。缺省情况下的 Istio 部署过程没有启用这一特性。目前健康检查功能通过周期性的向 API 发送 CSR 的方式，来检测 Citadel CSR 签署服务的故障。很快会实现更多的健康检查方法。
+
+Citadel 包含了一个检测器模块，它会周期性的检查 Citadel 的状态（目前只是 gRPC 服务器的健康情况）。如果 Citadel 是健康的，检测器客户端会更新健康状态文件（文件内容始终为空）的更新时间。否则就什么都不做。
+
 ### 可靠性和延迟
 
 - **无状态** : Mixer 本身无状态，自身不存储任何数据
 - **99.999%可用性**: Mixer 本身被设计成高度可靠的组件。设计目标是为任何单独的 Mixer 实例实现 > 99.999％ 的正常运行时间。
-- 
-
+- **缓存与缓冲**: Sidecar 会将Mixer的缓存策略做一次缓存（caching），再对需要汇报的数据做一次缓冲（Buffering）,以最大限度地减少对Mixer的直接依赖。
 
 网格中每个服务都会有对应的 Sidecar 代理在运行，因此在内存消耗方面，Sidecar 必须厉行节约，这就限制了本地缓存和缓冲的可能数量。然而，独立运行 的 Mixer 可以使用相当大的缓存和输出缓冲区。因此，Mixer 可用作 Sidecar 的高度扩展且高度可用的二级缓存。
 
+### 属性
+
+属性是 Istio 策略和遥测功能中的基本概念。属性是用于描述特定服务请求或请求环境的属性的一小段数据。例如，属性可以被赋值为特定请求的大小、操作的响应代码、请求来自的 IP 地址等。
+
+属性也是控制平面的数据元，每个Sidecar 在处理数据流动的时候，会向Mixer提供一个 "请求属性的（Attributes）"的键值，他的作用是描述请求体与对应的环境情况，让控制平面掌握请求的每项指标。
+
+每个属性都有一个名称和一个类型。该类型定义了该属性所持有的数据的种类。例如，属性可以是 STRING 类型，这意味着它的值是文本类型；或者可以是 INT64 类型，指示它的值是 64 位整数。
+
+以下是一些具有相关值的示例属性:
+
+```yaml
+
+request.path: xyz/abc
+request.size: 234
+request.time: 12:34:56.789 04/17/2017
+source.ip: [192 168 0 1]
+destination.service.name: example
+
+```
+
+Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求都会调用 Mixer，为 Mixer 提供一组描述请求和请求周围环境的属性。基于 Envoy sidecar 的配置和给定的特定属性集，Mixer 会调用各种基础设施后端。
+
+![属性机(https://istio.io/docs/concepts/policies-and-telemetry/machine.svg)](images/attribute-machine.png)
+
+## 安全控制
+
+首先还是来看下 Istio的 官方安全总览图。
+
+![Istio 的安全总览图](images/istio-secure-overview.png)
+
+![Istio 安全机制架构以及数据流向](images/istio-architecuture.png)
+
+[**补充：OAuth 2.0 和 OIDC 工作流程**](https://www.ibm.com/support/knowledgecenter/zh/SSPREK_9.0.4/com.ibm.isam.doc/config/concept/con_oauth20_workflow.html)
+
+从上面可以看出，整个安全体系架构是由多个模块联合起来，一起实现的。
+
+- Citadel 用于密钥和证书管理
+
+- Sidecar 和周边代理， 实现客户端和服务器之间的安全通信
+
+- Pilot 将授权策略和安全命名信息分发给代理
+
+- Mixer 对链路请求进行鉴权和审计
+
+点击 官方网站查看详细内容 [Istio 安全](https://istio.io/zh/docs/concepts/security/)
 
 ## kubernetes 服务组网原理
