@@ -1,24 +1,24 @@
 # ServiceMesh 下一代微服务
 <!-- TOC -->
 
-- [ServiceMesh 下一代微服务](#servicemesh-%E4%B8%8B%E4%B8%80%E4%BB%A3%E5%BE%AE%E6%9C%8D%E5%8A%A1)
-  - [What's a service mesh](#whats-a-service-mesh)
-  - [Linkerd](#linkerd)
-    - [Control Plane](#control-plane)
-    - [DataPlane](#dataplane)
-    - [Proxy](#proxy)
-    - [CLI](#cli)
-    - [Dashboard](#dashboard)
-    - [Grafana](#grafana)
-    - [Prometheus](#prometheus)
-  - [Istio](#istio)
-    - [Istio 是什么](#istio-%E6%98%AF%E4%BB%80%E4%B9%88)
-      - [Architecture](#architecture)
-      - [Envoy](#envoy)
-      - [Mixer](#mixer)
-      - [Pilot](#pilot)
-      - [Citadel](#citadel)
-      - [Galley](#galley)
+- [ServiceMesh 下一代微服务](#ServiceMesh-%E4%B8%8B%E4%B8%80%E4%BB%A3%E5%BE%AE%E6%9C%8D%E5%8A%A1)
+  - [What's a service mesh](#Whats-a-service-mesh)
+  - [Linkerd](#Linkerd)
+    - [Control Plane](#Control-Plane)
+    - [DataPlane](#DataPlane)
+    - [Proxy](#Proxy)
+    - [CLI](#CLI)
+    - [Dashboard](#Dashboard)
+    - [Grafana](#Grafana)
+    - [Prometheus](#Prometheus)
+  - [Istio](#Istio)
+    - [Istio 是什么](#Istio-%E6%98%AF%E4%BB%80%E4%B9%88)
+      - [Architecture](#Architecture)
+      - [Envoy](#Envoy)
+      - [Mixer](#Mixer)
+      - [Pilot](#Pilot)
+      - [Citadel](#Citadel)
+      - [Galley](#Galley)
     - [策略与遥测](#%E7%AD%96%E7%95%A5%E4%B8%8E%E9%81%A5%E6%B5%8B)
       - [适配器](#%E9%80%82%E9%85%8D%E5%99%A8)
       - [可靠性和延迟](#%E5%8F%AF%E9%9D%A0%E6%80%A7%E5%92%8C%E5%BB%B6%E8%BF%9F)
@@ -26,18 +26,19 @@
       - [属性词汇](#%E5%B1%9E%E6%80%A7%E8%AF%8D%E6%B1%87)
       - [属性表达式](#%E5%B1%9E%E6%80%A7%E8%A1%A8%E8%BE%BE%E5%BC%8F)
       - [配置模型](#%E9%85%8D%E7%BD%AE%E6%A8%A1%E5%9E%8B)
-      - [处理器（Handler）](#%E5%A4%84%E7%90%86%E5%99%A8handler)
-      - [实例（Instance）](#%E5%AE%9E%E4%BE%8Binstance)
-      - [规则（Rule）](#%E8%A7%84%E5%88%99rule)
-  - [Linkerd Or Istio](#linkerd-or-istio)
-    - [Linkerd的特点](#linkerd%E7%9A%84%E7%89%B9%E7%82%B9)
-    - [Istio的特点](#istio%E7%9A%84%E7%89%B9%E7%82%B9)
-  - [Microservices & Service Mesh](#microservices--service-mesh)
+      - [处理器（Handler）](#%E5%A4%84%E7%90%86%E5%99%A8Handler)
+      - [实例（Instance）](#%E5%AE%9E%E4%BE%8BInstance)
+      - [规则（Rule）](#%E8%A7%84%E5%88%99Rule)
+  - [Linkerd Or Istio](#Linkerd-Or-Istio)
+    - [Linkerd的特点](#Linkerd%E7%9A%84%E7%89%B9%E7%82%B9)
+    - [Istio的特点](#Istio%E7%9A%84%E7%89%B9%E7%82%B9)
+  - [Microservices & Service Mesh](#Microservices--Service-Mesh)
   - [总结](#%E6%80%BB%E7%BB%93)
     - [实现原理](#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-      - [SideCar](#sidecar)
-      - [Control Plane](#control-plane-1)
+      - [SideCar](#SideCar)
+      - [Control Plane](#Control-Plane-1)
     - [到底解决了什么问题](#%E5%88%B0%E5%BA%95%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98)
+  - [补充 Service Mesh 发展史](#%E8%A1%A5%E5%85%85-Service-Mesh-%E5%8F%91%E5%B1%95%E5%8F%B2)
   - [参考](#%E5%8F%82%E8%80%83)
 
 本文中有些图片的显示会有格式上的问题，建议 点击  [这里](https://github.com/PegasusMeteor/JustNote/blob/master/architecture/service-mesh.md) 查看原文。
@@ -430,6 +431,10 @@ sidecar 实现了服务的拦截调用功能，所有的服务都通过SideCar�
 4、提供了指标集合,服务网格好像一个监控系统一样，提供了一个收集指标的能力，称为遥测数据。以Istio为例，其中Mixer 及其适配器就是这样的作用。根据这些数据，我们能够了解到在各个时间维度上，应用程序发生了什么，同时这些指标可以作为了解应用程序是否健壮的关键数据。也可以为系统调优提供有用参数依据。
 
 至于现有的微服务如何与Service Mesh结合起来，就可以参考下面这篇文章 [Service Mesh vs API Gateway](https://medium.com/microservices-in-practice/service-mesh-vs-api-gateway-a6d814b9bf56)
+
+## 补充 Service Mesh 发展史
+
+![Service Mesh 发展史](images/servicemesh-history.png)
 
 ## 参考
 
