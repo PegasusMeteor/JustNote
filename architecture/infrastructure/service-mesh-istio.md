@@ -1,4 +1,26 @@
 # Service Mesh : Istio详解
+<!-- TOC -->
+
+- [Service Mesh : Istio详解](#Service-Mesh--Istio%E8%AF%A6%E8%A7%A3)
+  - [两个平面](#%E4%B8%A4%E4%B8%AA%E5%B9%B3%E9%9D%A2)
+  - [Data Plane](#Data-Plane)
+    - [xDS-API](#xDS-API)
+    - [服务负载 && 流量控制 && 服务发现](#%E6%9C%8D%E5%8A%A1%E8%B4%9F%E8%BD%BD--%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6--%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0)
+    - [Ingress 和 Egress](#Ingress-%E5%92%8C-Egress)
+    - [故障处理机制](#%E6%95%85%E9%9A%9C%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6)
+  - [Control Plane](#Control-Plane)
+    - [Pilot](#Pilot)
+    - [Mixer](#Mixer)
+    - [Citadel](#Citadel)
+    - [可靠性和延迟](#%E5%8F%AF%E9%9D%A0%E6%80%A7%E5%92%8C%E5%BB%B6%E8%BF%9F)
+    - [属性](#%E5%B1%9E%E6%80%A7)
+    - [安全控制](#%E5%AE%89%E5%85%A8%E6%8E%A7%E5%88%B6)
+  - [kubernetes 服务组网示意](#kubernetes-%E6%9C%8D%E5%8A%A1%E7%BB%84%E7%BD%91%E7%A4%BA%E6%84%8F)
+  - [总结](#%E6%80%BB%E7%BB%93)
+
+<!-- /TOC -->
+
+
 
 本篇文章是基于 [官方网站](https://istio.io/zh/docs/concepts/what-is-istio/) 和 《Service Mesh实战用Istio软负载实现服务网格》的学习笔记
 
@@ -76,7 +98,7 @@ Envoy 之所以提供两种形式的健康性检查，是为了避免将不可�
     都可以使用的标准格式。这种松散耦合使得 Istio 能够在多种环境下运行（例如，Kubernetes、Consul、Nomad），
     同时保持用于流量管理的相同操作界面。
 
-也就是说，在Istio架构中，Polit是对多种容器平台的抽象，通过适配器模式形成统一接口，官方可以支持K8S,Cloud Foundry,Apache Mesos。
+也就是说，在Istio架构中，Pilot是对多种容器平台的抽象，通过适配器模式形成统一接口，官方可以支持K8S,Cloud Foundry,Apache Mesos。
 
 Pilot 为Data Plane 的SideCar 提供服务发现能力，但是本身不做服务注册，只提供接口，，对接已有的注册系统，Eureka(2.x不再开源）,etcd,consul...
 
@@ -152,7 +174,7 @@ Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求�
 
 ![属性机(https://istio.io/docs/concepts/policies-and-telemetry/machine.svg)](images/attribute-machine.png)
 
-## 安全控制
+### 安全控制
 
 首先还是来看下 Istio的 官方安全总览图。
 
@@ -174,4 +196,23 @@ Mixer 本质上是一个属性处理机。每个经过 Envoy sidecar 的请求�
 
 点击 官方网站查看详细内容 [Istio 安全](https://istio.io/zh/docs/concepts/security/)
 
-## kubernetes 服务组网原理
+## kubernetes 服务组网示意
+
+kubernets 本身就是一款非常复杂的产品，其本身的学习难度也是有目共睹，Istio 本身也是由众多组件组件，学习起来比较复杂，再与Kubernetes一结合，估计就会有很多人望而却步了。不过，胖子不是一天吃成的，学习永无止境的。
+
+接下来，我们看下 Istio 与 Kubernetes 结合之后的一个简图，这也是现在主流的ServiceMesh组网全图。看完之后，应该就会有一个全局的概念了。
+
+![kubernetes与Istio 服务组网全图](images/kubernetes-istio.png)
+
+## 总结
+
+仅仅通过一篇两篇文章来学习和了解ServiceMesh，就像盲人摸象一样，完全不能窥其全貌。还需要很多时间和实践才能让人完全理解和应用ServiceMesh。
+
+因此这里列举了一些国内在ServiceMesh领域走在前列的一些组织或者网站，留作参考和以后学习。
+
+- [敖小剑的技术博客](https://skyao.io/post/)
+- [Kubernetes Handbook——Kubernetes中文指南/云原生应用架构实践手册](https://jimmysong.io/kubernetes-handbook/)
+- [Service Mesher 社区](http://www.servicemesher.com/)
+- [蚂蚁金服基于Istio的ServiceMesh解决方案](https://github.com/sofastack/sofa-mesh)
+
+到底什么是服务网格，或许概念已经不重要了，重要的是，就像docker带来的虚拟化浪潮一样，ServiceMesh 将改变我们的软件架构与基础架构，为我们的IT领域带来一种风潮上的变革。让我们继续学习拭目以待吧。
