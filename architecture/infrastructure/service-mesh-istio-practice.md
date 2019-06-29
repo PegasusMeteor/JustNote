@@ -2,7 +2,7 @@
 
 ## init Kubernetes
 
-这里简单介绍一下吧  [二进制安装 kubernetes](../../kubernetes/k8s/install.md)
+传送门  [二进制安装 kubernetes](../../kubernetes/k8s/install.md)
 
 ## 安装istio
 
@@ -14,11 +14,11 @@
 
 ```shell
 
-curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.2.2 sh -
+$ curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.2.2 sh -
 
-cd istio-1.2.2
+$ cd istio-1.2.2
 
-export PATH=$PWD/bin:$PATH
+$ export PATH=$PWD/bin:$PATH
 ```
 
 ### 初始化自定义资源
@@ -30,7 +30,6 @@ istio 本身进行了很多的资源自定义。 首先需要将这些自定义�
 $ for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
 
 $ kubectl get crd | grep istio
-
 adapters.config.istio.io               2019-06-29T04:49:22Z
 attributemanifests.config.istio.io     2019-06-29T04:49:22Z
 authorizationpolicies.rbac.istio.io    2019-06-29T04:49:22Z
@@ -59,7 +58,7 @@ virtualservices.networking.istio.io    2019-06-29T04:49:21Z
 执行istio-demo的安装,因为需要下载很多的镜像，而且大部分在国外，耗时比较长。
 
 ```shell
-kubectl apply -f install/kubernetes/istio-demo.yaml
+$ kubectl apply -f install/kubernetes/istio-demo.yaml
 
 ```
 
@@ -88,9 +87,9 @@ zipkin                   ClusterIP      10.254.188.138   <none>        9411/TCP 
 
 ```
 
-    如果你的集群在一个没有外部负载均衡器支持的环境中运行，istio-ingressgateway 的 EXTERNAL-IP 会是 <pending>。要访问这个网关，只能通过服务的 NodePort 或者使用端口转发来进行访问。
+**如果你的集群在一个没有外部负载均衡器支持的环境中运行，istio-ingressgateway 的 EXTERNAL-IP 会是 `<pending>`。要访问这个网关，只能通过服务的 NodePort 或者使用端口转发来进行访问。**
 
-    这一点很重要，这与后面访问应用时有着紧密的联系。
+这一点很重要，这与后面访问应用时有着紧密的联系。
 
 确认必要的 Kubernetes Pod 都已经创建并且其 `STATUS` 的值是 `Running`：
 
@@ -128,7 +127,7 @@ prometheus-5679cb4dcd-jxn2x               1/1     Running            0          
 
 ### 安装
 
-在使用 kubectl apply 进行应用部署的时候，如果目标命名空间已经打上了标签 istio-injection=enabled，Istio sidecar injector 会自动把 Envoy 容器注入到你的应用 Pod 之中。
+在使用 kubectl apply 进行应用部署的时候，如果目标命名空间已经打上了标签 `istio-injection=enabled`，`Istio sidecar injector` 会自动把 Envoy 容器注入到你的应用 Pod 之中。
 
 这里，我们采用默认的 namespace dafault 避免出错之后不好排查。
 
@@ -155,10 +154,10 @@ reviews       ClusterIP   10.254.37.253    <none>        9080/TCP   114s
 
 $ kubectl get pods -n bookinfo
 NAME                              READY   STATUS    RESTARTS   AGE
-details-v1-7964b4bb49-rzrs4       1/2     Running   0          45s
+details-v1-7964b4bb49-rzrs4       2/2     Running   0          45s
 productpage-v1-6c668694dc-v6685   2/2     Running   0          45s
 ratings-v1-7bb4dbd557-d44d5       2/2     Running   0          45s
-reviews-v1-597f899bf6-fg6hh       1/2     Running   0          45s
+reviews-v1-597f899bf6-fg6hh       2/2     Running   0          45s
 reviews-v2-664994896d-694tw       2/2     Running   0          45s
 reviews-v3-fc984656d-mx48l        2/2     Running   0          45s
 
@@ -195,9 +194,7 @@ bookinfo-gateway   47s
 
 接下来，确定 `INGRESS_HOST` 和 `INGRESS_PORT` 变量.
 
-1.1 确定入口 IP 和端口
-
-执行以下命令以确定 Kubernetes 集群是否在支持外部负载均衡器的环境中运行
+**确定入口 IP 和端口**,执行以下命令以确定 Kubernetes 集群是否在支持外部负载均衡器的环境中运行
 
 ```shell
 $ kubectl get svc istio-ingressgateway -n istio-system
@@ -218,6 +215,37 @@ $ export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
 
 ```
 
+**确认应用在运行中**
+
+可以用 curl 命令来确认 Bookinfo 应用的运行情况
+
+```shell
+
+$  curl -s http://${GATEWAY_URL}/productpage | grep -o "<title>.*</title>"
+<title>Simple Bookstore App</title>
+
+
+```
+
+**应用缺省目标规则**
+
+在使用 Istio 控制 Bookinfo 版本路由之前，你需要在目标规则中定义好可用的版本，命名为 subsets 。
+```shell
+
+$ kubectl apply -f samples/bookinfo/networking/destination-rule-all.yaml -n bookinfo
+
+```
+
+可以使用以下命令查看目标规则
+
+```shell
+
+kubectl get destinationrules -o yaml
+
+```
+
+**访问我们的应用**
+
 输入下面的地址，返回 200 的话，就说明部署成功
 
 ```shell
@@ -225,9 +253,9 @@ $ curl -o /dev/null -s -w "%{http_code}\n" http://${GATEWAY_URL}/productpage
 200
 ```
 
-当然也可以通过 http://${GATEWAY_URL}/productpage 来访问。
+当然也可以通过 http://${GATEWAY_URL}/productpage 来访问。如下的界面。
 
-如下的界面。
+![BookInfo Sample](images/istio-practice.png)
 
 
 ## 删除Istio 以及Demo示例
@@ -244,22 +272,23 @@ $ kubectl get gateway           #-- there should be no gateway
 $ kubectl get pods               #-- the Bookinfo pods should be deleted
 ```
 
-
 删除 Gateway 和 VirtualService，并关闭 httpbin 服务：
 
 ```shell
+
 $ kubectl delete gateway httpbin-gateway
 $ kubectl delete virtualservice httpbin
 $ kubectl delete --ignore-not-found=true -f samples/httpbin/httpbin.yaml
 ```
 
+删除自定义资源
 
-删除自定义资源 
-
-for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl delete  -f $i  ; done
-
+```shell
+for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl delete  -f $i  -n bookinfo ; done
+```
 
 删除镜像 ,找到相应的image 版本，替换掉 `1.2.0` 执行下面的命令
 
+```shell
 for i in $(docker image ls  | grep 1.2.0 | cut -f 1 -d " "); do docker rmi  $i:1.2.0 ;done
-
+```
