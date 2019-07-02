@@ -1,5 +1,24 @@
 # Service Mesh: 基于 Istio 的落地实践（一）
 
+<!-- TOC -->
+
+- [Service Mesh: 基于 Istio 的落地实践（一）](#Service-Mesh-%E5%9F%BA%E4%BA%8E-Istio-%E7%9A%84%E8%90%BD%E5%9C%B0%E5%AE%9E%E8%B7%B5%E4%B8%80)
+  - [init Kubernetes](#init-Kubernetes)
+  - [安装istio](#%E5%AE%89%E8%A3%85istio)
+    - [下载安装](#%E4%B8%8B%E8%BD%BD%E5%AE%89%E8%A3%85)
+    - [初始化自定义资源](#%E5%88%9D%E5%A7%8B%E5%8C%96%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B5%84%E6%BA%90)
+  - [安装BookInfo](#%E5%AE%89%E8%A3%85BookInfo)
+    - [安装](#%E5%AE%89%E8%A3%85)
+    - [确定 Ingress 的 IP 和端口](#%E7%A1%AE%E5%AE%9A-Ingress-%E7%9A%84-IP-%E5%92%8C%E7%AB%AF%E5%8F%A3)
+  - [Prometheus 指标数据](#Prometheus-%E6%8C%87%E6%A0%87%E6%95%B0%E6%8D%AE)
+  - [Grafana Dashboard](#Grafana-Dashboard)
+  - [分布式链路追踪 Jaeger](#%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA-Jaeger)
+  - [网格可视化kiali](#%E7%BD%91%E6%A0%BC%E5%8F%AF%E8%A7%86%E5%8C%96kiali)
+  - [删除Istio 以及Demo示例](#%E5%88%A0%E9%99%A4Istio-%E4%BB%A5%E5%8F%8ADemo%E7%A4%BA%E4%BE%8B)
+  - [总结](#%E6%80%BB%E7%BB%93)
+
+<!-- /TOC -->
+
 ## init Kubernetes
 
 传送门  [二进制安装 kubernetes](../../kubernetes/k8s/install.md)
@@ -257,6 +276,77 @@ $ curl -o /dev/null -s -w "%{http_code}\n" http://${GATEWAY_URL}/productpage
 
 ![BookInfo Sample](images/istio-practice.png)
 
+## Prometheus 指标数据
+
+前面的示例中，官方默认安装了一系列的可测试组件。
+
+可以执行下面的命令，就可以在浏览器 使用 `http://hostip:9090/graph` 中打开promethues UI 界面了。
+
+```shell
+
+$  kubectl -n istio-system port-forward --address 0.0.0.0 $(kubectl -n istio-system get pod -l app=prometheus -o jsonpath='{.items[0].metadata.name}') 9090:9090 &
+
+```
+
+![Prometheus 界面](images/istio-practice-prometheus.png)
+
+详细的测试数据可以参考官方的教程。
+
+## Grafana Dashboard
+
+首先确保 Prometheus 和 Grafana 在集群中运行
+
+```shell
+$  kubectl -n istio-system get svc prometheus
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+prometheus   ClusterIP   10.254.177.180   <none>        9090/TCP   3d2h
+$  kubectl -n istio-system get svc grafana
+NAME      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+grafana   ClusterIP   10.254.33.222   <none>        3000/TCP   3d2h
+
+```
+
+执行下面的命令，在 浏览器中打开 `http://hostip:3000/dashboard/db/istio-mesh-dashboard`
+
+```shell
+
+$ kubectl -n istio-system port-forward --address 0.0.0.0 $(kubectl -n istio-system get pod -l app=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000 &
+
+```
+
+![Grafana UI](images/istio-practice-grafana.png)
+
+## 分布式链路追踪 Jaeger 
+
+执行下面的命令，在浏览器中打开 `http://hostip:15032`，就可以访问到分布式链路追踪的UI了。
+
+```shell
+
+$ kubectl -n istio-system port-forward --address 0.0.0.0 $(kubectl -n istio-system get pod -l app=jaeger -o jsonpath='{.items[0].metadata.name}') 15032:16686
+
+```
+
+![分布式链路追踪](images/istio-practice-jaeger.png)
+
+## 网格可视化kiali
+
+确定kiali在集群中运行
+
+```shell
+$ kubectl -n istio-system get svc kiali
+NAME    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)     AGE
+kiali   ClusterIP   10.254.19.166   <none>        20001/TCP   3d3h
+```
+
+执行下面的命令，浏览器界面打开 `http://hostip:20001/kiali/console/`就可以对服务网格进行可视化查看了。
+
+默认账户密码 `admin:admin`
+
+isito 官方还有 如何创建secret的详细教程可以参考。
+
+![Service Mesh KIALI 可视化网格 （一）](images/istio-practice-kiali1.png)
+
+![Service Mesh KIALI 可视化网格 （二）](images/istio-practice-kiali2.png)
 
 ## 删除Istio 以及Demo示例
 
@@ -266,6 +356,7 @@ samples/bookinfo/platform/kube/cleanup.sh
 确认应用已经关停
 
 ```shell
+
 $ kubectl get virtualservices   #-- there should be no virtual services
 $ kubectl get destinationrules  #-- there should be no destination rules
 $ kubectl get gateway           #-- there should be no gateway
@@ -292,3 +383,7 @@ for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl delete  -
 ```shell
 for i in $(docker image ls  | grep 1.2.0 | cut -f 1 -d " "); do docker rmi  $i:1.2.0 ;done
 ```
+
+## 总结
+
+本文虽然说是实践，但是更多的却是将官方的例子跑了起来，没有什么特殊的地方，争取以后详细地输出落地实践的学习心得。
