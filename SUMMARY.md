@@ -89,4 +89,4 @@
     * [Envoy](architecture/infrastructure/envoy.md)
     * [Service Mesh](architecture/infrastructure/service-mesh.md)
     * [Service Mesh: Istio 详解](architecture/infrastructure/service-mesh-istio.md)
-    * [Service Mesh: 基于 Istio 的落地实践](architecture/infrastructure/service-mesh-istio-practice.md)
+    * [Service Mesh: 基于 Istio 的落地实践(一)](architecture/infrastructure/service-mesh-istio-practice.md)
