@@ -340,6 +340,10 @@ kiali   ClusterIP   10.254.19.166   <none>        20001/TCP   3d3h
 
 执行下面的命令，浏览器界面打开 `http://hostip:20001/kiali/console/`就可以对服务网格进行可视化查看了。
 
+```shell
+$ kubectl -n istio-system port-forward --address 0.0.0.0 $(kubectl -n istio-system get pod -l app=kiali -o jsonpath='{.items[0].metadata.name}') 20001:20001 &
+```
+
 默认账户密码 `admin:admin`
 
 isito 官方还有 如何创建secret的详细教程可以参考。
