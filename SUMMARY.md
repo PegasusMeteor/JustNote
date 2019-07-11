@@ -79,7 +79,8 @@
 * [Docker](docker/readme.md)
 
 * [Kubernetes](kubernetes/k8s.md)
-  * [从二进制开始安装](kubernetes/k8s/install.md)
+  * [二进制安装kubernetes](kubernetes/k8s/binary.md)
+    * [00.从零开始](kubernetes/k8s/binary/start-zero.md)
 
 * [Architecture](architecture/readme.md)
   * [Infrastructure](architecture/infrastructure.md)
