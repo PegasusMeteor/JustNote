@@ -39,6 +39,27 @@
     * [访问者模式](designpattern/behavioral-principle/visitor-pattern.md)
     * [状态模式](designpattern/behavioral-principle/state-pattern.md)
 
+<!-- * [Vue](vue/readme.md) -->
+* [Java](java/readme.md)
+  * [Java Core](java/core.md)
+    * [JVM 如何加载类](java/core/jvm-load-class.md)
+    * [JVM 垃圾回收](java/core/jvm-gc.md)
+    * [JVM G1GC](java/core/jvm-g1gc.md)
+    * [JVM G1GC Q&A](java/core/jvm-g1gc-qa.md)
+    * [JVM 与 Hbase](java/core/jvm-hbase.md)
+  <!-- * [Spring](java/spring/readme.md) -->
+  <!-- * [Spring boot](java/springboot/readme.md) -->
+  <!-- * [Spring cloud](java/springcloud/readme.md) -->
+<!-- * [mysql](mysql/readme.md) -->
+
+* [Algorithm](algorithm/readme.md)
+  * [Array](algorithm/array.md)
+    * [两数之和](algorithm/array/two-sum.md)
+  * [LinkedList](algorithm/linkedlist.md)
+    * [两数相加](algorithm/linkedlist/add-two-numbers.md)
+  * [dynamic-programming](algorithm/programming.md)
+    * [最长回文子串](algorithm/programming/longest-palindromic-substring.md)
+
 * [Golang](golang/readme.md)
   * [源码阅读](golang/source.md)
     * [Goroutines](golang/source/goroutine.md)
@@ -62,19 +83,6 @@
   <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
-
-<!-- * [Vue](vue/readme.md) -->
-* [Java](java/readme.md)
-  * [Java Core](java/core.md)
-    * [JVM 如何加载类](java/core/jvm-load-class.md)
-    * [JVM 垃圾回收](java/core/jvm-gc.md)
-    * [JVM G1GC](java/core/jvm-g1gc.md)
-    * [JVM G1GC Q&A](java/core/jvm-g1gc-qa.md)
-    * [JVM 与 Hbase](java/core/jvm-hbase.md)
-  <!-- * [Spring](java/spring/readme.md) -->
-  <!-- * [Spring boot](java/springboot/readme.md) -->
-  <!-- * [Spring cloud](java/springcloud/readme.md) -->
-<!-- * [mysql](mysql/readme.md) -->
 
 * [Docker](docker/readme.md)
 
