@@ -186,6 +186,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![工厂方法模式UML](images/factory-method-pattern.png)

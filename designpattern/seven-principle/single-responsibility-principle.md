@@ -174,6 +174,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML (接口为例)
 
 ![接口单一职责UML](images/single-responsibility-principle.png)

@@ -276,6 +276,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 #### 对象适配器模式UML
 
 ![对象适配器模式UML](images/apaper-pattern-object.png)

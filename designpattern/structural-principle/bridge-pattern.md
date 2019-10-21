@@ -281,6 +281,8 @@ public class Test {
 
 ```
 
+## Scala Demo
+
 ## UML
 
 ![桥接模式UML](images/bridge-pattern.png)

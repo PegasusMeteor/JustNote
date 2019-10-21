@@ -171,6 +171,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![合成复用原则UML](images/composite-reuse-principle.png)

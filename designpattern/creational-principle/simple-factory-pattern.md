@@ -164,6 +164,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![简单工厂模式UML](images/simple-factory-pattern.png)

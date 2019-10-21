@@ -209,6 +209,8 @@ public class Test {
 
 ```
 
+## Scala Demo
+
 ## UML
 
 ![外观模式UML](images/facade-pattern.png)

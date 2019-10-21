@@ -129,6 +129,8 @@ public class Bird implements IEatAnimalAction,IFlyAnimalAction {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![接口隔离原则UML](images/interface-segregation-principle.png)

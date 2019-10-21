@@ -250,6 +250,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![抽象工厂模式UML](images/abstract-factory-pattern.png)

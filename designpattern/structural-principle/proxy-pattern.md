@@ -303,6 +303,8 @@ public class DynamicTest {
 
 ```
 
+## Scala Demo
+
 ### 动态代理 UML
 
 ![动态代理的UML](images/dynamic-proxy-pattern.png)

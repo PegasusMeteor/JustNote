@@ -82,6 +82,9 @@
     * [偏函数](scala/function-programming/partialfunc.md)
   * [集合操作](scala/collection-operation.md)
     * [map](scala/collection-operation/map.md)
+    * [flatmap](scala/collection-operation/flatmap.md)
+  * [Future](scala/future/readme.md)
+  * [Akka](scala/akka/readme.md)
 
 <!-- * [Algorithm](algorithm/readme.md)
   * [Array](algorithm/array.md)

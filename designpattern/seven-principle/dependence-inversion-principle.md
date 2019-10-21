@@ -139,6 +139,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![依赖倒置原则UML](images/dependence-inversion-principle.png)

@@ -353,3 +353,5 @@ public class B extends A {
   }
 }
 ```
+
+## Scala Demo

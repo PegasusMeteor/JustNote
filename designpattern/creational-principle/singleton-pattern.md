@@ -329,3 +329,5 @@ public class ThreadLocalInstance {
   }
 }
 ```
+
+## Scala Demo

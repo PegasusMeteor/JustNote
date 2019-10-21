@@ -221,6 +221,8 @@ public class Test {
 
 ```
 
+## Scala Demo
+
 ## UML
 
 ![装饰者模式UML](images/decorator-pattern.png)

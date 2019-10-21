@@ -190,3 +190,5 @@ public class Test {
     }
 }
 ```
+
+## Scala Demo

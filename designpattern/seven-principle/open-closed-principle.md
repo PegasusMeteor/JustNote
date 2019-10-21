@@ -165,6 +165,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![开闭原则的UML类图](images/open-close-principle.png)

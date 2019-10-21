@@ -205,6 +205,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 ![建造者模式UML](images/builder-pattern.png)

@@ -124,6 +124,8 @@ public class Test {
 }
 ```
 
+## Scala Demo
+
 ## UML
 
 这里的类结构关系比较简单，就不上图了。
