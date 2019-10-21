@@ -10,11 +10,13 @@
 
 ## 函数的定义
 
+将 二元函数 引用于集合中的函数
+
 首先以 Seq 的flatmap函数定义来进行理解。
 
 ```scala
 
-defflatMap[B](f: (A) ⇒ GenTraversableOnce[B]): Seq[B]
+def flatMap[B](f: (A) ⇒ GenTraversableOnce[B]): Seq[B]
 [use case]
 Builds a new collection by applying a function to all elements of this sequence and using the elements of the resulting collections.
 
@@ -29,8 +31,6 @@ returns     a new sequence resulting from applying the given collection-valued f
 ## 作用
 
 将集合中每个**元素的子元素**映射(**转换**)到某个函数并返回新的集合。
-
-如果子元素还是一个集合，那就继续拆分子元素，最终返回一个集合。
 
 ```scala
 
@@ -55,4 +55,3 @@ object FlatMapDemo01 {
 
 
 ```
-

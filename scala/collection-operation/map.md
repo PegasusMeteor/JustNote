@@ -44,7 +44,7 @@ object MapOperateDemo1 {
 以 `Seq` 为例，可以看到它的map方法定义。
 
 ```scala
-defmap[B](f: (A) ⇒ B): Seq[B]
+def map[B](f: (A) ⇒ B): Seq[B]
     [use case]
     Builds a new collection by applying a function to all elements of this sequence.
 

@@ -83,6 +83,8 @@
   * [集合操作](scala/collection-operation.md)
     * [map](scala/collection-operation/map.md)
     * [flatmap](scala/collection-operation/flatmap.md)
+    * [filter](scala/collection-operation/filter.md)
+    * [reduceLeft](scala/collection-operation/reduceleft.md)
   * [Future](scala/future/readme.md)
   * [Akka](scala/akka/readme.md)
 
