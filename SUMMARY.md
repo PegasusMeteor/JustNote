@@ -52,14 +52,6 @@
   <!-- * [Spring cloud](java/springcloud/readme.md) -->
 <!-- * [mysql](mysql/readme.md) -->
 
-* [Algorithm](algorithm/readme.md)
-  * [Array](algorithm/array.md)
-    * [两数之和](algorithm/array/two-sum.md)
-  * [LinkedList](algorithm/linkedlist.md)
-    * [两数相加](algorithm/linkedlist/add-two-numbers.md)
-  * [dynamic-programming](algorithm/programming.md)
-    * [最长回文子串](algorithm/programming/longest-palindromic-substring.md)
-
 * [Golang](golang/readme.md)
   * [源码阅读](golang/source.md)
     * [Goroutines](golang/source/goroutine.md)
@@ -83,6 +75,21 @@
   <!-- * [函数式编程](golang/functional-programming/readme.md) -->
   <!-- * [RESTful API](golang/restful/readme.md) -->
   <!-- * [爬虫](golang/crawler/readme.md) -->
+
+* [Scala](scala/readme.md)
+  * [函数式编程](scala/function-programming/readme.md)
+    * [高阶函数](scala/function-programming/highorderfunc.md)
+    * [偏函数](scala/function-programming/partialfunc.md)
+  * [集合操作](scala/collection-operation.md)
+    * [map](scala/collection-operation/map.md)
+
+<!-- * [Algorithm](algorithm/readme.md)
+  * [Array](algorithm/array.md)
+    * [两数之和](algorithm/array/two-sum.md)
+  * [LinkedList](algorithm/linkedlist.md)
+    * [两数相加](algorithm/linkedlist/add-two-numbers.md)
+  * [dynamic-programming](algorithm/programming.md)
+    * [最长回文子串](algorithm/programming/longest-palindromic-substring.md) -->
 
 * [Docker](docker/readme.md)
 
