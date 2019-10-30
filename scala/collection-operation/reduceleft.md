@@ -42,6 +42,20 @@ def reduceLeft[B >: A](op: (B, A) ⇒ B): B
 
 ```scala
 
+object ReduceLeftDemo {
+  def main(args: Array[String]): Unit = {
+
+    val list = List(1,2,3,5,6)
+
+    val list1 = list.reduceLeft(sum)
+    println(list1)
+  }
+
+  def sum(n1:Int,n2:Int):Int ={
+    n1 + n2
+  }
+
+}
 ```
 
 ```scala
