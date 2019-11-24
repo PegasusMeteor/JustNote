@@ -250,7 +250,7 @@
     * [filter](scala/function-operation/filter.md)
     * [reduceLeft](scala/function-operation/reduceleft.md)
     * [foldLeft](scala/function-operation/foldleft.md)
-  * [Future](scala/future/readme.md)
+  * [Futures](scala/futures/readme.md)
   * [Akka](scala/akka/readme.md)
 
 <!-- * [Algorithm](algorithm/readme.md)
