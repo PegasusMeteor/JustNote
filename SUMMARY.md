@@ -245,6 +245,7 @@
       * [updated](scala/function-operation/U/updated.md)
     * [V](scala/function-operation/V.md)
       * [values](scala/function-operation/V/values.md)
+      * [view](scala/function-operation/V/view.md)
     * [W](scala/function-operation/W.md)
       * [withDefault](scala/function-operation/W/withDefault.md)
       * [withDefaultValue](scala/function-operation/W/withwithDefaultValueDefault.md)
