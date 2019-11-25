@@ -247,6 +247,7 @@
       * [values](scala/function-operation/V/values.md)
       * [view](scala/function-operation/V/view.md)
     * [W](scala/function-operation/W.md)
+      * [withFilter](scala/function-operation/W/withFilter.md)
       * [withDefault](scala/function-operation/W/withDefault.md)
       * [withDefaultValue](scala/function-operation/W/withwithDefaultValueDefault.md)
     * [Z](scala/function-operation/Z.md)
