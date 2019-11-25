@@ -206,6 +206,7 @@
       * [reduceRight](scala/function-operation/R/reduceRight.md)
       * [reduceRightOption](scala/function-operation/R/reduceRightOption.md)
       * [reverse](scala/function-operation/R/reverse.md)
+      * [reverseIterator](scala/function-operation/R/reverseIterator.md)
       * [reverseMap](scala/function-operation/R/reverseMap.md)
       * [runWith](scala/function-operation/R/runWith.md)
     * [S](scala/function-operation/S.md)
