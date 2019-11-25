@@ -184,6 +184,7 @@
       * [orElse](scala/function-operation/O/orElse.md)
     * [P](scala/function-operation/P.md)
       * [padTo](scala/function-operation/P/padTo.md)
+      * [par](scala/function-operation/P/par.md)
       * [partition](scala/function-operation/P/partition.md)
       * [partitionMap](scala/function-operation/P/partitionMap.md)
       * [patch](scala/function-operation/P/patch.md)
