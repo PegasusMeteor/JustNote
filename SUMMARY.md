@@ -211,6 +211,7 @@
       * [runWith](scala/function-operation/R/runWith.md)
     * [S](scala/function-operation/S.md)
       * [sameElements](scala/function-operation/S/sameElements.md)
+      * [scan](scala/function-operation/S/scan.md)
       * [scanLeft](scala/function-operation/S/scanLeft.md)
       * [scanRight](scala/function-operation/S/scanRight.md)
       * [search](scala/function-operation/S/search.md)
