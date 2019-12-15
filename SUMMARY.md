@@ -282,8 +282,9 @@
     * [Future promise](scala/futures/readme.md)
   * [Akka](scala/akka/readme.md)
 
-<!-- * [Algorithm](algorithm/readme.md)
-  * [Array](algorithm/array.md)
+* [Algorithm](algorithm/readme.md)
+
+<!--  * [Array](algorithm/array.md)
     * [常见数组算法](algorithm/array/array.md)
     * [两数之和](algorithm/array/two-sum.md)
   * [LinkedList](algorithm/linkedlist.md)

@@ -165,8 +165,6 @@ public class Test {
 }
 ```
 
-## Scala Demo
-
 ## UML
 
 ![开闭原则的UML类图](images/open-close-principle.png)
@@ -174,3 +172,17 @@ public class Test {
 ## 总结
 
 从上面两个Demo 中，我们还能看出一个Java 和 Golang 的区别。Java中，虽然用子类示例化了接口，但是在使用子类的方法时，还是需要将接口转成子类，而Golang中没有这种要求。
+
+---
+
+### 补充另一个版本的Java/Scala Demo 以及源码解析
+
+---
+
+## Java Demo_
+
+## Scala Demo
+
+## UML_
+
+## 源码解析

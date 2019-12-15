@@ -186,8 +186,20 @@ public class Test {
 
 这里面，title 一直不会发生变化，就是内部状态，而department需要通过setter方法来使用。就可以理解为title是内部状态，而department使外部状态。
 
-## Scala Demo
-
 ## UML
 
 ![享元模式UML](images/flyweight-pattern.png)
+
+---
+
+### 补充另一个版本的Java/Scala Demo 以及源码解析
+
+---
+
+## Java Demo_
+
+## Scala Demo
+
+## UML_
+
+## 源码解析
