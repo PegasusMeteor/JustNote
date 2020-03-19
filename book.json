@@ -19,7 +19,8 @@
         "sitemap-general",
         "lunr",
         "search",
-        "search-plus"
+        "search-plus",
+        "comments-footer"
     ],
     "pluginsConfig": {
         "tbfed-pagefooter": {
@@ -49,6 +50,11 @@
         },
         "sitemap-general": {
             "prefix": "https://xiaoshuaigege.gitbooks.io/justnote"
+        },
+        "comments-footer": {
+            "type": "github",
+            "repo": "PegasusMeteor/JustNote",
+            "copyright": "Copyright © PegasusMeteor"
         }
     }
 }

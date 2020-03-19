@@ -1,6 +1,6 @@
 # Summary
 
-* [简介](readme.md)
+* [Introduction](readme.md)
 
 * [DesignPattern](designpattern/readme.md)
   * [七大原则](designpattern/seven-principle.md)
