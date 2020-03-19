@@ -42,14 +42,14 @@
             }
         },
         "github": {
-            "url": "https://github.com/xiaoshuaigege/JustNote"
+            "url": "https://github.com/PegasusMeteor/JustNote"
         },
         "editlink": {
-            "base": "https://github.com/xiaoshuaigege",
+            "base": "https://github.com/PegasusMeteor",
             "label": "编辑本页面"
         },
         "sitemap-general": {
-            "prefix": "https://xiaoshuaigege.gitbooks.io/justnote"
+            "prefix": "https://pegasusmeteor.gitbooks.io/justnote"
         },
         "comments-footer": {
             "type": "github",
