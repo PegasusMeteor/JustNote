@@ -311,5 +311,8 @@
 * [DDD](ddd/readme.md)
 * [Reactive Programming](reactive/readme.md)
   * [Reactor](reactive/reactor.md)
+    * [Publisher](reactive/reactor/publisher.md)
+    * [Subscriber](reactive/reactor/subscriber.md)
     * [Subscription](reactive/reactor/subscription.md)
+    * [Processor](reactive/reactor/processor.md)
   * [WebFlux](reactive/webflux.md)
