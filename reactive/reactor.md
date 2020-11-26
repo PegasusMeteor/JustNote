@@ -1,12 +1,7 @@
 # Reactor
 
-反应式编程（Reactive Programming）这种新的编程范式越来越受到开发人员的欢迎。
+Reactor 是一种非阻塞式响应式编程框架。它可以直接与 Java8的函数式 API 集成到一起,尤其是CompletableFuture，Stream和Duration。它提供了可组合的异步 API，例如Flux 和Mon，并且广泛实现了Reactive Streams规范。
 
-因为webflux响应式的实现底层引用的核心库就是reactor，所以先学习和使用reactor，然后学习 webflux 就会如鱼得水。
+Reactor还支持与Reactor-Netty项目的非阻塞进程间通信。 适用于微服务架构，Reactor Netty为HTTP（包括Websockets），TCP和UDP提供了支持背压的网络引擎。 完全支持反应式编码和解码。
 
-## reactivestreams 核心 api
-
-- [Publisher](reactor/publisher.md)
-- [Subscriber](reactor/subscriber.md)
-- [Subscription](reactor/subscription.md)
-- [Processor](reactor/processor.md)
+在这里提到了一个词 **背压(backpressure)** ，这在reactor 中是比较关键的一项内容，后面会详细介绍到。
