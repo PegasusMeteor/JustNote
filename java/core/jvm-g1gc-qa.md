@@ -4,6 +4,12 @@
 
 G1 指的是 Garbage First,GC 在JVM 中有两个含义，内存的分配和针对已分配内存的回收。
 
+## 参考
+
+- 《JVM G1 源码分析和调优》-- 彭成寒编著
+- [G1GC 参数调优](https://www.oracle.com/cn/technical-resources/articles/java/g1gc.html)
+- [The Garbage First Garbage Collector](https://www.oracle.com/java/technologies/javase/hotspot-garbage-collection.html)
+
 ## G1 的基本概念
 
 ### 如何设置Heap Region的大小
@@ -230,7 +236,3 @@ G1 Old Generation:
    free     = 1927267336 (1837.9853591918945MB)
    2.9574783953593173% used
 ```
-
-## 参考
-
-- 《JVM G1 源码分析和调优》-- 彭成寒编著
