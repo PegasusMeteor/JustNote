@@ -308,6 +308,8 @@
     * [Service Mesh: Istio 详解](architecture/infrastructure/service-mesh-istio.md)
     * [Service Mesh: 基于 Istio 的落地实践(一)](architecture/infrastructure/service-mesh-istio-practice.md)
   * [CAS](architecture/cas.md)
+    * [CAS Server](architecture/cas/cas-install.md)
+    * [CAS Service Management](architecture/cas/cas-management-install.md)
 
 * [Netty](netty/readme.md)
 * [DDD](ddd/readme.md)
