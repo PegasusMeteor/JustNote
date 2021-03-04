@@ -4,6 +4,7 @@
 
 - [1. CAS 安装](#1-cas-安装)
   - [参考](#参考)
+  - [环境介绍](#环境介绍)
   - [下载cas](#下载cas)
   - [构建CAS Server War](#构建cas-server-war)
   - [修改配置](#修改配置)
@@ -25,6 +26,12 @@
 
 **cas-management** 下载地址 [https://github.com/apereo/cas-management](https://github.com/apereo/cas-management)
 
+## 环境介绍
+
+- CAS 6.4.0 (小版本之间差异也很大)
+- CentOS 7.5
+- JDK 11
+- Tomcat 9.0
 
 ## 下载cas
 
@@ -68,7 +75,7 @@
 cas.server.name=http://10.0.41.74:8090
 cas.server.prefix=${cas.server.name}/cas
 
-logging.config: file:/etc/cas/config/log4j2.xml
+logging.config= file:/etc/cas/config/log4j2.xml
 server.port=8090
 server.ssl.enabled=false
 
