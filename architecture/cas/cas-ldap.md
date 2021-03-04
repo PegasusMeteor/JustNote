@@ -8,7 +8,9 @@
   - [重新构建CAS Server War](#重新构建cas-server-war)
   - [生成CAS encryption and signing keys](#生成cas-encryption-and-signing-keys)
   - [更新CMS Server 配置](#更新cms-server-配置)
-  - [更新CMS Management 配置](#更新cms-management-配置)
+  - [CAS Management 参考](#cas-management-参考)
+  - [重新build CAS Management war](#重新build-cas-management-war)
+  - [更新CAS Management 配置](#更新cas-management-配置)
 
 <!-- /TOC -->
 
@@ -90,6 +92,23 @@ cas.webflow.crypto.encryption.key=
 编辑 `/etc/cas/config/cas.properties` 文件，添加如下的配置。
 
 ```properties
+cas.server.name=http://10.0.41.74:8090
+cas.server.prefix=${cas.server.name}/cas
+
+logging.config: file:/etc/cas/config/log4j2.xml
+server.port=8090
+server.ssl.enabled=false
+
+
+cas.service-registry.core.init-from-json=true
+cas.serviceRegistry.json.location=file:/etc/cas/services
+
+#cas.authn.oauth.grants.resourceOwner.requireServiceHeader=true
+#cas.authn.oauth.userProfileViewType=NESTED
+#
+#cas.authn.policy.requiredHandlerAuthenticationPolicyEnabled=true
+#
+#cas.authn.attributeRepository.stub.attributes.email=casuser@example.org
 
 # 开启debug 模式
 logging.level.org.apereo.cas=DEBUG
@@ -103,17 +122,19 @@ cas.tgc.crypto.signing.key=CIcpiVI97d57UmHhiYCSozo2QC8spO6pywdSofBrSJoLxnxWnuVdE
 cas.webflow.crypto.signing.key=oCFxNGwAcamNBDxNTdWAImA_ujdGXUTEedo8YDRp9iuiAb0spKxvSICRmbiGmCYWA-EbUkDaqXx-KaNJvaR18w
 cas.webflow.crypto.encryption.key=mLgVHrGbp4jfj9Sp4_e9uQ
 
-
+ldap-url=ldap://10.0.41.74:389
 ldap-dnformat=uid=%s,ou=People,dc=sugon,dc=com
-
+ldap-base-dn=dc=sugon,dc=com
+ldap-bind-dn=cn=ldapadm,dc=sugon,dc=com
+ldap-bind-credential=root;123
 
 cas.authn.ldap[0].password-policy.groovy.location=
 cas.authn.ldap[0].principal-transformation.groovy.location=
-cas.authn.ldap[0].base-dn=dc=sugon,dc=com
-cas.authn.ldap[0].bind-dn=cn=ldapadm,dc=sugon,dc=com
-cas.authn.ldap[0].bind-credential=root;123
+cas.authn.ldap[0].base-dn=${ldap-base-dn}
+cas.authn.ldap[0].bind-dn=${ldap-bind-dn}
+cas.authn.ldap[0].bind-credential=${ldap-bind-credential}
 cas.authn.ldap[0].dn-format=${ldap-dnformat}
-cas.authn.ldap[0].ldap-url=ldap://10.0.41.74:389
+cas.authn.ldap[0].ldap-url=${ldap-url}
 cas.authn.ldap[0].search-filter=(uid={user})
 cas.authn.ldap[0].type=DIRECT
 cas.authn.ldap[0].password-encoder.encoding-algorithm=
@@ -123,16 +144,56 @@ cas.authn.ldap[0].password-encoder.type=NONE
 
 重新启动 CAS，然后就可以在 `http://10.0.41.74:8090/cas/login` 使用ldap用户去登录啦。
 
+## CAS Management 参考
 
-## 更新CMS Management 配置
+- [https://jasigcas.readthedocs.io/en/latest/cas-server-documentation/installation/LDAP-Service-Management.html](https://jasigcas.readthedocs.io/en/latest/cas-server-documentation/installation/LDAP-Service-Management.html)
+- [https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.htm](https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.htm)
+  
+
+
+
+## 重新build CAS Management war
+
+
+
+在gradle.properties 文件中添加下面一行。
+
+```properties
+cas.version=6.4.0
+```
+
+这里的版本之所以是6.4.0,是需要与我们之前部署的CAS 保持版本一致。
+
+在 `cas-management-overlay` 项目中，添加下面的依赖。其他配置，与之前介绍的内容保持一致。
+
+```gradle
+dependencies {
+    // Other CAS Management dependencies/modules may be listed here...
+    compile "org.apereo.cas:cas-management-webapp-support-ldap:${project.'cas.version'}"
+}
+```
+
+重新执行 `./build.sh package` 命令，构建 cas-management.war
+
+## 更新CAS Management 配置
+
 
 编辑 `/etc/cas/config/cas-management.properties` 文件，添加如下的配置。
 
 ```properties
 
-mgmt.ldap.ldap-url = ldap://10.0.41.74:389
-mgmt.ldap.bind-dn = cn=ldapadm,dc=sugon,dc=com
-# mgmt.ldap.bind-credential =
+
+ldap-url=ldap://10.0.41.74:389
+ldap-dnformat=uid=%s,ou=People,dc=sugon,dc=com
+ldap-base-dn=dc=sugon,dc=com
+ldap-bind-dn=cn=ldapadm,dc=sugon,dc=com
+ldap-bind-credential=root;123
+
+
+
+mgmt.ldap.ldap-url = ${ldap-url}
+mgmt.ldap.bind-dn = ${ldap-bind-dn}
+mgmt.ldap.bind-credential =${ldap-bind-credential}
 # mgmt.ldap.use-ssl = false
 
 # mgmt.ldap.trust-certificates =
@@ -173,8 +234,8 @@ mgmt.ldap.max-pool-size = 20
 # mgmt.ldap.ldap-authz.group-prefix =
 # mgmt.ldap.ldap-authz.group-filter =
 # mgmt.ldap.ldap-authz.group-base-dn =
-mgmt.ldap.ldap-authz.base-dn = dc=sugon,dc=com
-mgmt.ldap.ldap-authz.search-filter =
+mgmt.ldap.ldap-authz.base-dn = ${ldap-base-dn}
+mgmt.ldap.ldap-authz.search-filter = (uid={user})
 
 ```
 
