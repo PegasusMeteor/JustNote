@@ -8,9 +8,6 @@
   - [重新构建CAS Server War](#重新构建cas-server-war)
   - [生成CAS encryption and signing keys](#生成cas-encryption-and-signing-keys)
   - [更新CMS Server 配置](#更新cms-server-配置)
-  - [CAS Management 参考](#cas-management-参考)
-  - [重新build CAS Management war](#重新build-cas-management-war)
-  - [更新CAS Management 配置](#更新cas-management-配置)
 
 <!-- /TOC -->
 
@@ -144,10 +141,16 @@ cas.authn.ldap[0].password-encoder.type=NONE
 
 重新启动 CAS，然后就可以在 `http://10.0.41.74:8090/cas/login` 使用ldap用户去登录啦。
 
+
+<!-- --------------------------------------------------------------------------------------------------------
+下面的这部分内容不一定正确暂时先注销掉
+--------------------------------------------------------------------------------------------------------
+
+
 ## CAS Management 参考
 
 - [https://jasigcas.readthedocs.io/en/latest/cas-server-documentation/installation/LDAP-Service-Management.html](https://jasigcas.readthedocs.io/en/latest/cas-server-documentation/installation/LDAP-Service-Management.html)
-- [https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.htm](https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.htm)
+- [https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.html](https://apereo.github.io/cas-management/6.3.x/installation/Installing-ServicesMgmt-Webapp.html)
   
 
 
@@ -238,4 +241,4 @@ mgmt.ldap.ldap-authz.base-dn = ${ldap-base-dn}
 mgmt.ldap.ldap-authz.search-filter = (uid={user})
 
 ```
-
+ -->

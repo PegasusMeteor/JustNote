@@ -27,13 +27,6 @@
 **CAS management overlay** 项目地址 [https://github.com/apereo/cas-management-overlay](https://github.com/apereo/cas-management-overlay)
 
 
-1. 修改jdk 版本。
-
-
-org.gradle.java.home=/usr/lib/jdk-11.0.10
-
-
-
 ## 下载 cas  management overlay template
 
 下载 [cas  management overlay template](https://github.com/apereo/cas-management-overlay) 项目。 
@@ -47,12 +40,10 @@ org.gradle.java.home=/usr/lib/jdk-11.0.10
 
 
 2. 手动指定 gradle 的java home,在gradle.properties 文件中添加下面一行。
-
-`org.gradle.java.home=/usr/lib/jdk-11.0.10`
+  `org.gradle.java.home=/usr/lib/jdk-11.0.10`
 
 3. 指定本地的gradle，避免每次都下载,在gradle-wrapper.properties 文件中，修改下面一行。
-
-`distributionUrl=file:///mnt/d/download/gradle-6.8.3-bin.zip`
+  `distributionUrl=file:///mnt/d/download/gradle-6.8.3-bin.zip`
 
 4. 执行 build.sh package 就可以构建出cas-management.war 了。
 
