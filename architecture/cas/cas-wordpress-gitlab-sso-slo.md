@@ -92,7 +92,7 @@ CAS 框架作为一个认证登录框架，安全是首位重要的。在实验�
 生成证书的时候，[需要注意要使用域名进行生成，使用ip生成的话，会有问题](https://www.oschina.net/question/106294_112887)。
 
 
-```
+```shell
 What is your first and last name?
   [Unknown]:  cas.sugon.com
 What is the name of your organizational unit?
