@@ -8,6 +8,7 @@
   - [重新构建CAS Server War](#重新构建cas-server-war)
   - [生成CAS encryption and signing keys](#生成cas-encryption-and-signing-keys)
   - [更新CMS Server 配置](#更新cms-server-配置)
+  - [单点登录 单点注销](#单点登录-单点注销)
 
 <!-- /TOC -->
 
@@ -54,13 +55,12 @@ java -jar build/libs/cas-server-support-shell-6.4.0-SNAPSHOT.jar
 
 也可以参考 [https://apereo.github.io/2017/10/30/intro-cas-cli-shell/](https://apereo.github.io/2017/10/30/intro-cas-cli-shell/)
 
-然后分别生成下面的五个参数。
+然后分别生成下面的四个参数。
 
 ```shell
 cas.tgc.crypto.encryption.key=
 cas.tgc.crypto.signing.key=
 cas.webflow.crypto.signing.key=
-cas.webflow.crypto.encryption.key=
 cas.webflow.crypto.encryption.key=
 ```
 
@@ -242,3 +242,20 @@ mgmt.ldap.ldap-authz.search-filter = (uid={user})
 
 ```
  -->
+
+
+## 单点登录 单点注销
+
+关于 单点登录，与单点注销 这里我们是通过 CAS Management 这个服务来进行的配置。
+
+首先新增一个gitlab 服务，将gitlab服务注册到cas server 中。因为我们前面的配置只是设置了gitlab 通过CAS 来登录，还没有实现SSO的目的。
+
+![添加gitlab服务](images/sso1.png)
+
+
+
+添加退出URL.
+
+![添加退出URL](images/sso2.png)
+
+

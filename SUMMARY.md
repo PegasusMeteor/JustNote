@@ -312,6 +312,8 @@
     * [CAS Service Management](architecture/cas/cas-management-install.md)
     * [CAS 集成LDAP](architecture/cas/cas-ldap.md)
     * [CAS 集成gitlab](architecture/cas/cas-gitlab.md)
+    * [CAS SSO & SLO](architecture/cas/cas-gitlab.md)
+
 
 * [Netty](netty/readme.md)
 * [DDD](ddd/readme.md)
