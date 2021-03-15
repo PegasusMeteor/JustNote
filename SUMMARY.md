@@ -313,7 +313,7 @@
     * [CAS 集成LDAP](architecture/cas/cas-ldap.md)
     * [CAS 集成gitlab](architecture/cas/cas-gitlab.md)
     * [CAS SSO & SLO](architecture/cas/cas-wordpress-gitlab-sso-slo.md)
-    * [CAS Gitbook](architecture/cas/cas-gitbook.md)
+    * [CAS Gitbook](architecture/cas/cas-springboot-gitbook.md)
 
 
 * [Netty](netty/readme.md)
