@@ -131,7 +131,7 @@ public class GitbookCASApplication {
 ```json
 {
   "@class": "org.apereo.cas.services.RegexRegisteredService",
-  "serviceId": "^http://cas.sugon.com:8092/.*",
+  "serviceId": "^http://cas.domain.com:8092/.*",
   "name": "Gitbook",
   "id": 10000006,
   "description": "Gitbook sample service",
@@ -154,7 +154,7 @@ public class GitbookCASApplication {
   },
   "accessStrategy": {
     "@class": "org.apereo.cas.services.DefaultRegisteredServiceAccessStrategy",
-    "unauthorizedRedirectUrl" : "http://cas.sugon.com",
+    "unauthorizedRedirectUrl" : "http://cas.domain.com",
     "enabled": true,
     "ssoEnabled": true
   },
