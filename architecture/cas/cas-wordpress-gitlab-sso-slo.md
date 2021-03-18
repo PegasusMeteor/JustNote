@@ -93,6 +93,9 @@ CAS 框架作为一个认证登录框架，安全是首位重要的。在实验�
 
 
 ```shell
+keytool -genkey -alias cas -keyalg RSA -keysize 2048 -validity 36500 -keystore /etc/cas/keys/the-cas-ssl-keystore
+
+
 What is your first and last name?
   [Unknown]:  cas.sugon.com
 What is the name of your organizational unit?
