@@ -20,7 +20,8 @@
         "lunr",
         "search",
         "search-plus",
-        "comments-footer"
+        "comments-footer",
+        "revealjs"
     ],
     "pluginsConfig": {
         "tbfed-pagefooter": {

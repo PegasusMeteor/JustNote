@@ -314,6 +314,7 @@
     * [CAS 集成gitlab](architecture/cas/cas-gitlab.md)
     * [CAS SSO & SLO](architecture/cas/cas-wordpress-gitlab-sso-slo.md)
     * [CAS Gitbook](architecture/cas/cas-springboot-gitbook.md)
+  * [xCAT](architecture/xCAT.md)
 
 
 * [Netty](netty/readme.md)
