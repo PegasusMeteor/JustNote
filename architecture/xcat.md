@@ -1,5 +1,5 @@
 <section data-markdown>
-  <textarea data-template>
+  <script type="text/template">
     ## xCAT
     A paragraph with some text and a [link](http://hakim.se).
     ---
@@ -7,5 +7,5 @@
     ---
     ## Management Node
     ---
-  </textarea>
+  </script>
 </section>
