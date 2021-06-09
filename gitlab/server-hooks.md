@@ -9,6 +9,7 @@ Git 支持下面的Hook:
 
 Server-side Git hooks 可以被配置到 某一个Repo或者全部的Repo上。
 
+三种类型的hook 有什么区别 ，可以通过[https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) ，进行参考。
 
 ## 为单个Git Repo 创建server hook 
 
@@ -57,4 +58,6 @@ Server-side Git hooks 可以被配置到 某一个Repo或者全部的Repo上。
 ## Gitlab基于git-hooks做checkstyle代码检测
 
 转载自 [https://my.oschina.net/leelance/blog/1922709](https://my.oschina.net/leelance/blog/1922709)
+
+
 
