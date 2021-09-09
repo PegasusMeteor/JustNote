@@ -21,9 +21,14 @@
         "search",
         "search-plus",
         "comments-footer",
-        "revealjs"
+        "revealjs",
+        "gitbook-plugin-icp"
     ],
     "pluginsConfig": {
+        "icp": {
+            "number": "鲁ICP备18012930号-2",
+            "link":"https://beian.miit.gov.cn/"
+        },
         "tbfed-pagefooter": {
             "copyright": "",
             "modify_label": "该文件修订时间：",
