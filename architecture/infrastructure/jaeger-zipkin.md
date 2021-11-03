@@ -14,7 +14,7 @@ Jaeger 和 Zipkin 是目前业界使用比较多的分布式追踪工具，同�
 
 ## 编程语言支持
 
-首先我们来看下 [Jaeger](https://www.jaegertracing.io/docs/1.12/client-libraries/#supported-libraries)
+首先我们来看下 [Jaeger](https://www.jaegertracing.io/docs/1.27/client-libraries/#supported-libraries)
 
 Language | GitHub Repo
 -|-
@@ -67,10 +67,14 @@ Jaeger 和 ZipKin 都在github上进行了开源。接下来，我们比较一�
 
 _ |Jaeger|Zipkin
 -|-|-
-**Contributors** | 98 | 79
-**Open Issues** | 258 | 240
-**Open PRs**  | 30 | 9
-**GitHub Stars** | 8286 | 11169
+**Contributors** | 232 | 145
+**Open Issues** | 342 | 150
+**Open PRs**  | 17 | 18
+**GitHub Stars** | 14.5k | 14.8k
+
+## 参考资料
+- [Jaeger vs Zipkin – OpenTracing Distributed Tracers](https://sematext.com/blog/jaeger-vs-zipkin-opentracing-distributed-tracers/)
+
 
 ## 结论
 
