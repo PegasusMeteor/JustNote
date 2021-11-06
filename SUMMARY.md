@@ -331,3 +331,7 @@
 
 * [Gitlab](gitlab/readme.md)
   * [Git Hook](gitlab/server-hooks.md)
+
+* [CICD](cicd/readme.md)
+  * [Jenkins](cicd/jenkins.md)
+    * [Kubectl](cicd/jenkins/install-kubectl.md)
