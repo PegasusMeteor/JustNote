@@ -24,10 +24,10 @@
    如需下载某个指定的版本，请用指定版本号替换该命令的这一部分：
    `$(curl -L -s https://dl.k8s.io/release/stable.txt)`。
 
-   例如，要在 Linux 中下载 {{< param "fullversion" >}} 版本，请输入：
+   例如，要在 Linux 中下载 v1.22.0 版本，请输入：
 
    ```bash
-   curl -LO https://dl.k8s.io/release/{{< param "fullversion" >}}/bin/linux/amd64/kubectl
+   curl -LO https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
    ```
    {% endhint %}
 
