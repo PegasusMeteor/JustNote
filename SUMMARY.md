@@ -49,6 +49,11 @@
     * [JVM G1GC Q&A](java/core/jvm-g1gc-qa.md)
     * [JVM 与 Hbase](java/core/jvm-hbase.md)
     * [JVM ZGC Overview](java/core/jvm-zgc-overview.md)
+    * [JVM ZGC 内存管理](java/core/jvm-zgc-memory.md)
+    * [JVM ZGC 线程](java/core/jvm-zgc-thread.md)
+    * [JVM ZGC 垃圾回收](java/core/jvm-zgc-gc.md)
+    * [JVM ZGC 日志分析](java/core/jvm-zgc-log.md)
+    * [JVM ZGC 参数调优](java/core/jvm-zgc-params.md)
   * [checkstyle](java/checkstyle.md)
   <!-- * [Spring](java/spring/readme.md) -->
   <!-- * [Spring boot](java/springboot/readme.md) -->
